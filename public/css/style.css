@@ -1,0 +1,133 @@
+/*TOP LEVEL*/
+
+#selectionContainer {
+    max-width: 900px;
+	margin: 20px auto;
+}
+
+#selectionPaneShowHide {
+    margin-top: 5px;
+	width: 224px;
+	text-align: center;
+    padding: 3px;
+	border: 2px solid #CDCDCD;
+}
+
+#selectionPane {
+    width: 100%;
+	border: 2px solid #CDCDCD;
+	display: flex;
+}
+
+
+/*CONTROL SIDEBAR*/
+
+.controlPanel {
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+	background: #e6EEEE;
+	border-right: 2px solid #CDCDCD;
+}
+
+.selectionHeader {
+	font-weight: bold;
+	font-size: 1.25em;
+	margin-bottom: 5px;
+	margin-left: -5px;
+}
+
+.controlPanelItem {
+	margin: 5px 0px;
+	padding: 0px 10px;
+}
+
+
+/*COLUMN BUCKETS*/
+
+.selectionDivider {
+	width: 100%;
+	display: flex;
+	justify-content: flex-start;
+	flex-direction: column;
+}
+
+.selectionBucket {
+	padding: 15px;
+	width: 25%;
+	min-height: 25%;
+	flex: 1 1 auto;
+}
+
+
+/*INDIVIDUAL FIELD ITEMS*/
+
+.additionalUI {
+	font-size: 0.75em;
+}
+
+.sortableItemName {
+	width: 40%;
+}
+
+input[type=text] {
+	line-height: 10px;
+	width: 80px;
+}
+
+.sortableItem {
+	min-height: 1.75em;
+	cursor: move;
+	padding: 5px 10px;
+	margin: 7px;
+	border: 1px solid rebeccapurple;
+	border-radius: 5px;
+
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+ul {
+	list-style: none;
+	padding-left: 0px;
+}
+
+.placeholder {
+	background-color: #CDCDCD;
+	border: 1px dashed #666;
+	height: 2em;
+	margin-bottom: 5px;
+}
+
+
+/*SORTABLE LISTS*/
+
+.sortableList {
+    padding: 5px 0px;
+	min-height: 1.5em;
+	background: #e6EEEE;
+	margin-bottom: 0px;
+}
+
+
+/*PIVOT TABLE*/
+#pivotTarget>table {
+	border: 2px solid #CDCDCD;
+	padding: 10px;
+	margin: 30px auto;
+}
+
+/*DEMO STUFF */
+.preambleShowHide {
+    max-width: 900px;
+	width: 90%;
+	margin: auto;
+}
+#preamble {
+    max-width: 900px;
+	width: 90%;
+	padding: 0px 30px;
+	border: 2px solid #cdcdcd;
+	margin: 0px auto;
+}
