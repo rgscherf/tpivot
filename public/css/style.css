@@ -17,12 +17,10 @@ body {
 	display: flex;
 }
 
-#pivotAppContainer > div {
-	border: 1px solid #CDCDCD;
-}
 
 #selectionPaneShowHide {
     margin-top: 5px;
+    margin-bottom: 5px;
 	width: 250px;
 	text-align: center;
     padding: 3px;
@@ -32,10 +30,11 @@ body {
 
 /*Query interface*/
 #pivotQuery {
+	border: 1px solid #CDCDCD;
 	display: flex;
-	flex-direction:column;
+	flex-direction: column;
 	width: 250px;
-	justify-content: space-between;
+	justify-content: flex-start;
 	min-height: 450px;
 }
 
@@ -43,6 +42,7 @@ body {
 	display: flex;
 	flex-direction: column;
 	padding: 5px;
+	min-height: 300px;
 }
 
 #queryTableFieldSelector>div {
@@ -80,6 +80,13 @@ body {
 	min-height: 75px;
 }
 
+#pivotContainer {
+	border: 1px solid #CDCDCD;
+}
+
+#pivotTarget {
+	padding: 5px;
+}
 
 /*INDIVIDUAL FIELD ITEMS*/
 

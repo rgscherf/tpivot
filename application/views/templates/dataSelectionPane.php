@@ -1,48 +1,53 @@
 <div id="pivotDiv">
+  <div id="selectionPaneShowHide">
+    Hide query pane
+  </div>
   <div id="pivotAppContainer">
-    <div id="pivotQuery">
-      <!--Table/Field selector-->
-      <div id="queryTableFieldSelector">
-        <div class="headerText">
-          Data source
-        </div>
-        <div class="indent" style="display:flex; align-items:center;">
-          <div>
-            <select id="tableSelector">
-              <?php foreach ($availableData as $tableName => $tableFields): ?>
-                <option value="<?php echo $tableName; ?>">
-                  <?php echo $tableName; ?>
-                </option>
-                <?php endforeach; ?>
-            </select>
+    <div>
+      <div id="pivotQuery">
+        <!--Table/Field selector-->
+        <div id="queryTableFieldSelector">
+          <div class="headerText">
+            Data source
           </div>
-          <div style="margin-left: 5px">
-            <button id="getTable">Load</button>
+          <div class="indent" style="display:flex; align-items:center;">
+            <div>
+              <select id="tableSelector">
+                <?php foreach ($availableData as $tableName => $tableFields): ?>
+                  <option value="<?php echo $tableName; ?>">
+                    <?php echo $tableName; ?>
+                  </option>
+                  <?php endforeach; ?>
+              </select>
+            </div>
+            <div style="margin-left: 5px">
+              <button id="getTable">Load</button>
+            </div>
+          </div>
+          <div class="headerText">
+            Choose fields for pivot table:
+          </div>
+          <div class="indent">
+            <ul class="sortableList" id="sortCol-noField">
+            </ul>
           </div>
         </div>
-        <div class="headerText">
-          Choose fields for pivot table:
-        </div>
-        <div class="indent">
-          <ul class="sortableList" id="sortCol-noField">
-          </ul>
-        </div>
-      </div>
-      <!--Field sorting-->
-      <div id="queryTableFieldSorter" style="padding-top: 5px;border-top:1px dashed #CDCDCD;">
-        <div class="headerText indent">Drag fields between areas below:</div>
-        <div id="fieldSorter">
-          <div class="sorterRow" style="border-bottom: 1px solid #CDCDCD">
-            <?php
+        <!--Field sorting-->
+        <div id="queryTableFieldSorter" style="padding-top: 5px;border-top:1px dashed #CDCDCD;">
+          <div class="headerText indent">Drag fields between areas below:</div>
+          <div id="fieldSorter">
+            <div class="sorterRow" style="border-bottom: 1px solid #CDCDCD">
+              <?php
 echo getColSection("Filters");
 echo getColSection("Columns", true);
 ?>
-          </div>
-          <div class="sorterRow">
-            <?php
+            </div>
+            <div class="sorterRow">
+              <?php
 echo getColSection("Rows");
 echo getColSection("Values", true);
 ?>
+            </div>
           </div>
         </div>
       </div>
@@ -52,13 +57,9 @@ echo getColSection("Values", true);
       </div>
     </div>
   </div>
-  <div id="selectionPaneShowHide">
-    Hide query pane
-  </div>
 </div>
 </div>
 
-<button id="postConfig" style="margin-left: 10px">Render my pivot!</button>
 <script>
   var tableRequestURL = "<?php echo base_url('index.php/renderpivot/sendconfig'); ?>";
   var availableTables = <?php echo json_encode($availableData); ?>;

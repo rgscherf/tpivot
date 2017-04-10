@@ -226,6 +226,7 @@ function modifyItemDOM(model, fieldNameAsID, colName) {
 				.change(function () {
 					var selectVal = this.value;
 					updateFieldReducer(model, fieldName, selectVal);
+					refreshPivot(model);
 				});
 			break;
 		case "Filters":
@@ -234,18 +235,21 @@ function modifyItemDOM(model, fieldNameAsID, colName) {
 				.change(function () {
 					var filterExistence = this.value;
 					updateFieldFilterExistence(model, fieldName, filterExistence);
+					refreshPivot(model);
 				})
 			$(filterOpSelect)
 				.appendTo(itemFlexBox)
 				.change(function () {
 					var filterOpVal = this.value;
 					updateFieldFilterOp(model, fieldName, filterOpVal);
+					refreshPivot(model);
 				});
 			$(filterValText)
 				.appendTo(itemFlexBox)
 				.change(function () {
 					var filterVal = this.value;
 					updateFieldFilterValue(model, fieldName, filterVal);
+					refreshPivot(model);
 				});
 			break;
 		default:
@@ -274,24 +278,20 @@ function addSortableFieldsToDOM(fieldsToAdd) {
 }
 
 
-function getTableData(currentDataset, model) {
-	// Send the user's pivot table config to the server.
-
+function getTableData(currentDataset, tableData, model) {
 	// TODO: We also send the entire availableTables object, which includes the paths
 	// of system resources. Should probably not do this, but I wanted to avoid storing data 
 	// on the server for this demo.
 	var payload = {
-		datasources: availableTables,
-		config: {
-			dataset: currentDataset,
-			fields: model
-		}
+		dataSets: availableTables,
+		selectedDataset: currentDataset
 	};
 	$.post({
 		url: tableRequestURL,
 		data: JSON.stringify(payload),
-		success: function (data) {
-			tpivot.renderPivot(data.data, data.config);
+		success: function (returnData) {
+			setTableData(returnData)
+			tpivot.renderPivot(returnData, model);
 		}
 	});
 }
@@ -300,6 +300,19 @@ function getTableData(currentDataset, model) {
 /////////////
 // CONTROLLER
 /////////////
+
+// tableData is all of the rows in the current data set.
+// managed as a widow var because it's set asynchronously
+// in getTableData.
+var tableData;
+function setTableData(newTB) {
+	tableData = newTB;
+}
+function refreshPivot(model) {
+	if (tableData) {
+		tpivot.renderPivot(tableData, model);
+	}
+}
 
 $(function () {
 	var cols = ['#sortCol-noField', '#sortCol-Filters', '#sortCol-Rows', '#sortCol-Columns', '#sortCol-Values'];
@@ -331,20 +344,17 @@ $(function () {
 				// element being moved.
 				var columnID = event.target.id;
 				reorderFields(model, columnID);
-				console.log("Updated model to: " + JSON.stringify(model));
+				//console.log("Updated model to: " + JSON.stringify(model));
+				refreshPivot(model);
 			}
 		});
-	});
-
-	$('#postConfig').click(function () {
-		getTableData(currentDataset, model);
 	});
 
 	$('#getTable').click(function () {
 		// Select a new table to configure. Resets the view and model.
 		currentDataset = $('#tableSelector').val();
 		model = resetState(colNames, availableTables[currentDataset]);
-		getTableData(currentDataset, model);
+		getTableData(currentDataset, tableData, model);
 	});
 
 	// showing-hiding the selection pane
