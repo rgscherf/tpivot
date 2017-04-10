@@ -273,22 +273,6 @@ function addSortableFieldsToDOM(fieldsToAdd) {
 	})
 }
 
-function makeDataAggregators(reducers) {
-	// given a list of reducers from the pivot table config, 
-	// turn string reducer tag into a reducer fn from
-	// from libary's aggregator template.
-	var templates = $.pivotUtilities.aggregatorTemplates;
-	var returnAggregators = {};
-	reducers.forEach(function (elem) {
-		var aggName = elem.reducer + 'Of' + elem.name;
-		if (elem.reducer === 'count') {
-			returnAggregators[aggName] = function () { return templates[elem.reducer]()(); }
-		} else {
-			returnAggregators[aggName] = function () { return templates[elem.reducer]()([elem.name]); }
-		}
-	});
-	return returnAggregators;
-}
 
 function getTableData(currentDataset, model) {
 	// Send the user's pivot table config to the server.
@@ -307,11 +291,7 @@ function getTableData(currentDataset, model) {
 		url: tableRequestURL,
 		data: JSON.stringify(payload),
 		success: function (data) {
-			if (data.reducers.length > 0) {
-				// passing an empty aggregators object causes a runtime error.
-				data.config.aggregators = makeDataAggregators(data.reducers);
-			}
-			$('#pivotTarget').pivotUI(data.data, data.config, true);
+			tpivot.renderPivot(data.data, data.config);
 		}
 	});
 }
