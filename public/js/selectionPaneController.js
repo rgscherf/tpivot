@@ -290,6 +290,32 @@ function makeDataAggregators(reducers) {
 	return returnAggregators;
 }
 
+function getTableData(currentDataset, model) {
+	// Send the user's pivot table config to the server.
+
+	// TODO: We also send the entire availableTables object, which includes the paths
+	// of system resources. Should probably not do this, but I wanted to avoid storing data 
+	// on the server for this demo.
+	var payload = {
+		datasources: availableTables,
+		config: {
+			dataset: currentDataset,
+			fields: model
+		}
+	};
+	$.post({
+		url: tableRequestURL,
+		data: JSON.stringify(payload),
+		success: function (data) {
+			if (data.reducers.length > 0) {
+				// passing an empty aggregators object causes a runtime error.
+				data.config.aggregators = makeDataAggregators(data.reducers);
+			}
+			$('#pivotTarget').pivotUI(data.data, data.config, true);
+		}
+	});
+}
+
 
 /////////////
 // CONTROLLER
@@ -331,35 +357,14 @@ $(function () {
 	});
 
 	$('#postConfig').click(function () {
-		// Send the user's pivot table config to the server.
-
-		// TODO: We also send the entire availableTables object, which includes the paths
-		// of system resources. Should probably not do this, but I wanted to avoid storing data 
-		// on the server for this demo.
-		var payload = {
-			datasources: availableTables,
-			config: {
-				dataset: currentDataset,
-				fields: model
-			}
-		};
-		$.post({
-			url: tableRequestURL,
-			data: JSON.stringify(payload),
-			success: function (data) {
-				if (data.reducers.length > 0) {
-					// passing an empty aggregators object causes a runtime error.
-					data.config.aggregators = makeDataAggregators(data.reducers);
-				}
-				$('#pivotTarget').pivotUI(data.data, data.config, true);
-			}
-		});
+		getTableData(currentDataset, model);
 	});
 
 	$('#getTable').click(function () {
 		// Select a new table to configure. Resets the view and model.
 		currentDataset = $('#tableSelector').val();
 		model = resetState(colNames, availableTables[currentDataset]);
+		getTableData(currentDataset, model);
 	});
 
 	// showing-hiding the selection pane
