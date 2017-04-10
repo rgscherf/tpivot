@@ -1,8 +1,77 @@
-<?php function getColSection($colName) {
+<div id="pivotDiv">
+  <div id="pivotAppContainer">
+    <div id="pivotQuery">
+      <!--Table/Field selector-->
+      <div id="queryTableFieldSelector">
+        <div class="headerText">
+          Data source
+        </div>
+        <div class="indent" style="display:flex; align-items:center;">
+          <div>
+            <select id="tableSelector">
+              <?php foreach ($availableData as $tableName => $tableFields): ?>
+                <option value="<?php echo $tableName; ?>">
+                  <?php echo $tableName; ?>
+                </option>
+                <?php endforeach; ?>
+            </select>
+          </div>
+          <div style="margin-left: 5px">
+            <button id="getTable">Load</button>
+          </div>
+        </div>
+        <div class="headerText">
+          Choose fields for pivot table:
+        </div>
+        <div class="indent">
+          <ul class="sortableList" id="sortCol-noField">
+          </ul>
+        </div>
+      </div>
+      <!--Field sorting-->
+      <div id="queryTableFieldSorter" style="padding-top: 5px;border-top:1px dashed #CDCDCD;">
+        <div class="headerText indent">Drag fields between areas below:</div>
+        <div id="fieldSorter">
+          <div class="sorterRow" style="border-bottom: 1px solid #CDCDCD">
+            <?php
+echo getColSection("Filters");
+echo getColSection("Columns", true);
+?>
+          </div>
+          <div class="sorterRow">
+            <?php
+echo getColSection("Rows");
+echo getColSection("Values", true);
+?>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="pivotContainer">
+      <div id="pivotTarget">
+      </div>
+    </div>
+  </div>
+  <div id="selectionPaneShowHide">
+    Hide query pane
+  </div>
+</div>
+</div>
+
+<button id="postConfig" style="margin-left: 10px">Render my pivot!</button>
+<script>
+  var tableRequestURL = "<?php echo base_url('index.php/renderpivot/sendconfig'); ?>";
+  var availableTables = <?php echo json_encode($availableData); ?>;
+</script>
+
+<?php function getColSection($colName, $addLeftBorder=false) {
+    $fontAwesomeDict = ["Filters" => "fa-filter", "Columns" => "fa-arrows-v", "Rows" => "fa-arrows-h", "Values" => "fa-cogs"];
+    $thisIconText = $fontAwesomeDict[$colName];
     ob_start(); ?>
-  <div class="selectionBucket">
-    <div class="selectionHeader" style="margin: 5px 0px;font-size:1.5em;">
-      <?php echo strtoupper($colName); ?>
+  <div class="selectionBucket" style="<?php if ($addLeftBorder) {echo 'border-left:1px solid #CDCDCD;';} ?>">
+    <div class="headerText">
+      <i class="fa <?php echo $thisIconText;?>" aria-hidden="true"></i>
+      <span><?php echo strtoupper($colName); ?></span>
     </div>
     <ul class="sortableList" id="<?php echo 'sortCol-'.$colName; ?>">
     </ul>
@@ -10,65 +79,3 @@
   <?php return ob_get_clean();
 }
 ?>
-
-    <div id="selectionContainer" style="display:flex;flex-direction:column;">
-      <div id="selectionPane">
-        <div class="controlPanel">
-          <div class="controlPanelItem">
-            <div class="selectionHeader">
-              1. Choose table
-            </div>
-            <div style="display:flex; align-items:center;">
-              <div>
-                <select id="tableSelector">
-                  <?php foreach ($availableData as $tableName => $tableFields): ?>
-                    <option value="<?php echo $tableName; ?>">
-                      <?php echo $tableName; ?>
-                    </option>
-                    <?php endforeach; ?>
-                </select>
-              </div>
-              <div style="margin-left: 5px">
-                <button id="getTable">Get</button>
-              </div>
-            </div>
-          </div>
-          <div class="controlPanelItem">
-            <div class="selectionHeader">
-              2. Organize fields
-            </div>
-            <div>
-              <ul class="sortableList" id="sortCol-noField">
-              </ul>
-            </div>
-          </div>
-          <div class="controlPanelItem">
-            <div class="selectionHeader">
-              3. Load pivot
-            </div>
-            <div>
-              <button id="postConfig" style="margin-left: 10px">Render my pivot!</button>
-            </div>
-          </div>
-        </div>
-        <div class="selectionDivider">
-          <div style="display:flex;width:100%;">
-            <?php
-echo getColSection("Filters");
-echo getColSection("Columns");
-?>
-          </div>
-          <div style="display:flex;width:100%;">
-            <?php
-echo getColSection("Rows");
-echo getColSection("Values");
-?>
-          </div>
-        </div>
-      </div>
-      <div id="selectionPaneShowHide">Hide query pane</div>
-    </div>
-    <script>
-      var tableRequestURL = "<?php echo base_url('index.php/renderpivot/sendconfig'); ?>";
-      var availableTables = <?php echo json_encode($availableData); ?>;
-    </script>

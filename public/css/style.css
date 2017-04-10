@@ -1,62 +1,83 @@
 /*TOP LEVEL*/
 
-#selectionContainer {
-    max-width: 900px;
-	margin: 20px auto;
+/*contains pivot app*/
+body {
+	font-family: "Segoe UI", "Helvetica", sans-serif;
+}
+
+/*Contains entire pivot app*/
+#pivotDiv {
+    margin: 10px;
+	display: flex;
+	flex-direction: column;
+}
+
+/*Contains query UI and pivot table (but not query hide button)*/
+#pivotAppContainer {
+	display: flex;
+}
+
+#pivotAppContainer > div {
+	border: 1px solid #CDCDCD;
 }
 
 #selectionPaneShowHide {
     margin-top: 5px;
-	width: 224px;
+	width: 250px;
 	text-align: center;
     padding: 3px;
-	border: 2px solid #CDCDCD;
+	border: 1px solid #CDCDCD;
 }
 
-#selectionPane {
-    width: 100%;
-	border: 2px solid #CDCDCD;
+
+/*Query interface*/
+#pivotQuery {
 	display: flex;
+	flex-direction:column;
+	width: 250px;
+	justify-content: space-between;
+	min-height: 450px;
 }
 
-
-/*CONTROL SIDEBAR*/
-
-.controlPanel {
-	padding: 10px;
+#queryTableFieldSelector {
 	display: flex;
 	flex-direction: column;
-	background: #e6EEEE;
-	border-right: 2px solid #CDCDCD;
+	padding: 5px;
 }
 
-.selectionHeader {
-	font-weight: bold;
-	font-size: 1.25em;
-	margin-bottom: 5px;
-	margin-left: -5px;
+#queryTableFieldSelector>div {
+	margin-bottom: 7px;
 }
 
-.controlPanelItem {
-	margin: 5px 0px;
-	padding: 0px 10px;
+.headerText {
+	font-variant: small-caps;
 }
 
+.indent {
+	margin-left: 10px;
+}
 
-/*COLUMN BUCKETS*/
-
-.selectionDivider {
-	width: 100%;
+#queryTableFieldSorter {
 	display: flex;
-	justify-content: flex-start;
 	flex-direction: column;
+	width: 250px;
+}
+
+
+#fieldSorter {
+	display:flex;
+	flex-direction: column;
+}
+
+.sorterRow {
+	display: flex;
 }
 
 .selectionBucket {
-	padding: 15px;
+	padding: 10px;
 	width: 25%;
-	min-height: 25%;
 	flex: 1 1 auto;
+	min-height: 75px;
 }
 
 
@@ -76,15 +97,10 @@ input[type=text] {
 }
 
 .sortableItem {
-	min-height: 1.75em;
 	cursor: move;
-	padding: 5px 10px;
-	margin: 7px;
-	border: 1px solid rebeccapurple;
-	border-radius: 5px;
-
 	display: flex;
 	align-items: center;
+    padding-left: 5px;
 	justify-content: space-between;
 }
 
@@ -95,8 +111,7 @@ ul {
 
 .placeholder {
 	background-color: #CDCDCD;
-	border: 1px dashed #666;
-	height: 2em;
+	height: 1.5em;
 	margin-bottom: 5px;
 }
 
@@ -106,16 +121,7 @@ ul {
 .sortableList {
     padding: 5px 0px;
 	min-height: 1.5em;
-	background: #e6EEEE;
 	margin-bottom: 0px;
-}
-
-
-/*PIVOT TABLE*/
-#pivotTarget>table {
-	border: 2px solid #CDCDCD;
-	padding: 10px;
-	margin: 30px auto;
 }
 
 /*DEMO STUFF */

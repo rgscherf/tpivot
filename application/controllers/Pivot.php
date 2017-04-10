@@ -10,7 +10,7 @@ class Pivot extends CI_Controller {
         $data['availableData'] = $this->Datastore->get_sources();
         
         $this->load->view('templates/header', $data);
-        $this->load->view('templates/preamble', $data);
+        //$this->load->view('templates/preamble', $data);
         $this->load->view('templates/dataSelectionPane', $data);
         $this->load->view('templates/pivotTemplate', $data);
         $this->load->view('templates/footer', $data);

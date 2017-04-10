@@ -366,10 +366,10 @@ $(function () {
 	var selectionPaneHidden = false;
 	$('#selectionPaneShowHide').click(function () {
 		if (selectionPaneHidden) {
-			$('#selectionPane').slideDown();
+			$('#pivotQuery').show();
 			$(this).text("Hide query pane");
 		} else {
-			$('#selectionPane').slideUp();
+			$('#pivotQuery').hide();
 			$(this).text("Show query pane");
 		}
 		selectionPaneHidden = !selectionPaneHidden;
