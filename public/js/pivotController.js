@@ -19,12 +19,12 @@ var tpivot = (function () {
     ///////////////////////
 
     var filterPredicates = {
-        lt: function (a, b) { return a < b; },
-        eq: function (a, b) { return a == b; },
-        gt: function (a, b) { return a > b; },
-        has: function (a, b) {
-            if (a && typeof a === 'string') {
-                return a.includes(b);
+        "less than": function (a, b) { return a < b; },
+        "equal to": function (a, b) { return a == b; },
+        "greater than": function (a, b) { return a > b; },
+        "including": function (a, b) {
+            if (a && typeof a === 'string' && b && typeof b === 'string') {
+                return a.toLowerCase().includes(b.toLowerCase());
             } else {
                 return false;
             }

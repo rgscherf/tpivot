@@ -85,7 +85,7 @@ body {
 }
 
 #pivotTarget {
-	padding: 5px;
+	/*padding: 5px;*/
 }
 
 /*INDIVIDUAL FIELD ITEMS*/
@@ -95,7 +95,6 @@ body {
 }
 
 .sortableItemName {
-	width: 40%;
 }
 
 input[type=text] {
@@ -109,6 +108,7 @@ input[type=text] {
 	align-items: center;
     padding-left: 5px;
 	justify-content: space-between;
+	flex-wrap: wrap;
 }
 
 ul {
@@ -143,4 +143,53 @@ ul {
 	padding: 0px 30px;
 	border: 2px solid #cdcdcd;
 	margin: 0px auto;
+}
+
+.context {
+	z-index:1000;
+	position:absolute;
+	border:1px solid #CDCDCD;
+	background-color: white;
+	padding:5px;
+	box-shadow: 3px 3px 2px #CDCDCD;
+}
+
+/*Aggregator context menu*/
+.contextItem {
+	border-radius: 2px;
+	padding: 2px;
+}
+
+.selectedContextItem {
+	background-color: #CDCDCD;
+}
+
+.metadataAnnotation {
+	font-size: 0.75em;
+	font-style:italic;
+}
+
+/*filter context menu*/
+.filterContext {
+	padding:0px;
+  display:inline-flex;
+  flex-direction: column;
+}
+
+.filterContextEntry {
+  align-items: center;
+  display:flex;
+  padding: 5px;
+}
+
+.filterContextEntry > span {
+  margin: 0px 3px;
+}
+
+input[type=text] {
+  width: 70px;
+}
+
+button {
+  margin: 3px;
 }

@@ -92,7 +92,7 @@ function constructFieldObj(fieldName, colName) {
 	switch (colName) {
 		case "Filters":
 			baseObj.filterExistence = true
-			baseObj.filterOp = "lt"
+			baseObj.filterOp = "less than"
 			baseObj.filterVal = ""
 			break;
 		case "Values":
@@ -151,7 +151,7 @@ function reorderFields(model, colNameAsID) {
 };
 
 
-// UPDATING FILTER AND VALUE OBJECTS
+// SET FILTER AND VALUE OBJECTS
 
 function findObjInColumn(model, fieldName, colToSearch) {
 	return model[colToSearch].filter(function (elem) {
@@ -159,24 +159,26 @@ function findObjInColumn(model, fieldName, colToSearch) {
 	})[0];
 }
 
-function updateFieldReducer(model, fieldName, selectedReducer) {
+function setReducer(model, fieldName, selectedReducer) {
 	var fieldReducerObj = findObjInColumn(model, fieldName, "Values");
 	fieldReducerObj.reducer = selectedReducer;
 }
 
-function updateFieldFilterOp(model, fieldName, filterOpVal) {
-	var fieldFilterObj = findObjInColumn(model, fieldName, "Filters");
-	fieldFilterObj.filterOp = filterOpVal;
+function setFilter(model, newFilter) {
+	var oldFilter = findObjInColumn(model, newFilter.name, "Filters");
+	oldFilter.filterExistence = newFilter.filterExistence === 'is';
+	oldFilter.filterOp = newFilter.filterOp;
+	oldFilter.filterVal = newFilter.filterVal;
 }
 
-function updateFieldFilterValue(model, fieldName, filterVal) {
-	var fieldFilterObj = findObjInColumn(model, fieldName, "Filters");
-	fieldFilterObj.filterVal = filterVal;
+// GET FILTER AND VALUE OBJECTS
+
+function getAggregatorObj(model, fieldName) {
+	return findObjInColumn(model, fieldName, "Values");
 }
 
-function updateFieldFilterExistence(model, fieldName, filterExistence) {
-	var fieldFilterObj = findObjInColumn(model, fieldName, "Filters");
-	fieldFilterObj.filterExistence = filterExistence === 'is';
+function getFilterObj(model, fieldName) {
+	return findObjInColumn(model, fieldName, "Filters");
 }
 
 
@@ -208,6 +210,11 @@ var filterExistenceSelect = ['<select class="additionalUI filterExist">',
 
 var filterValText = '<input class="additionalUI filterVal" type="text" placeholder=" " maxlength="16">';
 
+function makeFilterText(model, fieldName) {
+	var filterObj = getFilterObj(model, fieldName);
+	var is = filterObj.filterExistence ? "is" : "is not";
+	return "(" + is + " " + filterObj.filterOp + " " + filterObj.filterVal + ")";
+}
 function modifyItemDOM(model, fieldNameAsID, colName) {
 	// moving a field to/from the Filters or Values column will mutate its DOM
 	// to add additional options for that field.
@@ -221,37 +228,16 @@ function modifyItemDOM(model, fieldNameAsID, colName) {
 	itemFlexBox.find('.additionalUI').remove();
 	switch (colName) {
 		case "Values":
-			$(reducerSelect)
+			var textOfAggregator = getAggregatorObj(model, fieldName).reducer;
+			$('<div class="additionalUI metadataAnnotation">(' + textOfAggregator + ')</div>')
 				.appendTo(itemFlexBox)
-				.change(function () {
-					var selectVal = this.value;
-					updateFieldReducer(model, fieldName, selectVal);
-					refreshPivot(model);
-				});
 			break;
 		case "Filters":
-			$(filterExistenceSelect)
+			var textOfFilter = makeFilterText(model, fieldName);
+			$('<div class="additionalUI metadataAnnotation">' + textOfFilter + '</div>')
 				.appendTo(itemFlexBox)
-				.change(function () {
-					var filterExistence = this.value;
-					updateFieldFilterExistence(model, fieldName, filterExistence);
-					refreshPivot(model);
-				})
-			$(filterOpSelect)
-				.appendTo(itemFlexBox)
-				.change(function () {
-					var filterOpVal = this.value;
-					updateFieldFilterOp(model, fieldName, filterOpVal);
-					refreshPivot(model);
-				});
-			$(filterValText)
-				.appendTo(itemFlexBox)
-				.change(function () {
-					var filterVal = this.value;
-					updateFieldFilterValue(model, fieldName, filterVal);
-					refreshPivot(model);
-				});
 			break;
+
 		default:
 			break;
 	}
@@ -344,7 +330,7 @@ $(function () {
 				// element being moved.
 				var columnID = event.target.id;
 				reorderFields(model, columnID);
-				//console.log("Updated model to: " + JSON.stringify(model));
+				console.log("Updated model to: " + JSON.stringify(model));
 				refreshPivot(model);
 			}
 		});
@@ -390,6 +376,39 @@ $(function () {
 			$('.preambleShowHide').last().hide();
 		}
 		preambleHidden = !preambleHidden;
-	})
-})
+	});
 
+
+	// event binding for context menu
+	$(document).on('contextmenu', function (event) {
+		// We pass model to make initial transformations
+		// such as highlighting default values.
+		contextMenus.popMenu(model, event);
+	});
+
+	$(document).on('mousedown', function (event) {
+		contextMenus.hideMenu(event);
+	});
+
+	$(document).on('click', '.context', function (event) {
+		var clickInformation = contextMenus.getClickInformation(event, model);
+		if (!clickInformation || !clickInformation.contextType) { return; }
+		switch (clickInformation.contextType) {
+			case "aggregator":
+				setReducer(model, clickInformation.fieldName, clickInformation.selectedReducer);
+				modifyItemDOM(model, 'sortField-' + clickInformation.fieldName, "Values");
+				break;
+			case "filter":
+				if (clickInformation.filterWasApplied) {
+					var newFilter = clickInformation.filter;
+					setFilter(model, newFilter);
+					modifyItemDOM(model, 'sortField-' + newFilter.name, "Filters");
+				}
+				break;
+			default:
+				break;
+		}
+		refreshPivot(model);
+	});
+
+});
