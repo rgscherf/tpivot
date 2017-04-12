@@ -305,7 +305,7 @@ $(function () {
 	var colNames = getColNames(cols);
 
 	var currentDataset = $('#tableSelector').val();
-	var model = resetState(colNames, availableTables[currentDataset]);
+	var model; //resetState(colNames, availableTables[currentDataset]);
 
 	// set up sortable lists
 	cols.map(function (elem) {
@@ -343,7 +343,11 @@ $(function () {
 		getTableData(currentDataset, tableData, model);
 	});
 
-	// showing-hiding the selection pane
+
+	///////////////////////////
+	// SHOW AND HIDE QUERY PANE
+	///////////////////////////
+
 	var selectionPaneHidden = false;
 	$('#selectionPaneShowHide').click(function () {
 		if (selectionPaneHidden) {
@@ -379,7 +383,10 @@ $(function () {
 	});
 
 
-	// event binding for context menu
+	//////////////////////////////////
+	// EVENT BINDING FOR CONTEXT MENUS
+	//////////////////////////////////
+
 	$(document).on('contextmenu', function (event) {
 		// We pass model to make initial transformations
 		// such as highlighting default values.
