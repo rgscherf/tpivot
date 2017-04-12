@@ -84,8 +84,8 @@ body {
 	border: 1px solid #CDCDCD;
 }
 
-#pivotTarget {
-	/*padding: 5px;*/
+.smallPadding {
+	padding: 5px;
 }
 
 /*INDIVIDUAL FIELD ITEMS*/
@@ -171,7 +171,7 @@ ul {
 
 /*filter context menu*/
 .filterContext {
-	padding:0px;
+  padding:0px;
   display:inline-flex;
   flex-direction: column;
 }

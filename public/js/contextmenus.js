@@ -66,7 +66,7 @@ var contextMenus = (function () {
         makeContextHtml(aggregatorSelection, event, clickedSortItem);
         // highlight the current aggregator function
         var fieldName = nameFromID($(clickedSortItem).attr('id'));
-        var currentlySelectedAggregator = getFieldReducer(model, fieldName).reducer;
+        var currentlySelectedAggregator = getAggregatorObj(model, fieldName).reducer;
         $('.contextItem')
             .filter("[data-aggregator='" + currentlySelectedAggregator + "']")
             .addClass('selectedContextItem');
