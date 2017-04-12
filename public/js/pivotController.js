@@ -60,7 +60,7 @@ var tpivot = (function () {
                 return f(elem);
             });
             // returns true if none of the filter fns return false.
-            return !appliedFilters.includes(false);
+            return appliedFilters.filter(function (e) { return e === false }).length === 0; //!appliedFilters.includes(false);
         })
     }
 

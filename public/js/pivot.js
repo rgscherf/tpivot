@@ -652,7 +652,7 @@
                 this.colKeys = [];
                 this.rowTotals = {};
                 this.colTotals = {};
-                this.allTotal = this.aggregators[0](this, [], []);
+                this.allTotal = this.aggregators.map(function (f) { return f(this, [], []); });
                 this.sorted = false;
                 PivotData.forEachRecord(this.input, this.derivedAttributes, (function (_this) {
                     return function (record) {
@@ -838,20 +838,31 @@
                 }
                 flatRowKey = rowKey.join(String.fromCharCode(0));
                 flatColKey = colKey.join(String.fromCharCode(0));
-                this.allTotal.push(record);
+                // this.allTotal.push(record);
+                this.allTotal.forEach(function (f) {
+                    f.push(record);
+                });
                 if (rowKey.length !== 0) {
                     if (!this.rowTotals[flatRowKey]) {
                         this.rowKeys.push(rowKey);
-                        this.rowTotals[flatRowKey] = this.aggregators[0](this, rowKey, []);
+                        this.rowTotals[flatRowKey] = this.aggregators.map(function (f) {
+                            return f(this, rowKey, []);
+                        });
                     }
-                    this.rowTotals[flatRowKey].push(record);
+                    this.rowTotals[flatRowKey].forEach(function (f) {
+                        f.push(record);
+                    });
                 }
                 if (colKey.length !== 0) {
                     if (!this.colTotals[flatColKey]) {
                         this.colKeys.push(colKey);
-                        this.colTotals[flatColKey] = this.aggregators[0](this, [], colKey);
+                        this.colTotals[flatColKey] = this.aggregators.map(function (f) {
+                            return f(this, [], colKey);
+                        });
                     }
-                    this.colTotals[flatColKey].push(record);
+                    this.colTotals[flatColKey].forEach(function (f) {
+                        f.push(record);
+                    });
                 }
                 if (colKey.length !== 0 && rowKey.length !== 0) {
                     if (!this.tree[flatRowKey]) {
@@ -875,19 +886,25 @@
                 var agg, flatColKey, flatRowKey;
                 flatRowKey = rowKey.join(String.fromCharCode(0));
                 flatColKey = colKey.join(String.fromCharCode(0));
-                if (rowKey.length === 0 && colKey.length === 0) {
-                    agg = this.allTotal;
-                } else if (rowKey.length === 0) {
-                    agg = this.colTotals[flatColKey];
-                } else if (colKey.length === 0) {
-                    agg = this.rowTotals[flatRowKey];
-                } else {
-                    try {
+                try {
+                    if (rowKey.length === 0 && colKey.length === 0) {
+                        agg = this.allTotal[aggregatorIndex];
+                    } else if (rowKey.length === 0) {
+                        agg = this.colTotals[flatColKey][aggregatorIndex];
+                    } else if (colKey.length === 0) {
+                        agg = this.rowTotals[flatRowKey][aggregatorIndex];
+                    } else {
                         agg = this.tree[flatRowKey][flatColKey][aggregatorIndex];
-                    } catch (e) {
-                        agg = { value: function () { return ""; } };
                     }
                 }
+                catch (e) {
+                    // an exception is raised here when we can't find a key in the value tree.
+                    // usually it's because that intersection is empty.
+                    // agg is only called for its .value(), so we can gracefully pass a fn
+                    // returning the empty string.
+                    agg = { value: function () { return ""; } };
+                }
+
                 return agg != null ? agg : {
                     value: (function () {
                         return null;
@@ -985,6 +1002,7 @@
                 return len;
             };
             thead = document.createElement("thead");
+            var numberOfAggregators = pivotData.aggregators.length;
             for (j in colAttrs) {
                 if (!hasProp.call(colAttrs, j)) continue;
                 c = colAttrs[j];
@@ -1063,14 +1081,15 @@
                     }
                 }
 
-                // instead of appending one td,
+                ///////////////////////////////////////
+                // DISPLAYING MULTIPLE AGGREGATE VALUES
+                ///////////////////////////////////////
+                // instead of appending one td for td value
                 // we iterate thru the passed aggregators and append
                 // one td per agg to $tr
                 for (j in colKeys) {
                     if (!hasProp.call(colKeys, j)) continue;
                     colKey = colKeys[j];
-                    var numberOfAggregators = pivotData.aggregators.length;
-
                     for (var z = 0; z < numberOfAggregators; z++) {
                         var aggregator = pivotData.getAggregator(rowKey, colKey, z);
                         td = document.createElement("td");
@@ -1084,17 +1103,24 @@
                         tr.appendChild(td);
                     }
                 }
-                totalAggregator = pivotData.getAggregator(rowKey, []);
-                val = totalAggregator.value();
-                td = document.createElement("td");
-                td.className = "pvtTotal rowTotal";
-                td.textContent = totalAggregator.format(val);
-                td.setAttribute("data-value", val);
-                if (getClickHandler != null) {
-                    td.onclick = getClickHandler(val, rowKey, []);
+
+                /////////////////////////////////
+                // DISPLAYING MULTIPLE ROW TOTALS
+                /////////////////////////////////
+                // see implementation note on multiple aggregate values section
+                for (var z = 0; z < numberOfAggregators; z++) {
+                    totalAggregator = pivotData.getAggregator(rowKey, [], z);
+                    val = totalAggregator.value();
+                    td = document.createElement("td");
+                    td.className = "pvtTotal rowTotal";
+                    td.textContent = totalAggregator.format(val);
+                    td.setAttribute("data-value", val);
+                    if (getClickHandler != null) {
+                        td.onclick = getClickHandler(val, rowKey, []);
+                    }
+                    td.setAttribute("data-for", "row" + i);
+                    tr.appendChild(td);
                 }
-                td.setAttribute("data-for", "row" + i);
-                tr.appendChild(td);
                 tbody.appendChild(tr);
             }
             tr = document.createElement("tr");
@@ -1106,28 +1132,40 @@
             for (j in colKeys) {
                 if (!hasProp.call(colKeys, j)) continue;
                 colKey = colKeys[j];
-                totalAggregator = pivotData.getAggregator([], colKey);
+                /////////////////////////////////
+                // DISPLAYING MULTIPLE COL TOTALS
+                /////////////////////////////////
+                // see implementation note on multiple aggregate values section
+                for (var z = 0; z < numberOfAggregators; z++) {
+                    totalAggregator = pivotData.getAggregator([], colKey, z);
+                    val = totalAggregator.value();
+                    td = document.createElement("td");
+                    td.className = "pvtTotal colTotal";
+                    td.textContent = totalAggregator.format(val);
+                    td.setAttribute("data-value", val);
+                    if (getClickHandler != null) {
+                        td.onclick = getClickHandler(val, [], colKey);
+                    }
+                    td.setAttribute("data-for", "col" + j);
+                    tr.appendChild(td);
+                }
+            }
+            /////////////////////////////////
+            // DISPLAYING MULTIPLE GRAND TOTALS
+            /////////////////////////////////
+            // see implementation note on multiple aggregate values section
+            for (var z = 0; z < numberOfAggregators; z++) {
+                totalAggregator = pivotData.getAggregator([], [], z);
                 val = totalAggregator.value();
                 td = document.createElement("td");
-                td.className = "pvtTotal colTotal";
+                td.className = "pvtGrandTotal";
                 td.textContent = totalAggregator.format(val);
                 td.setAttribute("data-value", val);
                 if (getClickHandler != null) {
-                    td.onclick = getClickHandler(val, [], colKey);
+                    td.onclick = getClickHandler(val, [], []);
                 }
-                td.setAttribute("data-for", "col" + j);
                 tr.appendChild(td);
             }
-            totalAggregator = pivotData.getAggregator([], []);
-            val = totalAggregator.value();
-            td = document.createElement("td");
-            td.className = "pvtGrandTotal";
-            td.textContent = totalAggregator.format(val);
-            td.setAttribute("data-value", val);
-            if (getClickHandler != null) {
-                td.onclick = getClickHandler(val, [], []);
-            }
-            tr.appendChild(td);
             tbody.appendChild(tr);
             result.appendChild(tbody);
             result.setAttribute("data-numrows", rowKeys.length);
