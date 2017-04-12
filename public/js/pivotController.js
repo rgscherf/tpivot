@@ -93,6 +93,7 @@ var tpivot = (function () {
         return returnAggregators;
     };
 
+
     var getName = function (obj) { return obj.name };
 
     var shapePivotConfig = function (model, renderUITable) {
@@ -110,9 +111,13 @@ var tpivot = (function () {
             if (renderUI) {
                 configObj.aggregators = makeDataAggregators(model.Values);
             } else {
-                var aggregator = makeSingleAggregator(model.Values[0]);
-                configObj.aggregatorName = aggregator[0];
-                configObj.aggregator = aggregator[1](model.Values[0].name);
+                configObj.aggregators = model.Values.map(function (elem) {
+                    var agg = makeSingleAggregator(elem);
+                    return agg[1](agg[0]);
+                })
+                // var aggregator = makeSingleAggregator(model.Values[0]);
+                // configObj.aggregatorName = aggregator[0];
+                // configObj.aggregator = aggregator[1](model.Values[0].name);
             }
         }
 

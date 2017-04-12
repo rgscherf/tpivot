@@ -635,7 +635,7 @@
                 this.sortKeys = bind(this.sortKeys, this);
                 this.arrSort = bind(this.arrSort, this);
                 this.input = input;
-                this.aggregator = (ref = opts.aggregator) != null ? ref : aggregatorTemplates.count()();
+                this.aggregators = (ref = opts.aggregators) != null ? ref : [aggregatorTemplates.count()()];
                 this.aggregatorName = (ref1 = opts.aggregatorName) != null ? ref1 : "Count";
                 this.colAttrs = (ref2 = opts.cols) != null ? ref2 : [];
                 this.rowAttrs = (ref3 = opts.rows) != null ? ref3 : [];
@@ -652,7 +652,7 @@
                 this.colKeys = [];
                 this.rowTotals = {};
                 this.colTotals = {};
-                this.allTotal = this.aggregator(this, [], []);
+                this.allTotal = this.aggregators[0](this, [], []);
                 this.sorted = false;
                 PivotData.forEachRecord(this.input, this.derivedAttributes, (function (_this) {
                     return function (record) {
@@ -842,14 +842,14 @@
                 if (rowKey.length !== 0) {
                     if (!this.rowTotals[flatRowKey]) {
                         this.rowKeys.push(rowKey);
-                        this.rowTotals[flatRowKey] = this.aggregator(this, rowKey, []);
+                        this.rowTotals[flatRowKey] = this.aggregators[0](this, rowKey, []);
                     }
                     this.rowTotals[flatRowKey].push(record);
                 }
                 if (colKey.length !== 0) {
                     if (!this.colTotals[flatColKey]) {
                         this.colKeys.push(colKey);
-                        this.colTotals[flatColKey] = this.aggregator(this, [], colKey);
+                        this.colTotals[flatColKey] = this.aggregators[0](this, [], colKey);
                     }
                     this.colTotals[flatColKey].push(record);
                 }
@@ -858,13 +858,20 @@
                         this.tree[flatRowKey] = {};
                     }
                     if (!this.tree[flatRowKey][flatColKey]) {
-                        this.tree[flatRowKey][flatColKey] = this.aggregator(this, rowKey, colKey);
+                        this.tree[flatRowKey][flatColKey] = this.aggregators.map(function (f) {
+                            return f(this, rowKey, colKey);
+                        });
                     }
-                    return this.tree[flatRowKey][flatColKey].push(record);
+
+                    // return this.tree[flatRowKey][flatColKey].push(record);
+                    this.tree[flatRowKey][flatColKey].forEach(function (fun) {
+                        fun.push(record);
+                    });
+                    return true;
                 }
             };
 
-            PivotData.prototype.getAggregator = function (rowKey, colKey) {
+            PivotData.prototype.getAggregator = function (rowKey, colKey, aggregatorIndex) {
                 var agg, flatColKey, flatRowKey;
                 flatRowKey = rowKey.join(String.fromCharCode(0));
                 flatColKey = colKey.join(String.fromCharCode(0));
@@ -875,7 +882,11 @@
                 } else if (colKey.length === 0) {
                     agg = this.rowTotals[flatRowKey];
                 } else {
-                    agg = this.tree[flatRowKey][flatColKey];
+                    try {
+                        agg = this.tree[flatRowKey][flatColKey][aggregatorIndex];
+                    } catch (e) {
+                        agg = { value: function () { return ""; } };
+                    }
                 }
                 return agg != null ? agg : {
                     value: (function () {
@@ -1052,24 +1063,26 @@
                     }
                 }
 
-                // TODO can insert additional elements here
                 // instead of appending one td,
                 // we iterate thru the passed aggregators and append
                 // one td per agg to $tr
                 for (j in colKeys) {
                     if (!hasProp.call(colKeys, j)) continue;
                     colKey = colKeys[j];
-                    aggregator = pivotData.getAggregator(rowKey, colKey);
-                    console.log(rowKey, colKey);
-                    val = aggregator.value();
-                    td = document.createElement("td");
-                    td.className = "pvtVal row" + i + " col" + j;
-                    td.textContent = val;
-                    td.setAttribute("data-value", val);
-                    if (getClickHandler != null) {
-                        td.onclick = getClickHandler(val, rowKey, colKey);
+                    var numberOfAggregators = pivotData.aggregators.length;
+
+                    for (var z = 0; z < numberOfAggregators; z++) {
+                        var aggregator = pivotData.getAggregator(rowKey, colKey, z);
+                        td = document.createElement("td");
+                        td.className = "pvtVal row" + i + " col" + j;
+                        val = aggregator.value();
+                        td.textContent = val;
+                        td.setAttribute("data-value", val);
+                        if (getClickHandler != null) {
+                            td.onclick = getClickHandler(val, rowKey, colKey);
+                        }
+                        tr.appendChild(td);
                     }
-                    tr.appendChild(td);
                 }
                 totalAggregator = pivotData.getAggregator(rowKey, []);
                 val = totalAggregator.value();
@@ -1143,7 +1156,7 @@
                 filter: function () {
                     return true;
                 },
-                aggregator: aggregatorTemplates.count()(),
+                aggregators: [aggregatorTemplates.count()()],
                 aggregatorName: "Count",
                 sorters: {},
                 derivedAttributes: {},
