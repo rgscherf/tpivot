@@ -330,7 +330,7 @@ $(function () {
 				// element being moved.
 				var columnID = event.target.id;
 				reorderFields(model, columnID);
-				console.log("Updated model to: " + JSON.stringify(model));
+				//console.log("Updated model to: " + JSON.stringify(model));
 				refreshPivot(model);
 			}
 		});
