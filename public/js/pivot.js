@@ -1051,14 +1051,20 @@
                         tr.appendChild(th);
                     }
                 }
+
+                // TODO can insert additional elements here
+                // instead of appending one td,
+                // we iterate thru the passed aggregators and append
+                // one td per agg to $tr
                 for (j in colKeys) {
                     if (!hasProp.call(colKeys, j)) continue;
                     colKey = colKeys[j];
                     aggregator = pivotData.getAggregator(rowKey, colKey);
+                    console.log(rowKey, colKey);
                     val = aggregator.value();
                     td = document.createElement("td");
                     td.className = "pvtVal row" + i + " col" + j;
-                    td.textContent = aggregator.format(val);
+                    td.textContent = val;
                     td.setAttribute("data-value", val);
                     if (getClickHandler != null) {
                         td.onclick = getClickHandler(val, rowKey, colKey);
