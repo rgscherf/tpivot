@@ -58,7 +58,6 @@ echo getColSection("Values", true);
     </div>
   </div>
 </div>
-</div>
 
 <script>
   var tableRequestURL = "<?php echo base_url('index.php/renderpivot/sendconfig'); ?>";
