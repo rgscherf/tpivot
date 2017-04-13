@@ -70,10 +70,9 @@ var tpivot = (function () {
     /////////////////////////
 
     var makeSingleAggregator = function (reducerObj) {
-        // generate a pair of [aggregator-name, aggregator-fn] for use in pivot table generation.
-        // returning a pair makes this function useful for generating a map of aggregators, or just a single one.
+        // generate a pair of [aggregator-display-name, aggregator-fn] for use in pivot table generation.
         var templates = $.pivotUtilities.aggregatorTemplates;
-        var aggName = reducerObj.reducer + 'Of' + reducerObj.name;
+        var aggName = reducerObj.reducer[0].toUpperCase() + reducerObj.reducer.substr(1);
         if (reducerObj.reducer === 'count') {
             return [aggName, function () { return templates[reducerObj.reducer]()(); }];
         } else {
@@ -81,24 +80,9 @@ var tpivot = (function () {
         }
     };
 
-    var makeDataAggregators = function (reducers) {
-        // given a list of reducers from the pivot table config, 
-        // turn string reducer tag into a reducer fn from
-        // pivot UI libary's aggregator template.
-        var returnAggregators = {};
-        reducers.forEach(function (elem) {
-            var aggArray = makeSingleAggregator(elem);
-            returnAggregators[aggArray[0]] = aggArray[1];
-        });
-        return returnAggregators;
-    };
-
-
     var getName = function (obj) { return obj.name };
 
-    var shapePivotConfig = function (model, renderUITable) {
-        var renderUI = typeof renderUITable === 'undefined' ? true : renderUITable;
-
+    var shapePivotConfig = function (model) {
         // make config object for the pivot table, from model
         var configObj = {
             rows: model.Rows.map(getName),
@@ -106,19 +90,16 @@ var tpivot = (function () {
             hiddenAttributes: model.noField.map(getName),
         };
 
-        // aggregator handling
+        // AGGREGATOR PARSING
+        // the pivot object just uses the default count() aggregator if there's no
+        // aggregators property on the incoming config object, so we'll only worry about
+        // creating that property for the user-configured case.
         if (model.Values && model.Values.length > 0) {
-            if (renderUI) {
-                configObj.aggregators = makeDataAggregators(model.Values);
-            } else {
-                configObj.aggregators = model.Values.map(function (elem) {
-                    var agg = makeSingleAggregator(elem);
-                    return agg[1](agg[0]);
-                })
-                // var aggregator = makeSingleAggregator(model.Values[0]);
-                // configObj.aggregatorName = aggregator[0];
-                // configObj.aggregator = aggregator[1](model.Values[0].name);
-            }
+            var aggregatorInfoPairs = model.Values.map(function (elem) {
+                return makeSingleAggregator(elem);
+            });
+            configObj.aggregators = aggregatorInfoPairs.map(function (elem) { return elem[1](elem[0]); });
+            configObj.aggregatorNames = aggregatorInfoPairs.map(function (elem) { return elem[0]; });
         }
 
         return configObj;
@@ -135,7 +116,7 @@ var tpivot = (function () {
         // config is an object in the shape of:
         // {pivot-table-categories: {table-column-names: metadata}
         // (this schema is described in the selection pane controller source.)
-        var config = shapePivotConfig(model, false);
+        var config = shapePivotConfig(model);
         data = filterRows(data, model);
         render(data, config)
     };

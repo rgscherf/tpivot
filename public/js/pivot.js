@@ -125,7 +125,7 @@
                                 }
                             },
                             value: function () {
-                                return this.uniq.join(sep);
+                                return this.uniq;
                             },
                             format: function (x) {
                                 return x;
@@ -636,7 +636,7 @@
                 this.arrSort = bind(this.arrSort, this);
                 this.input = input;
                 this.aggregators = (ref = opts.aggregators) != null ? ref : [aggregatorTemplates.count()()];
-                this.aggregatorName = (ref1 = opts.aggregatorName) != null ? ref1 : "Count";
+                this.aggregatorNames = (ref1 = opts.aggregatorNames) != null ? ref1 : ["Count"];
                 this.colAttrs = (ref2 = opts.cols) != null ? ref2 : [];
                 this.rowAttrs = (ref3 = opts.rows) != null ? ref3 : [];
                 this.valAttrs = (ref4 = opts.vals) != null ? ref4 : [];
@@ -882,6 +882,22 @@
                 }
             };
 
+            PivotData.prototype.writeCellValue = function (td, val) {
+                // some aggregators, like List Unique, return values
+                // that should be joined by a newline. This is impossible
+                // if we're just setting an element's textContent,
+                // so we need this function instead.
+                if (!Array.isArray(val)) {
+                    td.textContent = val;
+                } else {
+                    val.forEach(function (elem) {
+                        var d = document.createElement("div");
+                        d.textContent = elem;
+                        td.appendChild(d);
+                    });
+                }
+            }
+
             PivotData.prototype.getAggregator = function (rowKey, colKey, aggregatorIndex) {
                 var agg, flatColKey, flatRowKey;
                 flatRowKey = rowKey.join(String.fromCharCode(0));
@@ -1002,42 +1018,80 @@
                 return len;
             };
             thead = document.createElement("thead");
+
             var numberOfAggregators = pivotData.aggregators.length;
-            for (j in colAttrs) {
-                if (!hasProp.call(colAttrs, j)) continue;
-                c = colAttrs[j];
+
+            ///////////////////////////////////////////////////////////
+            // ADDING TABLE HEADERS TO ACCOMMODATE MULTIPLE AGGREGATORS
+            ///////////////////////////////////////////////////////////
+            // colKeys is an array of arrays representing the tree of column overlaps
+            // eg list of columns [Province, Gender] produces colKey [[Manitoba, Female], [Manitoba, Male], ...]
+            // The result is that the values toward the beginning of the column array have a colspan equal to the 
+            // total number of values underneath them.
+            // For table headers only, we create colKeysWithAggregators which inserts our aggregator names at
+            // the bottom of the colKeys tree.
+
+            var fnNames = pivotData.aggregatorNames;
+            var colAttrsWithAggregators = colAttrs.length === 0 ? [] : colAttrs.concat("Aggregators");
+            var colKeysWithAggregators = [];
+            colKeys.forEach(function (ks) {
+                fnNames.forEach(function (fnName) {
+                    var keys = ks.concat([fnName]);
+                    colKeysWithAggregators.push(keys);
+                });
+            });
+
+            for (j in colAttrsWithAggregators) {
+                if (!hasProp.call(colAttrsWithAggregators, j)) continue;
+                c = colAttrsWithAggregators[j];
                 tr = document.createElement("tr");
                 if (parseInt(j) === 0 && rowAttrs.length !== 0) {
                     th = document.createElement("th");
                     th.setAttribute("colspan", rowAttrs.length);
-                    th.setAttribute("rowspan", colAttrs.length);
+                    th.setAttribute("rowspan", colAttrsWithAggregators.length);
                     tr.appendChild(th);
                 }
                 th = document.createElement("th");
                 th.className = "pvtAxisLabel";
                 th.textContent = c;
                 tr.appendChild(th);
-                for (i in colKeys) {
-                    if (!hasProp.call(colKeys, i)) continue;
-                    colKey = colKeys[i];
-                    x = spanSize(colKeys, parseInt(i), parseInt(j));
+                for (i in colKeysWithAggregators) {
+                    if (!hasProp.call(colKeysWithAggregators, i)) continue;
+                    colKey = colKeysWithAggregators[i];
+                    x = spanSize(colKeysWithAggregators, parseInt(i), parseInt(j));
                     if (x !== -1) {
                         th = document.createElement("th");
                         th.className = "pvtColLabel";
+                        if (parseInt(j) === (colAttrsWithAggregators.length - 1)) {
+                            th.className += " metadataAnnotation";
+                        }
                         th.textContent = colKey[j];
                         th.setAttribute("colspan", x);
-                        if (parseInt(j) === colAttrs.length - 1 && rowAttrs.length !== 0) {
+                        if (parseInt(j) === colAttrsWithAggregators.length - 1 && rowAttrs.length !== 0) {
                             th.setAttribute("rowspan", 2);
                         }
                         tr.appendChild(th);
                     }
                 }
+
                 if (parseInt(j) === 0) {
                     th = document.createElement("th");
-                    th.className = "pvtTotalLabel";
+                    th.className = "pvtColLabel";
                     th.innerHTML = opts.localeStrings.totals;
-                    th.setAttribute("rowspan", colAttrs.length + (rowAttrs.length === 0 ? 0 : 1));
+                    th.setAttribute("rowspan", colAttrs.length);
+                    th.setAttribute("colspan", fnNames.length);
                     tr.appendChild(th);
+                }
+
+                // ADDING AGGREGATOR FUNCTION NAMES TO THE TOTAL COLUMN(S)
+                if (parseInt(j) === (colAttrsWithAggregators.length - 1)) {
+                    fnNames.forEach(function (fName) {
+                        th = document.createElement("th");
+                        th.className = "pvtColLabel metadataAnnotation";
+                        th.textContent = fName;
+                        th.setAttribute("rowspan", rowAttrs.length === 0 ? 1 : 2);
+                        tr.appendChild(th);
+                    });
                 }
                 thead.appendChild(tr);
             }
@@ -1095,7 +1149,7 @@
                         td = document.createElement("td");
                         td.className = "pvtVal row" + i + " col" + j;
                         val = aggregator.value();
-                        td.textContent = val;
+                        pivotData.writeCellValue(td, val);
                         td.setAttribute("data-value", val);
                         if (getClickHandler != null) {
                             td.onclick = getClickHandler(val, rowKey, colKey);
@@ -1111,9 +1165,10 @@
                 for (var z = 0; z < numberOfAggregators; z++) {
                     totalAggregator = pivotData.getAggregator(rowKey, [], z);
                     val = totalAggregator.value();
+                    val = totalAggregator.format(val);
                     td = document.createElement("td");
+                    pivotData.writeCellValue(td, val);
                     td.className = "pvtTotal rowTotal";
-                    td.textContent = totalAggregator.format(val);
                     td.setAttribute("data-value", val);
                     if (getClickHandler != null) {
                         td.onclick = getClickHandler(val, rowKey, []);
@@ -1139,9 +1194,10 @@
                 for (var z = 0; z < numberOfAggregators; z++) {
                     totalAggregator = pivotData.getAggregator([], colKey, z);
                     val = totalAggregator.value();
+                    val = totalAggregator.format(val);
                     td = document.createElement("td");
+                    pivotData.writeCellValue(td, val);
                     td.className = "pvtTotal colTotal";
-                    td.textContent = totalAggregator.format(val);
                     td.setAttribute("data-value", val);
                     if (getClickHandler != null) {
                         td.onclick = getClickHandler(val, [], colKey);
@@ -1157,9 +1213,10 @@
             for (var z = 0; z < numberOfAggregators; z++) {
                 totalAggregator = pivotData.getAggregator([], [], z);
                 val = totalAggregator.value();
+                val = totalAggregator.format(val);
                 td = document.createElement("td");
+                pivotData.writeCellValue(td, val);
                 td.className = "pvtGrandTotal";
-                td.textContent = totalAggregator.format(val);
                 td.setAttribute("data-value", val);
                 if (getClickHandler != null) {
                     td.onclick = getClickHandler(val, [], []);
