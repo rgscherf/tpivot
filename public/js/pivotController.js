@@ -11,8 +11,7 @@ var tpivot = (function () {
         // away we go!
         //$('#pivotTarget').pivotUI(inputData, configModel, true);
         $('#pivotTarget')
-            .pivot(inputData, configModel)
-            .addClass('smallPadding');
+            .pivot(inputData, configModel);
     };
 
 

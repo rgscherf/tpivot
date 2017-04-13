@@ -19,12 +19,11 @@ body {
 
 
 #selectionPaneShowHide {
-    margin-top: 5px;
-    margin-bottom: 5px;
 	width: 250px;
 	text-align: center;
     padding: 3px;
 	border: 1px solid #CDCDCD;
+	margin-left: 10px;
 }
 
 
@@ -36,6 +35,7 @@ body {
 	width: 250px;
 	justify-content: flex-start;
 	min-height: 450px;
+	margin:10px;
 }
 
 #queryTableFieldSelector {
@@ -81,7 +81,7 @@ body {
 }
 
 #pivotContainer {
-	border: 1px solid #CDCDCD;
+	margin:10px;
 }
 
 .smallPadding {
@@ -92,9 +92,6 @@ body {
 
 .additionalUI {
 	font-size: 0.75em;
-}
-
-.sortableItemName {
 }
 
 input[type=text] {
