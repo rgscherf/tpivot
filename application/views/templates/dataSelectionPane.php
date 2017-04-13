@@ -25,7 +25,7 @@
             </div>
           </div>
           <div class="headerText">
-            Choose fields for pivot table:
+            Drag fields below to create query.
           </div>
           <div class="indent">
             <ul class="sortableList" id="sortCol-noField">
@@ -34,7 +34,7 @@
         </div>
         <!--Field sorting-->
         <div id="queryTableFieldSorter" style="padding-top: 5px;border-top:1px dashed #CDCDCD;">
-          <div class="headerText indent">Drag fields between areas below:</div>
+          <div class="headerText indent">Right-click a Filter or Value for options.</div>
           <div id="fieldSorter">
             <div class="sorterRow" style="border-bottom: 1px solid #CDCDCD">
               <?php

@@ -12,7 +12,6 @@ class Pivot extends CI_Controller {
         $this->load->view('templates/header', $data);
         //$this->load->view('templates/preamble', $data);
         $this->load->view('templates/dataSelectionPane', $data);
-        $this->load->view('templates/pivotTemplate', $data);
         $this->load->view('templates/footer', $data);
     }
     
