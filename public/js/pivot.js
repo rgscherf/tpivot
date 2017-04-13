@@ -295,7 +295,7 @@
                                 }
                             },
                             value: function () {
-                                return this.sum / this.len;
+                                return Math.round((this.sum / this.len) * 100) / 100;
                             },
                             format: formatter,
                             numInputs: attr != null ? 0 : 1
