@@ -1151,7 +1151,7 @@
                         var aggregator = pivotData.getAggregator(rowKey, colKey, z);
                         td = document.createElement("td");
                         td.className = "pvtVal row" + i + " col" + j;
-                        val = aggregator.cellValue();
+                        val = aggregator.value();
                         pivotData.writeCellValue(td, val);
                         td.setAttribute("data-value", val);
                         if (getClickHandler != null) {

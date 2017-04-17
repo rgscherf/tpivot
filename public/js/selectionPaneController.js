@@ -96,7 +96,7 @@ function constructFieldObj(fieldName, colName) {
 			baseObj.filterVal = ""
 			break;
 		case "Values":
-			baseObj.reducer = "count"
+			baseObj.reducer = "listUnique"
 			break;
 		default:
 			break;

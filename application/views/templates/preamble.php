@@ -11,47 +11,52 @@
     <tbody>
       <tr>
         <td><i class="fa fa-check fa-lg" aria-hidden="true"></td>
-<td>Display tables/views</td>
-<td>In query pane.</td>
-</tr>
-<tr>
-<td><i class="fa fa-check fa-lg" aria-hidden="true"></td>
-<td>Populate pivot table with drag and drop.</td>
+<td>Populate pivot table with drag and drop, similar to Excel.</td>
 <td></td>
 </tr>
 <tr>
 <td><i class="fa fa-check fa-lg" aria-hidden="true"></td>
-<td>Filter results on pivot table</td>
+<td>Pivot table entries can be filtered.</td>
 <td>Data is filtered on client side. We will need to monitor performance against large data sets.</td>
 </tr>
 <tr>
 <td><i class="fa fa-check fa-lg" aria-hidden="true"></td>
-<td>Aggregate values (e.g. Average Of Age)</td>
+<td>Use right-click to open detail menus for filter/value fields.</td>
+    <td></td>
+</tr>
+<tr>
+<td><i class="fa fa-check fa-lg" aria-hidden="true"></td>
+<td>Calculate aggregate values (e.g. Average Of Age)</td>
 <td>Standard aggregating functions are implemented.</td>
 </tr>
 <tr>
 <td><i class="fa fa-check fa-lg" aria-hidden="true"></td>
-<td>Multiple aggregate values (e.g. Average Of Age and Count of Names)</td>
+<td>Default aggregate function should be List Unique.</td>
 <td></td>
 </tr>
 <tr>
 <td><i class="fa fa-check fa-lg" aria-hidden="true"></td>
-<td>Report changes back to server in real-time</td>
+<td>Multiple aggregate values can be shown side by side (e.g. Average Of Age and Count of Names).</td>
+<td></td>
+</tr>
+<tr>
+<td><i class="fa fa-check fa-lg" aria-hidden="true"></td>
+<td>Report changes back to server in real-time.</td>
 <td>The system records changes to user queries, but doesn’t do anything with them. Awaiting a specification here :)</td>
 </tr>
 <tr>
 <td><i class="fa fa-times fa-lg" aria-hidden="true"></td>
-<td>Choose display method of aggregate values (e.g. &amp; of grand total, % of row total)</td>
-<td>Next priority</td>
+<td>Choose display method of aggregate values (e.g. % of grand total, % of row total).</td>
+<td>Next priority!</td>
 </tr>
 <tr>
 <td><i class="fa fa-times fa-lg" aria-hidden="true"></td>
-<td>Documentation and end-of-project refactoring</td>
+<td>Documentation and end-of-project cleanup refactoring.</td>
 <td>Will start after display methods are implemented.</td>
 </tr>
 <tr>
 <td><i class="fa fa-times fa-lg" aria-hidden="true"></td>
-<td>Display data from Oracle database</td>
+<td>Display data from Oracle database.</td>
 <td>Still waiting for access to our databases.</td>
     </tr>
 </tbody>
