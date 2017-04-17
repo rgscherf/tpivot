@@ -78,6 +78,9 @@
                             push: function () {
                                 return this.count++;
                             },
+                            cellValue: function () {
+                                return this.value();
+                            },
                             value: function () {
                                 return this.count;
                             },
@@ -874,8 +877,8 @@
                         });
                     }
 
-                    // return this.tree[flatRowKey][flatColKey].push(record);
                     this.tree[flatRowKey][flatColKey].forEach(function (fun) {
+                        fun.cellValue = function () { return this.value(); };
                         fun.push(record);
                     });
                     return true;
@@ -1148,7 +1151,7 @@
                         var aggregator = pivotData.getAggregator(rowKey, colKey, z);
                         td = document.createElement("td");
                         td.className = "pvtVal row" + i + " col" + j;
-                        val = aggregator.value();
+                        val = aggregator.cellValue();
                         pivotData.writeCellValue(td, val);
                         td.setAttribute("data-value", val);
                         if (getClickHandler != null) {
