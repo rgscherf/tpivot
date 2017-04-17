@@ -40,19 +40,19 @@
 <td></td>
 </tr>
 <tr>
-<td><i class="fa fa-check fa-lg" aria-hidden="true"></td>
-<td>Report changes back to server in real-time.</td>
-<td>The system records changes to user queries, but doesn’t do anything with them. Awaiting a specification here :)</td>
-</tr>
-<tr>
 <td><i class="fa fa-times fa-lg" aria-hidden="true"></td>
 <td>Choose display method of aggregate values (e.g. % of grand total, % of row total).</td>
 <td>Next priority!</td>
 </tr>
 <tr>
+<td><i class="fa fa-check fa-lg" aria-hidden="true"></td>
+<td>'Bookmark' queries for later review.</td>
+    <td>Second priority. This should be simple.</td>
+</tr>
+<tr>
 <td><i class="fa fa-times fa-lg" aria-hidden="true"></td>
 <td>Documentation and end-of-project cleanup refactoring.</td>
-<td>Will start after display methods are implemented.</td>
+<td>Third priority.</td>
 </tr>
 <tr>
 <td><i class="fa fa-times fa-lg" aria-hidden="true"></td>
