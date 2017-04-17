@@ -360,28 +360,6 @@ $(function () {
 		selectionPaneHidden = !selectionPaneHidden;
 	});
 
-	// supporting extra text for the prototype preamble
-	var preambleHidden = true;
-	$('#preamble').hide();
-	$('.preambleShowHide').last().hide();
-	$('.preambleShowHide')
-		.css({ opacity: 0 })
-		.animate({ opacity: 1 }, 1000)
-		.animate({ opacity: 0.25 }, 1000)
-		.animate({ opacity: 1 }, 1000);
-	$('.preambleShowHide').click(function () {
-		if (preambleHidden) {
-			$('#preamble').slideDown();
-			$('.preambleShowHide').text("Hide the preamble");
-			$('.preambleShowHide').last().show();
-		} else {
-			$('#preamble').slideUp();
-			$('.preambleShowHide').text("Show the preamble");
-			$('.preambleShowHide').last().hide();
-		}
-		preambleHidden = !preambleHidden;
-	});
-
 
 	//////////////////////////////////
 	// EVENT BINDING FOR CONTEXT MENUS
