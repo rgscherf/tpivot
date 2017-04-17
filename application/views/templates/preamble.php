@@ -42,12 +42,12 @@
 <tr>
 <td><i class="fa fa-times fa-lg" aria-hidden="true"></td>
 <td>Choose display method of aggregate values (e.g. % of grand total, % of row total).</td>
-<td>Next priority!</td>
+<td>Next priority.</td>
 </tr>
 <tr>
 <td><i class="fa fa-times fa-lg" aria-hidden="true"></td>
 <td>'Bookmark' queries for later review.</td>
-    <td>Second priority. This should be simple.</td>
+    <td>Second priority.</td>
 </tr>
 <tr>
 <td><i class="fa fa-times fa-lg" aria-hidden="true"></td>
