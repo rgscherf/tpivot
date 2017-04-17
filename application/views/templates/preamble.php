@@ -45,7 +45,7 @@
 <td>Next priority!</td>
 </tr>
 <tr>
-<td><i class="fa fa-check fa-lg" aria-hidden="true"></td>
+<td><i class="fa fa-times fa-lg" aria-hidden="true"></td>
 <td>'Bookmark' queries for later review.</td>
     <td>Second priority. This should be simple.</td>
 </tr>
