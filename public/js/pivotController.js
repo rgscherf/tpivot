@@ -9,7 +9,6 @@ var tpivot = (function () {
 
     var render = function (inputData, configModel) {
         // away we go!
-        //$('#pivotTarget').pivotUI(inputData, configModel, true);
         $('#pivotTarget')
             .pivot(inputData, configModel);
     };

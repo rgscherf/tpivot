@@ -389,8 +389,12 @@
                                 return this.inner.push(record);
                             },
                             format: formatter,
-                            value: function () {
-                                return this.inner.value() / data.getAggregator.apply(data, this.selector).inner.value();
+                            value: function (aggIndex) {
+                                if (rowKey.length === 0 && colKey.length === 0) {
+                                    return 1;
+                                }
+                                var denom = data.getAggregator(this.selector[0], this.selector[1], aggIndex).inner.value();
+                                return this.inner.value() / denom;
                             },
                             numInputs: wrapped.apply(null, x)().numInputs
                         };
@@ -638,8 +642,8 @@
                 this.sortKeys = bind(this.sortKeys, this);
                 this.arrSort = bind(this.arrSort, this);
                 this.input = input;
-                this.aggregators = (ref = opts.aggregators) != null ? ref : [aggregatorTemplates.count()()];
-                this.aggregatorNames = (ref1 = opts.aggregatorNames) != null ? ref1 : ["Count"];
+                this.aggregators = (ref = opts.aggregators) != null ? ref : [aggregatorTemplates.fractionOf(aggregatorTemplates.count(), "col", usFmtPct)(), aggregatorTemplates.fractionOf(aggregatorTemplates.count(), "col", usFmtPct)()];
+                this.aggregatorNames = (ref1 = opts.aggregatorNames) != null ? ref1 : ["Count", "Count2"];
                 this.colAttrs = (ref2 = opts.cols) != null ? ref2 : [];
                 this.rowAttrs = (ref3 = opts.rows) != null ? ref3 : [];
                 this.valAttrs = (ref4 = opts.vals) != null ? ref4 : [];
@@ -850,7 +854,7 @@
                         this.rowKeys.push(rowKey);
                         this.rowTotals[flatRowKey] = this.aggregators.map(function (f) {
                             return f(this, rowKey, []);
-                        });
+                        }, this);
                     }
                     this.rowTotals[flatRowKey].forEach(function (f) {
                         f.push(record);
@@ -861,7 +865,7 @@
                         this.colKeys.push(colKey);
                         this.colTotals[flatColKey] = this.aggregators.map(function (f) {
                             return f(this, [], colKey);
-                        });
+                        }, this);
                     }
                     this.colTotals[flatColKey].forEach(function (f) {
                         f.push(record);
@@ -874,11 +878,10 @@
                     if (!this.tree[flatRowKey][flatColKey]) {
                         this.tree[flatRowKey][flatColKey] = this.aggregators.map(function (f) {
                             return f(this, rowKey, colKey);
-                        });
+                        }, this);
                     }
 
                     this.tree[flatRowKey][flatColKey].forEach(function (fun) {
-                        fun.cellValue = function () { return this.value(); };
                         fun.push(record);
                     });
                     return true;
@@ -921,7 +924,10 @@
                     // usually it's because that intersection is empty.
                     // agg is only called for its .value(), so we can gracefully pass a fn
                     // returning the empty string.
-                    agg = { value: function () { return ""; } };
+                    agg = {
+                        value: function () { return ""; },
+                        format: function (x) { return ""; }
+                    };
                 }
 
                 return agg != null ? agg : {
@@ -1151,7 +1157,8 @@
                         var aggregator = pivotData.getAggregator(rowKey, colKey, z);
                         td = document.createElement("td");
                         td.className = "pvtVal row" + i + " col" + j;
-                        val = aggregator.value();
+                        val = aggregator.value(z);
+                        val = aggregator.format(val);
                         pivotData.writeCellValue(td, val);
                         td.setAttribute("data-value", val);
                         if (getClickHandler != null) {
@@ -1167,7 +1174,7 @@
                 // see implementation note on multiple aggregate values section
                 for (var z = 0; z < numberOfAggregators; z++) {
                     totalAggregator = pivotData.getAggregator(rowKey, [], z);
-                    val = totalAggregator.value();
+                    val = totalAggregator.value(z);
                     val = totalAggregator.format(val);
                     td = document.createElement("td");
                     pivotData.writeCellValue(td, val);
@@ -1196,7 +1203,7 @@
                 // see implementation note on multiple aggregate values section
                 for (var z = 0; z < numberOfAggregators; z++) {
                     totalAggregator = pivotData.getAggregator([], colKey, z);
-                    val = totalAggregator.value();
+                    val = totalAggregator.value(z);
                     val = totalAggregator.format(val);
                     td = document.createElement("td");
                     pivotData.writeCellValue(td, val);
@@ -1215,7 +1222,7 @@
             // see implementation note on multiple aggregate values section
             for (var z = 0; z < numberOfAggregators; z++) {
                 totalAggregator = pivotData.getAggregator([], [], z);
-                val = totalAggregator.value();
+                val = totalAggregator.value(z);
                 val = totalAggregator.format(val);
                 td = document.createElement("td");
                 pivotData.writeCellValue(td, val);
@@ -1254,8 +1261,6 @@
                 filter: function () {
                     return true;
                 },
-                aggregators: [aggregatorTemplates.count()()],
-                aggregatorName: "Count",
                 sorters: {},
                 derivedAttributes: {},
                 renderer: pivotTableRenderer
