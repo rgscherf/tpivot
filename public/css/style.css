@@ -138,13 +138,26 @@ ul {
 }
 
 .context {
-	z-index:1000;
 	position:absolute;
+  	align-items: flex-start;
+}
+
+.contextBackground {
+	z-index:1000;
 	border:1px solid #CDCDCD;
 	background-color: white;
 	padding:5px;
 	box-shadow: 3px 3px 2px #CDCDCD;
 }
+
+.sideby {
+  display: flex;
+}
+
+.sideby > div {
+  margin-right: 10px;
+}
+
 
 /*Aggregator context menu*/
 .contextItem {

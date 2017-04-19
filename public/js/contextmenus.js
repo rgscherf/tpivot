@@ -6,7 +6,9 @@ var contextMenus = (function () {
     ///////////////////////////
 
     // HTML for the aggregator selection menu.
-    var aggregatorSelection = ['<div class="context" data-contexttype="aggregator">',
+    var aggregatorSelection = ['<div class="context sideby" data-contexttype="aggregator">',
+        '<div class="contextBackground">',
+        '<div class="metadataAnnotation" style="opacity:.8;margin-bottom:3px;">Summarize by</div>',
         '<div class="contextItem" data-aggregator="count">Count</div>',
         '<div class="contextItem" data-aggregator="sum">Sum</div>',
         '<div class="contextItem" data-aggregator="average">Average</div>',
@@ -14,13 +16,21 @@ var contextMenus = (function () {
         '<div class="contextItem" data-aggregator="max">Max</div>',
         '<div class="contextItem" data-aggregator="countUnique">Count unique</div>',
         '<div class="contextItem" data-aggregator="listUnique">List unique</div>',
-        '</div>'].join('\n');
+        '</div>',
+        '<div class="contextBackground">',
+        '<div class="metadataAnnotation" style="opacity:.8;margin-bottom:3px;">Display as</div>',
+        '<div class="contextItem" data-displayas="raw">Raw value</div>',
+        '<div class="contextItem" data-displayas="row">% row total</div>',
+        '<div class="contextItem" data-displayas="col">% column total</div>',
+        '<div class="contextItem" data-displayas="total">% grand total</div>',
+        '</div>',
+        '</div >'].join("\n");
 
     // HTML for the filter context menu.
     // If you are adding a new value here, you MUST ADD a 
     // matching keyed predicate in tpivot.filterPredicates() 
     var filterSelection = [
-        '<div class="filterContext context" data-contexttype="filter">',
+        '<div class="filterContext context contextBackground" data-contexttype="filter">',
         '<div class="filterContextEntry" id="filterFieldNameEntry">',
         'Show rows where $field</div>',
         '<div class="filterContextEntry">',
@@ -66,9 +76,14 @@ var contextMenus = (function () {
         makeContextHtml(aggregatorSelection, event, clickedSortItem);
         // highlight the current aggregator function
         var fieldName = nameFromID($(clickedSortItem).attr('id'));
-        var currentlySelectedAggregator = getAggregatorObj(model, fieldName).reducer;
+        var reducerObj = getAggregatorObj(model, fieldName);
+        var currentlySelectedAggregator = reducerObj.reducer;
+        var currentlySelectedDisplayAs = reducerObj.displayAs;
         $('.contextItem')
             .filter("[data-aggregator='" + currentlySelectedAggregator + "']")
+            .addClass('selectedContextItem');
+        $('.contextItem')
+            .filter("[data-displayas='" + currentlySelectedDisplayAs + "']")
             .addClass('selectedContextItem');
     }
 
@@ -126,11 +141,11 @@ var contextMenus = (function () {
 
     var getAggregatorClickInformation = function (event) {
         var fieldName = nameFromID($(event.target).closest('.sortableItem').attr('id'));
-        var selectedReducer = $(event.target).data("aggregator");
         return {
             contextType: "aggregator",
             fieldName: fieldName,
-            selectedReducer: selectedReducer
+            selectedReducer: $(event.target).data("aggregator"),
+            selectedDisplayAs: $(event.target).data("displayas")
         }
     }
 
@@ -203,8 +218,6 @@ var contextMenus = (function () {
                 break;
             case "filter":
                 returnValue = getFilterClickInformation(event);
-                // we only care if user clicked 'cancel' or 'apply'
-                //returnValue = getFilterClickInformation(event);
                 break;
         }
         return returnValue

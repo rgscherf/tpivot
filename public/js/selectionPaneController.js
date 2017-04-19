@@ -160,9 +160,20 @@ function findObjInColumn(model, fieldName, colToSearch) {
 	})[0];
 }
 
-function setReducer(model, fieldName, selectedReducer) {
-	var fieldReducerObj = findObjInColumn(model, fieldName, "Values");
-	fieldReducerObj.reducer = selectedReducer;
+function setReducer(model, newReducer) {
+	// check contextmenu.getAggregatorClickInformation to see
+	// the shape of the newReduer object.
+	var fieldName = newReducer.fieldName;
+	var reducerInModel = findObjInColumn(model, fieldName, "Values");
+
+	var selectedReducer = newReducer.selectedReducer;
+	var selectedDisplayAs = newReducer.selectedDisplayAs;
+	if (selectedReducer) {
+		reducerInModel.reducer = selectedReducer;
+	}
+	if (selectedDisplayAs) {
+		reducerInModel.displayAs = selectedDisplayAs;
+	}
 }
 
 function setFilter(model, newFilter) {
@@ -381,7 +392,7 @@ $(function () {
 		if (!clickInformation || !clickInformation.contextType) { return; }
 		switch (clickInformation.contextType) {
 			case "aggregator":
-				setReducer(model, clickInformation.fieldName, clickInformation.selectedReducer);
+				setReducer(model, clickInformation);
 				modifyItemDOM(model, 'sortField-' + clickInformation.fieldName, "Values");
 				break;
 			case "filter":
