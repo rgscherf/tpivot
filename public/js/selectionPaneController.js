@@ -22,7 +22,7 @@ when the pivot table is rendered.
 Each obj in the model is one of (depending on its field in the model object):
 {name: $fieldname} <- for noField, Rows, Columns
 {name: $fieldname, filterOp: $filterOpName, filterVal: $filterValName, filterExistence: $(true|false)} <- for Filters
-{name: $fieldname, reducer: $reducerFnName} <- for Values
+{name: $fieldname, reducer: $reducerFnName, displayAs: (raw|col|row|total)} <- for Values
 */
 
 
@@ -91,12 +91,13 @@ function constructFieldObj(fieldName, colName) {
 	};
 	switch (colName) {
 		case "Filters":
-			baseObj.filterExistence = true
-			baseObj.filterOp = "less than"
-			baseObj.filterVal = ""
+			baseObj.filterExistence = true;
+			baseObj.filterOp = "less than";
+			baseObj.filterVal = "";
 			break;
 		case "Values":
-			baseObj.reducer = "listUnique"
+			baseObj.reducer = "listUnique";
+			baseObj.displayAs = "raw";
 			break;
 		default:
 			break;
@@ -330,7 +331,7 @@ $(function () {
 				// element being moved.
 				var columnID = event.target.id;
 				reorderFields(model, columnID);
-				//console.log("Updated model to: " + JSON.stringify(model));
+				console.log("Updated model to: " + JSON.stringify(model));
 				refreshPivot(model);
 			}
 		});

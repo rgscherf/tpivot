@@ -70,12 +70,37 @@ var tpivot = (function () {
     var makeSingleAggregator = function (reducerObj) {
         // generate a pair of [aggregator-display-name, aggregator-fn] for use in pivot table generation.
         var templates = $.pivotUtilities.aggregatorTemplates;
-        var aggName = reducerObj.reducer[0].toUpperCase() + reducerObj.reducer.substr(1);
-        if (reducerObj.reducer === 'count') {
-            return [aggName, function () { return templates[reducerObj.reducer]()(); }];
+        var displays = $.pivotUtilities.displayTemplates;
+
+        var rname = reducerObj.name;
+        var reducer = reducerObj.reducer;
+        var aggName = rname + " " + reducer[0].toUpperCase() + reducer.substr(1);
+
+        var reducerFn;
+        if (reducerObj.displayAs === 'raw') {
+            reducerFn = function () { return templates[reducer]()([rname]); };
         } else {
-            return [aggName, function () { return templates[reducerObj.reducer]()([reducerObj.name]); }];
+            reducerFn = function () { return displays.fractionOf(templates[reducer](), reducerObj.displayAs)([rname]); };
         }
+
+        return [aggName, reducerFn]
+
+        // if (reducerObj.displayAs === 'raw') {
+        //     // no special display settings. user will see raw aggregated values.
+        //     if (reducer === 'count') {
+        //         return [aggName, function () { return templates[reducer]()(); }];
+        //     }
+        //     return [aggName, function () { return templates[reducer]()([rname]); }];
+        // } else {
+        //     // user wants a special display value.
+        //     // currently we only support "% of" displays. user selects viewing
+        //     // % of row total, col total, or grand total.
+        //     if (reducer === 'count') {
+        //         return [aggName, function () { return templates[reducer]()(); }];
+        //     }
+        //     return [aggName, function () { return templates[reducer]()([rname]); }];
+        // }
+
     };
 
     var getName = function (obj) { return obj.name };

@@ -367,6 +367,8 @@
                     };
                 };
             },
+        };
+        displayTemplates = {
             fractionOf: function (wrapped, type, formatter) {
                 if (type == null) {
                     type = "total";
@@ -400,8 +402,8 @@
                         };
                     };
                 };
-            }
-        };
+            },
+        }
         aggregators = (function (tpl) {
             return {
                 "Count": tpl.count(usFmtInt),
@@ -417,12 +419,6 @@
                 "Sum over Sum": tpl.sumOverSum(usFmt),
                 "80% Upper Bound": tpl.sumOverSumBound80(true, usFmt),
                 "80% Lower Bound": tpl.sumOverSumBound80(false, usFmt),
-                "Sum as Fraction of Total": tpl.fractionOf(tpl.sum(), "total", usFmtPct),
-                "Sum as Fraction of Rows": tpl.fractionOf(tpl.sum(), "row", usFmtPct),
-                "Sum as Fraction of Columns": tpl.fractionOf(tpl.sum(), "col", usFmtPct),
-                "Count as Fraction of Total": tpl.fractionOf(tpl.count(), "total", usFmtPct),
-                "Count as Fraction of Rows": tpl.fractionOf(tpl.count(), "row", usFmtPct),
-                "Count as Fraction of Columns": tpl.fractionOf(tpl.count(), "col", usFmtPct)
             };
         })(aggregatorTemplates);
         renderers = {
@@ -642,8 +638,8 @@
                 this.sortKeys = bind(this.sortKeys, this);
                 this.arrSort = bind(this.arrSort, this);
                 this.input = input;
-                this.aggregators = (ref = opts.aggregators) != null ? ref : [aggregatorTemplates.fractionOf(aggregatorTemplates.count(), "col", usFmtPct)(), aggregatorTemplates.fractionOf(aggregatorTemplates.count(), "col", usFmtPct)()];
-                this.aggregatorNames = (ref1 = opts.aggregatorNames) != null ? ref1 : ["Count", "Count2"];
+                this.aggregators = (ref = opts.aggregators) != null ? ref : [aggregatorTemplates.count()()];
+                this.aggregatorNames = (ref1 = opts.aggregatorNames) != null ? ref1 : ["Row Count"];
                 this.colAttrs = (ref2 = opts.cols) != null ? ref2 : [];
                 this.rowAttrs = (ref3 = opts.rows) != null ? ref3 : [];
                 this.valAttrs = (ref4 = opts.vals) != null ? ref4 : [];
@@ -944,6 +940,7 @@
 
         })();
         $.pivotUtilities = {
+            displayTemplates: displayTemplates,
             aggregatorTemplates: aggregatorTemplates,
             aggregators: aggregators,
             renderers: renderers,
