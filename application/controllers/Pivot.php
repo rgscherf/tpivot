@@ -9,17 +9,17 @@ class Pivot extends CI_Controller {
     public function index() {
         $user = ""; //prevent the "no index" error from $_POST
         $pass = "";
-        if (isset($_POST['user'])) { // check for them and set them so
+        if (isset($_POST['user'])) {
             $user = $_POST['user'];
         }
-        if (isset($_POST['pass'])) { // so that they don't return errors
+        if (isset($_POST['pass'])) {
             $pass = $_POST['pass'];
         }
         
-        $useroptions = ['cost' => 8,]; // all up to you
-        $pwoptions   = ['cost' => 8,]; // all up to you
-        $userhash    = password_hash($user, PASSWORD_BCRYPT, $useroptions); // hash entered user
-        $passhash    = password_hash($pass, PASSWORD_BCRYPT, $pwoptions);  // hash entered pw
+        $useroptions = ['cost' => 8,];
+        $pwoptions   = ['cost' => 8,];
+        $userhash    = password_hash($user, PASSWORD_BCRYPT, $useroptions);
+        $passhash    = password_hash($pass, PASSWORD_BCRYPT, $pwoptions);
         $hasheduser  = getenv('TPIVOT_LOGIN_USERNAME_HASH');
         $hashedpass  = getenv('TPIVOT_LOGIN_PASSWORD_HASH');
         
