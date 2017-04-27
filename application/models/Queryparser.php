@@ -111,11 +111,4 @@ class Queryparser extends CI_Model {
         
         return $sqlQuery;
     }
-    // $test_data = json_decode('{"noField":[{"name":"Age"}],
-    //     "Filters":[],
-    //     "Rows":[{"name":"Province"}],
-    //     "Columns":[{"name":"Party"}],
-    // "Values":[{"name":"Gender","reducer":"count","displayAs":"raw"},{"name":"Name","reducer":"count","displayAs":"raw"}]}', true);
-    
-    // var_dump(make_pivot_query($test_data));
 }

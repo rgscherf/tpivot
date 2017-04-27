@@ -173,7 +173,10 @@ class Datastore extends CI_Model {
     }
     
     private function unwrap_keys($row) {
-        log_message('debug', 'entered unwrap keys');
+        // Remove single-quotes from row array keys.
+        // Row keys come from a SELECT DISTINCT call where return values are wrapped in q'[ ]'
+        // This causes them to come back like "'this'" (note single-quotes inside the string delimiter).
+        // Wrapped keys will cause havoc on the JS pivot table layer.
         $return_row = [];
         foreach ($row as $key=>$value) {
             $unwrapped_key = str_replace("'", "", $key);
@@ -194,9 +197,7 @@ class Datastore extends CI_Model {
         log_message('debug', $result);
         
         // REMOVE SINGLE QUOTES FROM ROW ARRAY KEYS
-        log_message('debug', 'RESULT FROM RESULT ARRAY');
         $return_result = array_map(array($this, 'unwrap_keys'), $query->result_array());
-        log_message('debug', 'UNWRAPPED RESULTS');
         
         return $return_result;
     }
