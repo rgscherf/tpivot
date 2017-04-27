@@ -47,13 +47,13 @@ class Pivot extends CI_Controller {
         
     }
     
-    public function process_config() {
+    public function process_client_query() {
         $goods = $this->input->raw_input_stream;
         $cleangoods = json_decode(trim($goods), true);
-        
-        // get pivot data
-        $pivot_data = $this->Datastore->retrieve_data($cleangoods);
-        $this->output->set_content_type('application/json')->set_output(json_encode($pivot_data, JSON_NUMERIC_CHECK));
-        
+        $pivot_results = $this->Datastore->process_query($cleangoods);
+        $results_and_model = ['model' => $cleangoods['model'], 'results' => $pivot_results];
+        $this->output->set_content_type('application/json')->set_output(json_encode($results_and_model, JSON_NUMERIC_CHECK));
     }
+    
+    
 }

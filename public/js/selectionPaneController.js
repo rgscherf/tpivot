@@ -276,20 +276,17 @@ function addSortableFieldsToDOM(fieldsToAdd) {
 }
 
 
-function getTableData(currentDataset, tableData, model) {
-	// TODO: We also send the entire availableTables object, which includes the paths
-	// of system resources. Should probably not do this, but I wanted to avoid storing data 
-	// on the server for this demo.
+function sendConfig(model) {
+	var currentTable = $("#tableSelector").val()
 	var payload = {
-		dataSets: availableTables,
-		selectedDataset: currentDataset
+		table: currentTable,
+		model: model
 	};
 	$.post({
-		url: tableRequestURL,
+		url: queryProcessURL,
 		data: JSON.stringify(payload),
 		success: function (returnData) {
-			setTableData(returnData)
-			tpivot.renderPivot(returnData, model);
+			tpivot.renderPivot(returnData);
 		}
 	});
 }
@@ -317,7 +314,15 @@ $(function () {
 	var colNames = getColNames(cols);
 
 	var currentDataset = $('#tableSelector').val();
-	var model; //resetState(colNames, availableTables[currentDataset]);
+	var model;
+
+	// when adding/removing/reordering fields, we update the model and send it to server in the
+	// sortable list's `update` event. This event fires twice per user action: once for the item
+	// leaving a list, and once for entering the new list. Therefore, we only want to act on every
+	// second firing of `update` when the model state is fully captured. 
+	// This var is checked in `update` and, if true, we continue with our logic. In either case, 
+	// its value is flipped.
+	var sendConfigOnThisUpdate = false;
 
 	// set up sortable lists
 	cols.map(function (elem) {
@@ -335,15 +340,13 @@ $(function () {
 				modifyItemDOM(model, fieldNameAsID, nameFromID(colNameAsID));
 			},
 			update: function (event, ui) {
-				// Update the ordering of all fields in affected column.
-				// This is called twice per sort event (first for the item leaving a col,
-				// and second for the item being placed into a col). Only the second firing
-				// reflects the model's correct state. The first firing doesn't include the 
-				// element being moved.
-				var columnID = event.target.id;
-				reorderFields(model, columnID);
-				console.log("Updated model to: " + JSON.stringify(model));
-				refreshPivot(model);
+				if (sendConfigOnThisUpdate) {
+					var columnID = event.target.id;
+					reorderFields(model, columnID);
+					// console.log("Updated model to: " + JSON.stringify(model));
+					sendConfig(model);
+				}
+				sendConfigOnThisUpdate = !sendConfigOnThisUpdate;
 			}
 		});
 	});
@@ -352,7 +355,6 @@ $(function () {
 		// Select a new table to configure. Resets the view and model.
 		currentDataset = $('#tableSelector').val();
 		model = resetState(colNames, availableTables[currentDataset]);
-		getTableData(currentDataset, tableData, model);
 	});
 
 
@@ -405,7 +407,6 @@ $(function () {
 			default:
 				break;
 		}
-		refreshPivot(model);
+		sendConfig(model);
 	});
-
 });

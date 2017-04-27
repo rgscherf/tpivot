@@ -60,7 +60,7 @@ echo getColSection("Values", true);
 </div>
 
 <script>
-  var tableRequestURL = "<?php echo base_url('index.php/renderpivot/sendconfig'); ?>";
+  var queryProcessURL = "<?php echo base_url('index.php/renderpivot/processquery'); ?>";
   var availableTables = <?php echo json_encode($availableData); ?>;
 </script>
 

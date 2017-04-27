@@ -113,6 +113,7 @@ class Datastore extends CI_Model {
     public function __construct() {
         parent::__construct();
         $this->load->database();
+        $this->load->model('Queryparser');
     }
     
     public function get_sources() {
@@ -169,6 +170,35 @@ class Datastore extends CI_Model {
         }
         
         return $rows;
+    }
+    
+    private function unwrap_keys($row) {
+        log_message('debug', 'entered unwrap keys');
+        $return_row = [];
+        foreach ($row as $key=>$value) {
+            $unwrapped_key = str_replace("'", "", $key);
+            $return_row[$unwrapped_key] = $value;
+        }
+        return $return_row;
+    }
+    
+    public function process_query($incoming) {
+        $result = $this->Queryparser->make_pivot_query($incoming);
+        if ($result == false) {
+            return $result;
+        }
+        
+        $query = $this->db->query($result);
+        
+        // SQL QUERY SENT TO ORACLE
+        log_message('debug', $result);
+        
+        // REMOVE SINGLE QUOTES FROM ROW ARRAY KEYS
+        log_message('debug', 'RESULT FROM RESULT ARRAY');
+        $return_result = array_map(array($this, 'unwrap_keys'), $query->result_array());
+        log_message('debug', 'UNWRAPPED RESULTS');
+        
+        return $return_result;
     }
     
 }

@@ -50,5 +50,5 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 |		my-controller/my-method	-> my_controller/my_method
 */
 
-$route['renderpivot/sendconfig']['post'] = 'Pivot/process_config';
+$route['renderpivot/processquery']['post'] = 'Pivot/process_client_query';
 $route['default_controller'] = 'Pivot/index';
