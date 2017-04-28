@@ -199,6 +199,10 @@ class Datastore extends CI_Model {
         // REMOVE SINGLE QUOTES FROM ROW ARRAY KEYS
         $return_result = array_map(array($this, 'unwrap_keys'), $query->result_array());
         
+        foreach($return_result as $row) {
+            log_message('debug', json_encode($row));
+        }
+        
         return $return_result;
     }
     
