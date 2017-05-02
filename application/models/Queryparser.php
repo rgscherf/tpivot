@@ -27,7 +27,7 @@ class Queryparser extends CI_Model {
         return join(",\n", $qualified_col_names);
     }
     
-    private function make_and_clauses($query_model) {
+    private function make_filters($query_model) {
         return '';
     }
     
@@ -125,18 +125,18 @@ class Queryparser extends CI_Model {
         }
         
         $selections = $this->make_selections($table, $query_model);
-        $and_clauses = $this->make_and_clauses($query_model);
+        $filters = $this->make_filters($query_model);
         $aggregator = $this->make_aggregator($query_model);
         $columns = $this->make_columns($table, $query_model);
         
-        $sqlQuery = "
+        $sql_query = "
         SELECT * FROM (
         SELECT
         $selections
         FROM CE_CASE_MGMT.SF_CASE
         WHERE TRUNC(CREATEDDATE) >= TRUNC(SYSDATE)-90
         AND ROWNUM <= 50000
-        $and_clauses
+        $filters
         ORDER BY CREATEDDATE DESC
         )
         pivot
@@ -145,6 +145,6 @@ class Queryparser extends CI_Model {
         $columns
         )";
         
-        return $sqlQuery;
+        return $sql_query;
     }
 }
