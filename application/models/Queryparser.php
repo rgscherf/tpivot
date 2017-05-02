@@ -90,7 +90,7 @@ class Queryparser extends CI_Model {
             $distinct_entry_alias = $trim_result[0];
             $unique_trim_counter = max([$unique_trim_counter, $trim_result[1]]);
             
-            $append_start_char = !$distinct_col_entries ? '' : ',';
+            $append_start_char = !$distinct_col_entries ? '' : ', ';
             $alias_clause = $row[$col_name] == '' ? '' : " AS $distinct_entry_alias"; // Empty strings will be renamed 'NULL' at the display layer.
             
             $distinct_col_entries .= $append_start_char . "q'[$row[$col_name]]'" . $alias_clause;
