@@ -26,15 +26,18 @@ class Queryparser extends CI_Model {
     // SELECT CLAUSE
     ////////////////
     
-    private function make_simple_selections($table, $query_model, $select_distinct=false) {
-        // Return selected columns plus selected table.
-        
-        // decide included columns
+    private function get_selected_columns($query_model) {
         $rows = $query_model['Rows'];
         $cols = $query_model['Columns'];
         $vals = $query_model['Values'];
-        $selected_columns = array_merge($rows, $cols, $vals);
+        return array_merge($rows, $cols, $vals);
+    }
+    
+    private function make_simple_selections($table, $query_model, $select_distinct=false) {
+        // Return selected columns plus selected table.
+        
         $qualified_col_names = [];
+        $selected_columns = $this->get_selected_columns($query_model);
         foreach ($selected_columns as $col) {
             $qualified_col_names[] = $this->qualified_field_name($table, $col);
         }
@@ -46,11 +49,43 @@ class Queryparser extends CI_Model {
         return $return_string;
     }
     
-    private function make_nested_selections($table, $query_model) {
+    private function make_nested_selections($table, $query_model, $agg_column) {
         // if the user has asked for a list unique aggregation,
         // nest simple selections inside a LISTAGG for that field.
         
-        // TODO implement!
+        // OUTER SELECT
+        $return_string = "SELECT \n";
+        $selected_columns = $this->get_selected_columns($query_model);
+        $col_strings = [];
+        foreach($selected_columns as $col) {
+            $col_name = $this->field_name($col);
+            if ($col_name != $agg_column) {
+                $col_strings[] = $col_name;
+            } else {
+                $col_strings[] = "LISTAGG($col_name) WITHIN GROUP (ORDER BY $col_name) $col_name" . "S";
+            }
+        }
+        
+        // INNER SELECT
+        $return_string .= join(",\n", $col_strings);
+        $return_string .= "\n";
+        $return_string .= "FROM (\n";
+        $return_string .= $this->make_simple_selections($table, $query_model, true);
+        $return_string .= ")\n";
+        
+        // GROUP BY EVERY COL THAT IS NOT LISTAGG
+        $return_string .= "GROUP BY \n";
+        $grouping_cols = [];
+        foreach($selected_columns as $col) {
+            $col_name = $this->field_name($col);
+            if (in_array($col_name, $col_strings)) {
+                $grouping_cols[] = $col_name;
+            }
+        }
+        $return_string .= join(", ", $grouping_cols);
+        $return_string .= "\n";
+        
+        return $return_string;
     }
     
     private function make_selections($table, $query_model) {
@@ -58,11 +93,10 @@ class Queryparser extends CI_Model {
         // make_simple_selections() constructs a basic select.
         // make_nested_selections() constructs select for LISTAGG queries.
         
-        // TODO: fully implement
-        // if LISTAGG is in model.values:
-        // return make_nested_selections()
-        // else
-        return ($this->make_simple_selections($table, $query_model));
+        // TODO check whether any model.value fields are LISTAGG, and make_nested_selections with field name
+        return $this->make_nested_selections($table, $query_model, "REASON");
+        // else run simple selection
+        // return $this->make_simple_selections($table, $query_model);
     }
     
     
