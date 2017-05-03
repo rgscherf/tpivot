@@ -2,14 +2,27 @@
 
 ## Functionality 
 
-- Can we get LIST UNIQUE working as an aggregator function? Maybe LISTAGG??
-- GROUP BY DATE 
-    - for date types -> Year, Month, Day, Hour
-- Should there be default behavior when we don't have >0 row, col, val?
-    - Yes, requirement for at least (len col) == 0. User should select row and val, and see a 'spreadsheet' view.
-- Can we stack row/col/val like the old pivot table?
-- What should happen when the user picks an invalid field (this can happen if col type is CLOB)?
-- Are there fields we will NEVER use? Could stop them from being displayed.
+- Aggregator functions
+    - LISTAGG
+        - Requires bigly rewriting SELECT statement.
+        - Examples in `scratch.sql`
+    - VARIANCE add to front-end
+    - STDDEV add to front-end
+    - COUNT UNIQUE add to front-end?
+    - DONE MIN 
+    - DONE MAX 
+    - DONE SUM 
+    - DONE AVG 
+    - DONE COUNT 
+- New functionality
+    - GROUP BY DATE 
+        - Did greg just add this as a column?
+        - for date types -> Year, Month, Day, Hour
+    - Should there be default behavior when we don't have >0 row, col, val?
+        - Yes, requirement for at least (len col) == 0. User should select row and val, and see a 'spreadsheet' view.
+    - Can we stack row/col/val like the old pivot table?
+    - What should happen when the user picks an invalid field (this can happen if col type is CLOB)?
+    - Filters
 
 ## Presentation
 
