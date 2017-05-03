@@ -8,6 +8,11 @@ class Queryparser extends CI_Model {
         $this->load->database();
     }
     
+    
+    ////////////////////
+    // UTILITY FUNCTIONS
+    ////////////////////
+    
     private function qualified_field_name($table, $field) {
         return 'CE_CASE_MGMT.' . strtoupper($table) . '.' . strtoupper($field['name']);
     }
@@ -16,7 +21,15 @@ class Queryparser extends CI_Model {
         return strtoupper($field['name']);
     }
     
-    private function make_selections($table, $query_model) {
+    
+    ////////////////
+    // SELECT CLAUSE
+    ////////////////
+    
+    private function make_simple_selections($table, $query_model, $select_distinct=false) {
+        // Return selected columns plus selected table.
+        
+        // decide included columns
         $rows = $query_model['Rows'];
         $cols = $query_model['Columns'];
         $vals = $query_model['Values'];
@@ -25,12 +38,47 @@ class Queryparser extends CI_Model {
         foreach ($selected_columns as $col) {
             $qualified_col_names[] = $this->qualified_field_name($table, $col);
         }
-        return join(",\n", $qualified_col_names);
+        
+        // putting clause together
+        $return_string = $select_distinct ? "SELECT DISTINCT \n" : "SELECT \n";
+        $return_string .= join(",\n", $qualified_col_names);
+        $return_string .= "\n FROM CE_CASE_MGMT.$table";
+        return $return_string;
     }
+    
+    private function make_nested_selections($table, $query_model) {
+        // if the user has asked for a list unique aggregation,
+        // nest simple selections inside a LISTAGG for that field.
+        
+        // TODO implement!
+    }
+    
+    private function make_selections($table, $query_model) {
+        // Construct the query's SELECT clause.
+        // make_simple_selections() constructs a basic select.
+        // make_nested_selections() constructs select for LISTAGG queries.
+        
+        // TODO: fully implement
+        // if LISTAGG is in model.values:
+        // return make_nested_selections()
+        // else
+        return ($this->make_simple_selections($table, $query_model));
+    }
+    
+    
+    ///////////////
+    // WHERE CLAUSE
+    ///////////////
     
     private function make_filters($query_model) {
         return '';
     }
+    
+    
+    
+    //////////////////////////
+    // PIVOT AGGREGATOR CLAUSE
+    //////////////////////////
     
     private function make_aggregator($query_model) {
         // if there are aggregator values in the client query,
@@ -48,6 +96,10 @@ class Queryparser extends CI_Model {
         }
     }
     
+    
+    ////////////////
+    // PIVOT COLUMNS
+    ////////////////
     
     private function trimstr($str, $counter) {
         // Truncate a string to so it can be used as an Oracle column identifier.
@@ -123,12 +175,23 @@ class Queryparser extends CI_Model {
         return "FOR $col in ($distinct_col_entries)";
     }
     
+    
+    //////////////////
+    // MODEL VALIDATOR
+    //////////////////
+    
+    // TODO: Should this be in Datastore instead?
     private function model_is_valid($query_model) {
         return (
         count($query_model['Columns']) > 0
         && count($query_model['Rows']) > 0
         && count($query_model['Values']) > 0);
     }
+    
+    
+    ///////////////////////
+    // PUT IT ALL TOGETHER!
+    ///////////////////////
     
     public function make_pivot_query($incoming) {
         // validate model,
@@ -147,9 +210,7 @@ class Queryparser extends CI_Model {
         
         $sql_query = "
         SELECT * FROM (
-        SELECT
         $selections
-        FROM CE_CASE_MGMT.$table
         $filters
         )
         pivot
