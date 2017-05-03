@@ -1,6 +1,7 @@
 <?php
 
 class Queryparser extends CI_Model {
+    private $distinct_columns_seen = [];
     
     public function __construct() {
         parent::__construct();
@@ -50,31 +51,46 @@ class Queryparser extends CI_Model {
     
     private function trimstr($str, $counter) {
         // Truncate a string to so it can be used as an Oracle column identifier.
-        // Maxlen is set at 29. Max length for Oracle columns is 30 chars, but
-        // Oracle adds a trailing underscore.
+        // Maxlen is set at 29. Max length for Oracle columns is 30 chars, but Oracle adds a trailing underscore.
+        
         // Truncated strings will add an underscore and a counter value (which increments across all columns processed).
         // Special characters and spaces are stripped from every string.
+        
         // There are also a number of special cases:
         // If the string is empty, return NIL (would be NULL, but that is a reserved word.)
         // If the string is an oracle reserved word, treat it as if we were truncating.
+        // If the string begins with an underscore or numeral, replace that character with 'a'. Column names must begin with an alpha character.
         
         $maxlen = 29;
         $truncsym = '_';
-        $maxlen_with_trunc = $maxlen - strlen($truncsym) - strlen($counter);
-        
-        $str = str_replace(' ', '_', $str);
-        $disallowed_chars = explode(' ', "/ ( ) ! @ # $ % ^ & * + = < > . ,");
-        $str = str_replace($disallowed_chars, '', $str);
-        
+        $maxlen_with_trunc = $maxlen - strlen($truncsym) - strlen($counter + 1);
+        $disallowed_chars = explode(' ', "/ ( ) ! @ # $ % ^ & * + = < > . , -");
         $oracle_reserved_words = ['ACCESS', 'ELSE', 'MODIFY', 'START', 'ADD', 'EXCLUSIVE', 'NOAUDIT', 'SELECT', 'ALL', 'EXISTS', 'NOCOMPRESS', 'SESSION', 'ALTER', 'FILE', 'NOT', 'SET', 'AND', 'FLOAT', 'NOTFOUND', 'SHARE', 'ANY', 'FOR', 'NOWAIT', 'SIZE', 'ARRAYLEN', 'FROM', 'NULL', 'SMALLINT', 'AS', 'GRANT', 'NUMBER',	'SQLBUF', 'ASC', 'GROUP', 'OF',	'SUCCESSFUL', 'AUDIT', 'HAVING', 'OFFLINE',	'SYNONYM', 'BETWEEN', 'IDENTIFIED', 'ON', 'SYSDATE', 'BY', 'IMMEDIATE', 'ONLINE', 'TABLE', 'CHAR', 'IN', 'OPTION',	'THEN', 'CHECK', 'INCREMENT', 'OR',	'TO', 'CLUSTER', 'INDEX', 'ORDER',	'TRIGGER', 'COLUMN', 'INITIAL', 'PCTFREE',	'UID', 'COMMENT', 'INSERT', 'PRIOR',	'UNION', 'COMPRESS', 'INTEGER', 'PRIVILEGES',	'UNIQUE', 'CONNECT', 'INTERSECT', 'PUBLIC',	'UPDATE', 'CREATE', 'INTO', 'RAW',	'USER', 'CURRENT', 'IS', 'RENAME',	'VALIDATE', 'DATE', 'LEVEL', 'RESOURCE', 'VALUES', 'DECIMAL', 'LIKE', 'REVOKE',	'VARCHAR', 'DEFAULT', 'LOCK', 'ROW', 'VARCHAR2', 'DELETE', 'LONG', 'ROWID',	'VIEW', 'DESC', 'MAXEXTENTS', 'ROWLABEL',	'WHENEVER', 'DISTINCT', 'MINUS', 'ROWNUM',	'WHERE', 'DROP', 'MODE', 'ROWS',	'WITH'];
         
-        if (in_array(strtoupper($str), $oracle_reserved_words)) {
-            return [$str . $truncsym . $counter, $counter + 1];
+        $str = str_replace(['__', ' '], '_', $str);
+        $str = str_replace($disallowed_chars, '', $str);
+        
+        if ($str != '') {
+            $first_char = mb_substr($str, 0, 1);
+            if ( $first_char == '_' || preg_match('/[0-9]/', $first_char) == 1) {
+                $str = substr_replace($str, 'a', 0, 1);
+            }
+        }
+        
+        $return_string = $str;
+        $return_counter = $counter;
+        
+        if (in_array(strtoupper($str), $oracle_reserved_words) || in_array(strtoupper($str), $this->distinct_columns_seen)) {
+            $return_string = $str . $truncsym . $counter;
+            $return_counter = $counter + 1;
         }
         if (strlen($str) > $maxlen) {
-            return [substr($str, 0, $maxlen_with_trunc) . $truncsym . $counter, $counter + 1];
+            $return_string = substr($str, 0, $maxlen_with_trunc) . $truncsym . $counter;
+            $return_counter = $counter + 1;
         }
-        return [$str, $counter];
+        
+        $this->distinct_columns_seen[] = strtoupper($return_string);
+        return [$return_string, $return_counter];
     }
     
     private function get_distinct_entries($table, $col_name) {
@@ -82,7 +98,7 @@ class Queryparser extends CI_Model {
         // Sanitizes column entries. See $this->trimstr()
         
         $upper_table = 'CE_CASE_MGMT.' . strtoupper($table);
-        $query = $this->db->query("SELECT DISTINCT $col_name FROM $upper_table");
+        $query = $this->db->query("SELECT DISTINCT UPPER($col_name) as $col_name FROM $upper_table");
         $unique_trim_counter = 0;
         $distinct_col_entries = null;
         foreach ($query->result_array() as $row) {
@@ -133,11 +149,8 @@ class Queryparser extends CI_Model {
         SELECT * FROM (
         SELECT
         $selections
-        FROM CE_CASE_MGMT.SF_CASE
-        WHERE TRUNC(CREATEDDATE) >= TRUNC(SYSDATE)-90
-        AND ROWNUM <= 50000
+        FROM CE_CASE_MGMT.$table
         $filters
-        ORDER BY CREATEDDATE DESC
         )
         pivot
         (

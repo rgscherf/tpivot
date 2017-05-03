@@ -6,17 +6,204 @@ class Datastore extends CI_Model {
     // once the user makes a selection of source/fields we come back to the map
     // to pull rows for the pivot table.
     
-    private $sources = ['Canadian MPs' =>
-    ['path' => APPPATH.'models/data/mps.csv',
-    'type' => 'csv',
-    'headers' => ['Name',
-    'Party',
-    'Province',
-    'Age',
-    'Gender']],
-    'SF_CASE' => ['path' => "SELECT * FROM CE_CASE_MGMT.SF_CASE",
+    private $sources = [
+    'OUTCOME_CASE_PVT' => [
+    'path' => "SELECT * FROM CE_CASE_MGMT.OUTCOME_CASE_PVT",
     'type' => 'oracle',
-    'headers' => ['ID',
+    'headers' => [
+    'ID',
+    'CASENUMBER',
+    'CONTACTID',
+    'ACCOUNTID',
+    'PARENTID',
+    'REQUEST',
+    'STATUS',
+    'REASON',
+    'ORIGIN',
+    'DESCRIPTION',
+    'WHEN_CLOSED',
+    'WHEN_CLOSED_YEAR',
+    'WHEN_CLOSED_MONTH',
+    'WHEN_CLOSED_DAY',
+    'WHEN_CLOSED_TIME_MST',
+    'WHEN_CLOSED_HOUR_MST',
+    'WHEN_CLOSED_MINUTE_MST',
+    'OWNERID',
+    'OWNER_NTID',
+    'OWNER_ROLE',
+    'OWNER_AVAYA_ID',
+    'CREATEDBYID',
+    'CREATEDBY_NTID',
+    'CREATEDBY_ROLE',
+    'CREATEDBY_AVAYA_ID',
+    'FIRST_AGENT_ASSIGNED',
+    'FIRST_AGENT_NTID',
+    'FIRST_AGENT_ROLE',
+    'FIRST_AGENT_AVAYA_ID',
+    'WHEN_CREATED',
+    'WHEN_CREATED_YEAR',
+    'WHEN_CREATED_MONTH',
+    'WHEN_CREATED_DAY',
+    'WHEN_CREATED_TIME_MST',
+    'WHEN_CREATED_HOUR_MST',
+    'WHEN_CREATED_MINUTE_MST',
+    'WHEN_MODIFIED',
+    'WHEN_MODIFIED_YEAR',
+    'WHEN_MODIFIED_MONTH',
+    'WHEN_MODIFIED_DAY',
+    'WHEN_MODIFIED_TIME_MST',
+    'WHEN_MODIFIED_HOUR_MST',
+    'WHEN_MODIFIED_MINUTE_MST',
+    'PENDING_CLOSE_DATE',
+    'PENDING_CLOSE_DATE_YEAR',
+    'PENDING_CLOSE_DATE_MONTH',
+    'PENDING_CLOSE_DATE_DAY',
+    'PENDING_CLOSE_DATE_TIME_MST',
+    'PENDING_CLOSE_DATE_HOUR_MST',
+    'PENDING_CLOSE_DATE_MINUTE_MST',
+    'DUE_DATE',
+    'DUE_DATE_YEAR',
+    'DUE_DATE_MONTH',
+    'DUE_DATE_DAY',
+    'RESULT',
+    'RELATED_ORDER_TICKET_TYPE',
+    'RELATED_ORDER_TICKET_ID',
+    'LANGUAGE_PREFERENCE',
+    'NOTIFICATION_METHOD',
+    'NOTIFICATION_ID',
+    'SPOKE_TO',
+    'EVENING_PHONE',
+    'CAN_BE_REACHED_PHONE',
+    'ISFIELDED',
+    'ISESCALATED',
+    'PRE_APPT_REVIEW_REQUESTED',
+    'OUTCOME_REVIEW_REQUESTED',
+    'CLOSE_REVIEW_REQUESTED',
+    'PRE_APPT_REVIEW_DUE_DATE',
+    'OUTCOME_REVIEW_DUE_DATE',
+    'OUTCOME_REVIEW_DUE_DATE_YEAR',
+    'OUTCOME_REVIEW_DUE_DATE_MONTH',
+    'OUTCOME_REVIEW_DUE_DATE_DAY',
+    'CLOSE_REVIEW_DUE_DATE',
+    'CLOSE_REVIEW_DUE_DATE_YEAR',
+    'CLOSE_REVIEW_DUE_DATE_MONTH',
+    'CLOSE_REVIEW_DUE_DATE_DAY',
+    'BILL_CYCLE_DAY',
+    'BILLING_ACCOUNT_NUMBER',
+    'SOURCEREFID',
+    'SOURCE_TYPE',
+    'SOURCE_STATUS',
+    'CLOSING_COMMENTS',
+    'BRAND',
+    'TREATMENT_TYPE',
+    'WORKFLOW_TEMPLATE',
+    'AGENT_FUNCTION',
+    'PENDING_CLOSE_DURATION',
+    'CLOSE_CASE_REMINDER_DAYS',
+    'LINE_OF_BUSINESS',
+    'CUSTOMER_TIME_ZONE',
+    'L2R_SURVEY_NOTIFICATION',
+    'COUNT'
+    ]],
+    'OUTCOME_TASK_PVT' => [
+    'path' => "SELECT * FROM CE_CASE_MGMT.OUTCOME_TASK_PVT",
+    'type' => 'oracle',
+    'headers' => [
+    'COMPLETION_BY_ID',
+    'COMPLETION_DATE',
+    'PUSHED_ITEM_ID',
+    'PUSHED_ITEM_SUBJECT',
+    'CANCELLED_REASON',
+    'ID',
+    'RECORDTYPEID',
+    'RELATED_TO',
+    'SUBJECT',
+    'STATUS',
+    'PRIORITY',
+    'OWNERID',
+    'OWNER_NTID',
+    'OWNER_ROLE',
+    'OWNER_AVAYA_ID',
+    'DESCRIPTION',
+    'TYPE',
+    'WHEN_CREATED',
+    'WHEN_CREATED_YEAR',
+    'WHEN_CREATED_MONTH',
+    'WHEN_CREATED_DAY',
+    'WHEN_CREATED_TIME_MST',
+    'WHEN_CREATED_HOUR_MST',
+    'WHEN_CREATED_MINUTE_MST',
+    'WHEN_MODIFIED',
+    'WHEN_MODIFIED_YEAR',
+    'WHEN_MODIFIED_MONTH',
+    'WHEN_MODIFIED_DAY',
+    'WHEN_MODIFIED_TIME_MST',
+    'WHEN_MODIFIED_HOUR_MST',
+    'WHEN_MODIFIED_MINUTE_MST',
+    'LAST_MODIFIED_DATE',
+    'LAST_MODIFIED_DATE_YEAR',
+    'LAST_MODIFIED_DATE_MONTH',
+    'LAST_MODIFIED_DATE_DAY',
+    'LAST_MODIFIED_DATE_TIME_MST',
+    'LAST_MODIFIED_DATE_HOUR_MST',
+    'LAST_MODIFIED_DATE_MINUTE_MST',
+    'LASTMODIFIEDBYID',
+    'LAST_MODIFIED_NTID',
+    'LAST_MODIFIED_ROLE',
+    'LAST_MODIFIED_AVAYA_ID',
+    'ISREMINDERSET',
+    'REMINDERDATETIME',
+    'REMINDERDATETIME_YEAR',
+    'REMINDERDATETIME_MONTH',
+    'REMINDERDATETIME_DAY',
+    'REMINDERDATETIME_TIME_MST',
+    'REMINDERDATETIME_HOUR_MST',
+    'REMINDERDATETIME_MINUTE_MST',
+    'RECURRENCETYPE',
+    'RECURRENCEINTERVAL',
+    'DUE_DATE',
+    'DUE_DATE_YEAR',
+    'DUE_DATE_MONTH',
+    'DUE_DATE_DAY',
+    'DUE_DATE_TIME_MST',
+    'DUE_DATE_HOUR_MST',
+    'DUE_DATE_MINUTE_MST',
+    'ISESCALATED',
+    'OBJECT_NAME',
+    'OBJECT_DESCRIPTION',
+    'OBJECT_TYPE',
+    'ESCALATED',
+    'ACTIVITY_DATE',
+    'CALL_DURATION',
+    'CALLING_LINE_ID',
+    'CALL_TOPIC',
+    'CALL_TOPIC_TYPE',
+    'DIRECTION',
+    'DISPOSITION',
+    'DNIS',
+    'GENESYSID',
+    'LAST_IVR_MENU',
+    'SERVICE_GROUP_AND_CELL',
+    'TN_NUMBER',
+    'TRANSFER_HISTORY',
+    'CONTACT_ID',
+    'CREATEDBYID',
+    'CREATEDBY_NTID',
+    'CREATEDBY_ROLE',
+    'CREATEDBY_AVAYA_ID',
+    'CALL_TYPE',
+    'WHO',
+    'DELETED_IND',
+    'CALL_DURATION_IN_SECONDS',
+    'IWD_ESCALATED',
+    'CAN_BE_REACHED',
+    'TASK_DESCRIPTION_SUMMARY',
+    'LAST_MODIFIED_BY',
+    'PROVINCE'
+    ]],
+    'SF_CASE' => ['path' => 'SELECT * FROM CS_CASE_MGMT.SF_CASE', 'type' => 'oracle', 'headers' =>
+    [
+    'ID',
     'CASENUMBER',
     'CONTACTID',
     'ACCOUNTID',
@@ -68,46 +255,7 @@ class Datastore extends CI_Model {
     'LINE_OF_BUSINESS',
     'CUSTOMER_TIME_ZONE',
     'LASTMODIFIEDBYID',
-    'L2R_SURVEY_NOTIFICATION__C']],
-    'SF_WORKFLOW' =>[
-    'type' => 'oracle',
-    'path' => "SELECT * FROM CE_CASE_MGMT.SF_WORKFLOW_TEMPLATE",
-    'headers' => [
-    'ID',
-    'OWNERID',
-    'ISDELETED',
-    'WORKFLOW_TEMPLATE_NAME',
-    'CREATEDDATE',
-    'CREATEDBYID',
-    'LASTMODIFIEDDATE',
-    'LASTMODIFIEDBYID',
-    'SYSTEMMODSTAMP',
-    'LAST_VIEWED_DATE',
-    'LAST_REFERENCED_DATE',
-    'CLOSE_REMINDER_DAYS',
-    'LOB',
-    'EXTERNALID',
-    'ACCOUNT_REQUIRED',
-    'AGE',
-    'AGENT_FUNCTION',
-    'BRAND',
-    'CASE_DESCRIPTION_ENGLISH',
-    'CASE_DESCRIPTION_FRENCH',
-    'DELIVER_BY',
-    'FIELDED',
-    'HELP_URL_ENGLISH',
-    'HELP_URL_FRENCH',
-    'INTRO_NOTIFICATION_TEMPLATE',
-    'IS_ACTIVE',
-    'IS_VISIBLE',
-    'PENDING_CLOSE_DURATION',
-    'RELATED_ORDER_TICKET',
-    'REQUESTED_OUTCOME',
-    'SOURCE_ACTION_CD',
-    'SOURCE_STATUS',
-    'SOURCE_TYPE',
-    'TREATMENTS_COMMAS',
-    'TREATMENTS',
+    'L2R_SURVEY_NOTIFICATION__C'
     ]]];
     
     public function __construct() {
@@ -120,56 +268,6 @@ class Datastore extends CI_Model {
         // given entries in $CSV_sources (and others?), makes
         // the $data map that will be used to populate pivot table.
         return $this->sources;
-    }
-    
-    private function get_csv_rows_from_path($path) {
-        ini_set('auto_detect_line_endings', true);
-        
-        $file = file($path);
-        $csv = array_map('str_getcsv', $file);
-        $keymap = $csv[0];
-        
-        if (!$keymap) {
-            return "CSV did not match naming requirements. See documentation in loadCSV.php";
-        }
-        
-        $clean_csv = [];
-        foreach(array_slice($csv, 1) as $row) {
-            $assoc_row = array_combine($keymap, $row);
-            $clean_csv[] = $assoc_row;
-        }
-        
-        return $clean_csv;
-    }
-    
-    private function get_oracle_rows_from_path($path) {
-        $ret_query = [];
-        $query = $this->db->query($path);
-        $count = 0;
-        while ($row = $query->unbuffered_row('array')) {
-            $count += 1;
-            log_message('debug', $count);
-            $ret_query[] = $row;
-        }
-        
-        return $ret_query;
-    }
-    
-    public function retrieve_data($incoming) {
-        set_time_limit(300);
-        $selected_source_name = $incoming['selectedDataset'];
-        $selected_table_info = $incoming['dataSets'][$selected_source_name];
-        $path = $selected_table_info['path'];
-        $selected_table_type = $selected_table_info['type'];
-        
-        $rows;
-        if ($selected_table_type === 'csv') {
-            $rows = $this->get_csv_rows_from_path($path);
-        } else {
-            $rows = $this->get_oracle_rows_from_path($path);
-        }
-        
-        return $rows;
     }
     
     private function unwrap_keys($row) {
@@ -186,6 +284,7 @@ class Datastore extends CI_Model {
     }
     
     public function process_query($incoming) {
+        set_time_limit(300);
         $result = $this->Queryparser->make_pivot_query($incoming);
         if ($result == false) {
             return $result;
@@ -199,9 +298,9 @@ class Datastore extends CI_Model {
         // REMOVE SINGLE QUOTES FROM ROW ARRAY KEYS
         $return_result = array_map(array($this, 'unwrap_keys'), $query->result_array());
         
-        foreach($return_result as $row) {
-            log_message('debug', json_encode($row));
-        }
+        // foreach($return_result as $row) {
+        //     log_message('debug', json_encode($row));
+        // }
         
         return $return_result;
     }

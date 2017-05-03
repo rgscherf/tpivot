@@ -38,10 +38,8 @@ class Pivot extends CI_Controller {
         
         if ((password_verify($user, $hasheduser)) && (password_verify($pass,$hashedpass))) {
             // if (true) {
-            log_message('debug', 'login accepted!');
             $this->render_index_page();
         } else {
-            log_message('debug', 'login required!');
             $this->load->view('templates/login');
         }
         
