@@ -72,7 +72,7 @@ class Queryparser extends CI_Model {
         
         if ($str != '') {
             $first_char = mb_substr($str, 0, 1);
-            if ( $first_char == '_' || preg_match('/[0-9]/', $first_char) == 1) {
+            if ($first_char == '_' || preg_match('/[0-9]/', $first_char) == 1) {
                 $str = substr_replace($str, 'a', 0, 1);
             }
         }
