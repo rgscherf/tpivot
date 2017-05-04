@@ -96,7 +96,7 @@ function constructFieldObj(fieldName, colName) {
 			baseObj.filterVal = "";
 			break;
 		case "Values":
-			baseObj.reducer = "listUnique";
+			baseObj.reducer = "listagg";
 			baseObj.displayAs = "raw";
 			break;
 		default:
@@ -343,7 +343,6 @@ $(function () {
 				if (sendConfigOnThisUpdate) {
 					var columnID = event.target.id;
 					reorderFields(model, columnID);
-					// console.log("Updated model to: " + JSON.stringify(model));
 					sendConfig(model);
 				}
 				sendConfigOnThisUpdate = !sendConfigOnThisUpdate;
