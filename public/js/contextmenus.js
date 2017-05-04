@@ -15,13 +15,15 @@ var contextMenus = (function () {
         '<div class="contextItem" data-aggregator="average">Average</div>',
         '<div class="contextItem" data-aggregator="min">Min</div>',
         '<div class="contextItem" data-aggregator="max">Max</div>',
-        '</div>',
-        '<div class="contextBackground">',
-        '<div class="metadataAnnotation" style="opacity:.8;margin-bottom:3px;">Display as</div>',
-        '<div class="contextItem" data-displayas="raw">Raw value</div>',
-        '<div class="contextItem" data-displayas="row">% row total</div>',
-        '<div class="contextItem" data-displayas="col">% column total</div>',
-        '<div class="contextItem" data-displayas="total">% grand total</div>',
+        '<div class="contextItem" data-aggregator="stddev">Std. Dev.</div>',
+        '<div class="contextItem" data-aggregator="variance">Variance</div>',
+        // '</div>',
+        // '<div class="contextBackground">',
+        // '<div class="metadataAnnotation" style="opacity:.8;margin-bottom:3px;">Display as</div>',
+        // '<div class="contextItem" data-displayas="raw">Raw value</div>',
+        // '<div class="contextItem" data-displayas="row">% row total</div>',
+        // '<div class="contextItem" data-displayas="col">% column total</div>',
+        // '<div class="contextItem" data-displayas="total">% grand total</div>',
         '</div>',
         '</div >'].join("\n");
 
@@ -81,6 +83,7 @@ var contextMenus = (function () {
         $('.contextItem')
             .filter("[data-aggregator='" + currentlySelectedAggregator + "']")
             .addClass('selectedContextItem');
+        // display-as fields are deprecated for now. 
         $('.contextItem')
             .filter("[data-displayas='" + currentlySelectedDisplayAs + "']")
             .addClass('selectedContextItem');
@@ -144,6 +147,7 @@ var contextMenus = (function () {
             contextType: "aggregator",
             fieldName: fieldName,
             selectedReducer: $(event.target).data("aggregator"),
+            // display-as fields are deprecated for now. 
             selectedDisplayAs: $(event.target).data("displayas")
         }
     }

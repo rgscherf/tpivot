@@ -3,17 +3,15 @@
 ## Functionality 
 
 - Aggregator functions
-    - LISTAGG
-        - Requires bigly rewriting SELECT statement.
-        - Examples in `scratch.sql`
-    - VARIANCE add to front-end
-    - STDDEV add to front-end
-    - COUNT UNIQUE add to front-end?
+    - DONE LISTAGG
+    - DONE COUNT 
+    - DONE AVG 
+    - DONE SUM 
     - DONE MIN 
     - DONE MAX 
-    - DONE SUM 
-    - DONE AVG 
-    - DONE COUNT 
+    - DONE VARIANCE 
+    - DONE STDDEV 
+
 - New functionality
     - GROUP BY DATE 
         - Did greg just add this as a column?
@@ -23,6 +21,8 @@
     - Can we stack row/col/val like the old pivot table?
     - What should happen when the user picks an invalid field (this can happen if col type is CLOB)?
     - Filters
+
+- Error messages -- how should they be passed to the client?
 
 ## Presentation
 
