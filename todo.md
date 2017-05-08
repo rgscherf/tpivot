@@ -1,29 +1,14 @@
 # TPIVOT TODO
 
 ## Functionality 
-
-- Aggregator functions
-    - DONE LISTAGG
-    - DONE COUNT 
-    - DONE AVG 
-    - DONE SUM 
-    - DONE MIN 
-    - DONE MAX 
-    - DONE VARIANCE 
-    - DONE STDDEV 
-
 - New functionality
     - GROUP BY DATE 
         - Did greg just add this as a column?
         - for date types -> Year, Month, Day, Hour
-    - Can we stack row/col/val like the old pivot table?
-        - Yes, think about results as an array of arrays rather than array of objects.
-        - return[0] = [header]
-        - return[1...] = [col_value]
+    - implement filters
+    - Returning error messages from pivot parsing?
+    - Server retuning metadata such as selected row fields?
     - What should happen when the user picks an invalid field (this can happen if col type is CLOB)?
-    - Filters
-
-- Error messages -- how should they be passed to the client?
 
 ## Presentation
 
