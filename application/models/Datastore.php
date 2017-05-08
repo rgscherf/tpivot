@@ -325,6 +325,7 @@ class Datastore extends CI_Model {
     public function process_query($incoming) {
         //set_time_limit(300);
         $result = $this->Queryparser->make_pivot_query($incoming);
+        log_message('debug', $result);
         if ($result == false) {
             return $result;
         }
