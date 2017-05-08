@@ -26,6 +26,16 @@ class Queryparser extends CI_Model {
     // SELECT CLAUSE
     ////////////////
     
+    private function get_row_names($query_model) {
+        $rows = $query_model['Rows'];
+        $row_strs = [];
+        foreach ($rows as $row) {
+            $row_str = $this->field_name($row);
+            $row_strs[] = $row_str;
+        }
+        return join($row_strs, ', ');
+    }
+    
     private function get_selected_columns($query_model) {
         $rows = $query_model['Rows'];
         $cols = $query_model['Columns'];
@@ -203,7 +213,7 @@ private function get_distinct_entries($table, $col_name) {
     // Sanitizes column entries. See $this->trimstr()
     
     $upper_table = 'CE_CASE_MGMT.' . strtoupper($table);
-    $query = $this->db->query("SELECT DISTINCT UPPER($col_name) as $col_name FROM $upper_table");
+    $query = $this->db->query("SELECT DISTINCT $col_name as $col_name FROM $upper_table");
     $unique_trim_counter = 0;
     $distinct_col_entries = null;
     foreach ($query->result_array() as $row) {
@@ -221,7 +231,6 @@ private function get_distinct_entries($table, $col_name) {
 
 private function make_columns($table, $query_model) {
     // if there are entries in the column table, take the first and set its unique values as 'as'.
-    // TODO if there are no entries in the column table, do ???
     $first_val = $query_model['Columns'][0];
     $col = $this->field_name($first_val);
     $distinct_col_entries = $this->get_distinct_entries($table, $col);
@@ -233,12 +242,25 @@ private function make_columns($table, $query_model) {
 // MODEL VALIDATOR
 //////////////////
 
-// TODO: Should this be in Datastore instead?
-private function model_is_valid($query_model) {
-    return (
-    count($query_model['Columns']) > 0
-    && count($query_model['Rows']) > 0
-    && count($query_model['Values']) > 0);
+private function query_shape_selector($query_model) {
+    // given a user query, pick the SQL 'template' that will be used.
+    // also does a simple validatation, rejecting query models that lack >0 rows and >0 values.
+    
+    $model_is_renderable = count($query_model['Rows']) > 0 && count($query_model['Values']) > 0;
+    
+    if (!$model_is_renderable) {
+        return false;
+    }
+    
+    $ret = '';
+    if (count($query_model['Columns']) === 0) {
+        // 'spreadsheet' view only includes row and value columns.
+        $ret = 'spreadsheet';
+    } else {
+        // 'pivot' view is values with row/col intersections.
+        $ret = 'pivot';
+    }
+    return $ret;
 }
 
 
@@ -246,16 +268,7 @@ private function model_is_valid($query_model) {
 // PUT IT ALL TOGETHER!
 ///////////////////////
 
-public function make_pivot_query($incoming) {
-    // validate model,
-    // construct query
-    $table = $incoming['table'];
-    $query_model = $incoming['model'];
-    
-    if (!$this->model_is_valid($query_model)) {
-        return false;
-    }
-    
+private function make_pivot_view($table, $query_model) {
     $selections = $this->make_selections($table, $query_model);
     $filters = $this->make_filters($query_model);
     $aggregator = $this->make_aggregator($query_model);
@@ -273,5 +286,51 @@ public function make_pivot_query($incoming) {
     )";
     
     return $sql_query;
+}
+
+private function make_spreadsheet_view($table, $query_model) {
+    $aggregator = $this->make_aggregator($query_model);
+    $selected_rows = $this->get_row_names($query_model);
+    
+    $sql_query = "
+    SELECT
+    $selected_rows
+    , $aggregator
+    FROM CE_CASE_MGMT.$table
+    GROUP BY
+    $selected_rows
+    ORDER BY $selected_rows
+    ";
+    
+    return $sql_query;
+}
+
+public function make_pivot_query($incoming) {
+    $table = $incoming['table'];
+    $query_model = $incoming['model'];
+    $query_shape = $this->query_shape_selector($query_model);
+    
+    log_message('debug', 'ROWS: ' . json_encode($query_model['Rows']));
+    log_message('debug', 'COLS: ' . json_encode($query_model['Columns']));
+    log_message('debug', 'VALS: ' . json_encode($query_model['Values']));
+    
+    if (!$query_shape) {
+        // The shape was not valid.
+        return false;
+    }
+    
+    $sql_query = "";
+    switch ($query_shape) {
+        case 'spreadsheet':
+            $sql_query = $this->make_spreadsheet_view($table, $query_model);
+            break;
+        case 'pivot':
+            $sql_query = $this->make_pivot_view($table, $query_model);
+            break;
+        default:
+            break;
+}
+
+return $sql_query;
 }
 }
