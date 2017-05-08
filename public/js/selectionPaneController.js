@@ -322,7 +322,6 @@ $(function () {
 	// second firing of `update` when the model state is fully captured. 
 	// This var is checked in `update` and, if true, we continue with our logic. In either case, 
 	// its value is flipped.
-	var sendConfigOnThisUpdate = false;
 
 	// set up sortable lists
 	cols.map(function (elem) {
@@ -339,13 +338,16 @@ $(function () {
 				addFieldToCol(model, fieldNameAsID, colNameAsID);
 				modifyItemDOM(model, fieldNameAsID, nameFromID(colNameAsID));
 			},
-			update: function (event, ui) {
-				if (sendConfigOnThisUpdate) {
-					var columnID = event.target.id;
-					reorderFields(model, columnID);
-					sendConfig(model);
-				}
-				sendConfigOnThisUpdate = !sendConfigOnThisUpdate;
+			stop: function (event, ui) {
+				var columnID = event.target.id;
+				reorderFields(model, columnID);
+				sendConfig(model);
+				var displayModel = {
+					Rows: model.Rows,
+					Columns: model.Columns,
+					Values: model.Values
+				};
+				console.log(JSON.stringify(displayModel));
 			}
 		});
 	});

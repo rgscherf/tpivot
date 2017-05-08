@@ -1,6 +1,7 @@
 var tpivot = (function () {
     var makeHeaderArray = function (passedModel, pivotRow) {
         var cols = [];
+        var firstCol = passedModel.Rows[0].name;
         Object.keys(pivotRow).forEach(function (elem) {
             if (elem === firstCol) {
                 return;
@@ -9,7 +10,6 @@ var tpivot = (function () {
             }
         });
         cols.sort();
-        var firstCol = passedModel.Rows[0].name;
         cols = cols.filter(function (elem) {
             return elem !== firstCol;
         })
@@ -64,7 +64,6 @@ var tpivot = (function () {
         if (pivotData.results === false) { return; }
         var passedModel = pivotData.model;
         var queryResults = pivotData.results;
-        console.table(queryResults);
         var headerArray = makeHeaderArray(passedModel, queryResults[0]);
         queryResults.sort(function (a, b) {
             return a[headerArray[0]] === b[headerArray[0]] ? 0 : +(a[headerArray[0]] > b[headerArray[0]]) || -1;

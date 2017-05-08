@@ -16,9 +16,10 @@
     - GROUP BY DATE 
         - Did greg just add this as a column?
         - for date types -> Year, Month, Day, Hour
-    - Should there be default behavior when we don't have >0 row, col, val?
-        - Yes, requirement for at least (len col) == 0. User should select row and val, and see a 'spreadsheet' view.
     - Can we stack row/col/val like the old pivot table?
+        - Yes, think about results as an array of arrays rather than array of objects.
+        - return[0] = [header]
+        - return[1...] = [col_value]
     - What should happen when the user picks an invalid field (this can happen if col type is CLOB)?
     - Filters
 
