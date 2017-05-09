@@ -5,7 +5,7 @@
 - Multiple rows, cols, values in pivot?
 - Implement filters
 - What should happen when the user picks an invalid field (this can happen if col type is CLOB)?
-    - For now, error.
+    - For now, return error object.
 
 ## Infrastructure
 
@@ -21,4 +21,5 @@
 - Need total rows/cols.
 
 ## Future dev
+
 - Add query metadata to response, such as number of title cols
