@@ -49,6 +49,8 @@ class Pivot extends CI_Controller {
         $cleangoods = json_decode(trim($goods), true);
         $pivot_results = $this->Datastore->process_query($cleangoods);
         $return_payload = ['model' => $cleangoods['model'], 'results' => $pivot_results];
-        $this->output->set_content_type('application/json')->set_output(json_encode($return_payload, JSON_NUMERIC_CHECK));
+        $this->output->set_status_header(200)
+        ->set_content_type('application/json')
+        ->set_output(json_encode($return_payload, JSON_NUMERIC_CHECK));
     }
 }
