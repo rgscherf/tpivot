@@ -42,16 +42,13 @@ class Pivot extends CI_Controller {
         } else {
             $this->load->view('templates/login');
         }
-        
     }
     
     public function process_client_query() {
         $goods = $this->input->raw_input_stream;
         $cleangoods = json_decode(trim($goods), true);
         $pivot_results = $this->Datastore->process_query($cleangoods);
-        $results_and_model = ['model' => $cleangoods['model'], 'results' => $pivot_results];
-        $this->output->set_content_type('application/json')->set_output(json_encode($results_and_model, JSON_NUMERIC_CHECK));
+        $return_payload = ['model' => $cleangoods['model'], 'results' => $pivot_results];
+        $this->output->set_content_type('application/json')->set_output(json_encode($return_payload, JSON_NUMERIC_CHECK));
     }
-    
-    
 }

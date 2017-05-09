@@ -330,12 +330,20 @@ class Datastore extends CI_Model {
             return $result;
         }
         
-        $query = $this->db->query($result);
-        $query_result = $query->result_array();
-        
-        $header = $this->make_header_row($incoming, $query_result);
-        $flat_results = $this->flatten_result_array($header, $query_result);
-        return $flat_results;
+        // $query = $this->db->query($result);
+        $query = $this->db->query("SELECT BLANK FROM CS_CASE_MGMT.SF_CASE");
+        if (!$query) {
+            $err = $this->db->error();
+            $ret = ['error' => true,
+            'errmsg' => $err['message'],
+            'errsql' => $err['sqltext'],
+            'rows' => null];
+            return $ret;
+        } else {
+            $query_result = $query->result_array();
+            $header = $this->make_header_row($incoming, $query_result);
+            $flat_results = $this->flatten_result_array($header, $query_result);
+            return ['error' => false, 'rows' => $flat_results];
+        }
     }
-    
 }
