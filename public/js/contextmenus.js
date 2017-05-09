@@ -12,7 +12,7 @@ var contextMenus = (function () {
         '<div class="contextItem" data-aggregator="listagg">List unique</div>',
         '<div class="contextItem" data-aggregator="count">Count</div>',
         '<div class="contextItem" data-aggregator="sum">Sum</div>',
-        '<div class="contextItem" data-aggregator="average">Average</div>',
+        '<div class="contextItem" data-aggregator="avg">Average</div>',
         '<div class="contextItem" data-aggregator="min">Min</div>',
         '<div class="contextItem" data-aggregator="max">Max</div>',
         '<div class="contextItem" data-aggregator="stddev">Std. Dev.</div>',

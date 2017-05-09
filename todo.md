@@ -1,14 +1,16 @@
 # TPIVOT TODO
 
-## Functionality 
-- New functionality
-    - GROUP BY DATE 
-        - Did greg just add this as a column?
-        - for date types -> Year, Month, Day, Hour
-    - implement filters
-    - Returning error messages from pivot parsing?
-    - Server retuning metadata such as selected row fields?
-    - What should happen when the user picks an invalid field (this can happen if col type is CLOB)?
+## New Functionality 
+
+- Multiple rows, cols, values in pivot?
+- Implement filters
+- What should happen when the user picks an invalid field (this can happen if col type is CLOB)?
+    - For now, error.
+
+## Infrastructure
+
+- Get views replicated on DEV?
+- Move to TELUS server?
 
 ## Presentation
 
@@ -17,3 +19,6 @@
     - side-by-side view?
     - 2-column layout for long field lists?
 - Need total rows/cols.
+
+## Future dev
+- Add query metadata to response, such as number of title cols
