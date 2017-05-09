@@ -196,3 +196,8 @@ input[type=text] {
 button {
   margin: 3px;
 }
+
+.errorBanner {
+	color: orangered;
+	margin-bottom: 30px;
+}

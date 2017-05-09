@@ -282,11 +282,16 @@ function sendConfig(model) {
 		table: currentTable,
 		model: model
 	};
-	$.post({
+	$.ajax({
+		type: "post",
 		url: queryProcessURL,
 		data: JSON.stringify(payload),
 		success: function (returnData) {
 			tpivot.renderPivot(returnData);
+		},
+		error: function (x, stat, err) {
+			console.log("AJAX REQUEST FAILED");
+			console.log(x, stat, err);
 		}
 	});
 }
@@ -305,7 +310,7 @@ function setTableData(newTB) {
 }
 function refreshPivot(model) {
 	if (tableData) {
-		tpivot.renderPivot(tableData, model);
+		tpivot.renderPivot(tableData);
 	}
 }
 
