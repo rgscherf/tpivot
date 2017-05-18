@@ -99,7 +99,7 @@ class Queryparser extends CI_Model {
     }
     
     private function detect_listagg($query_model) {
-        // Detects whether the user has chosed a LISTAGG aggregator.
+        // Detects whether the user has chosen a LISTAGG aggregator.
         // If so, returns the FIRST field selected for LISTAGG to be aggregated
         // e.g. User can only listagg one field at a time.
         $listagg_detected = false;
@@ -269,15 +269,15 @@ private function query_shape_selector($query_model) {
 ///////////////////////
 
 private function make_pivot_view($table, $query_model) {
-    $selections = $this->make_selections($table, $query_model);
-    $filters = $this->make_filters($query_model);
+    $from_selections = $this->make_selections($table, $query_model);
+    $where_filters = $this->make_filters($query_model);
     $aggregator = $this->make_aggregator($query_model);
     $columns = $this->make_columns($table, $query_model);
     
     $sql_query = "
     SELECT * FROM (
-    $selections
-    $filters
+    $from_selections
+    $where_filters
     )
     pivot
     (
@@ -289,8 +289,8 @@ private function make_pivot_view($table, $query_model) {
 }
 
 private function make_spreadsheet_view($table, $query_model) {
-    $aggregator = $this->make_aggregator($query_model);
     $selected_rows = $this->get_row_names($query_model);
+    $aggregator = $this->make_aggregator($query_model);
     
     $sql_query = "
     SELECT

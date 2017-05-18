@@ -79,7 +79,3 @@ PIVOT (
     max(ORIGINS)
     FOR BRAND IN (q'[]', q'[KOODO]' AS KOODO, q'[TELUS]' AS TELUS)
 );
-
--- So we need to add an inner SELECT DISTINCT for all selected cols
--- And rearrange the outer SELECT with only simple col names and and a LISTAGG on the List Unique column.
--- For the pivot value, do `max` (although it doesn't really matter) for the ALIASED col name. Probably just add an `S` onto the col name?

@@ -152,6 +152,8 @@ var contextMenus = (function () {
         }
     }
 
+    //////////////////////////////////////////////
+    // DEPRECATED UNTIL FILTERS ARE RE-IMPLEMENTED
     var tryToApplyFilter = function (event) {
         // relevant id's in the filter context box, and the
         // filter object fields they correspond to (if applicable)
@@ -184,6 +186,8 @@ var contextMenus = (function () {
         return ret;
     };
 
+    //////////////////////////////////////////////
+    // DEPRECATED UNTIL FILTERS ARE RE-IMPLEMENTED
     var getFilterClickInformation = function (event) {
         // Handle clicks inside the filter context menu.
         // We only act on clicks for the Cancel button (removing this component)
@@ -225,7 +229,6 @@ var contextMenus = (function () {
         }
         return returnValue
     }
-
 
 
     /////////////////

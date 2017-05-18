@@ -1,6 +1,6 @@
 <?php
 
-class Datastore extends CI_Model {
+class Datasource extends CI_Model {
     // $data is a map from data-source-title => data-path, column-titles, and csv-or-sql-flag.
     // initially used to populate the list of possible data sources,
     // once the user makes a selection of source/fields we come back to the map
@@ -265,22 +265,8 @@ class Datastore extends CI_Model {
     }
     
     public function get_sources() {
-        // given entries in $CSV_sources (and others?), makes
-        // the $data map that will be used to populate pivot table.
+        // Returns metadata about pivot table sources.
         return $this->sources;
-    }
-    
-    private function unwrap_keys($row) {
-        // Remove single-quotes from row array keys.
-        // Row keys come from a SELECT DISTINCT call where return values are wrapped in q'[ ]'
-        // This causes them to come back like "'this'" (note single-quotes inside the string delimiter).
-        // Wrapped keys will cause havoc on the JS pivot table layer.
-        $return_row = [];
-        foreach ($row as $key=>$value) {
-            $unwrapped_key = str_replace("'", "", $key);
-            $return_row[$unwrapped_key] = $value;
-        }
-        return $return_row;
     }
     
     private function make_header_row($incoming, $result_array) {
@@ -288,7 +274,8 @@ class Datastore extends CI_Model {
         // First, add the row field(s) specified by the user.
         // Next, add the null column value (if it exists).
         // Finally, sort remaining column entries in ascending order and add them to the header array.
-        // This array is the first entry in the JSON result array. All result rows present data in the order of this array.
+        // This array is the first entry in the JSON result array.
+        // All result rows present data in the order of this array.
         $query_cols = [];
         foreach ($incoming['model']['Rows'] as $row_obj) {
             $query_cols[] = $row_obj['name'];
@@ -323,14 +310,14 @@ class Datastore extends CI_Model {
     
     
     public function process_query($incoming) {
-        //set_time_limit(300);
-        $result = $this->Queryparser->make_pivot_query($incoming);
-        log_message('debug', $result);
-        if ($result == false) {
-            return $result;
+        $sql_string = $this->Queryparser->make_pivot_query($incoming);
+        log_message('debug', $sql_string);
+        
+        if ($sql_string == false) {
+            return false;
         }
         
-        $query = $this->db->query($result);
+        $query = $this->db->query($sql_string);
         if (!$query) {
             $err = $this->db->error();
             $ret = ['error' => true, 'errmsg' => $err['message'], 'errsql' => $err['sqltext']];
