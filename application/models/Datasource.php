@@ -201,7 +201,9 @@ class Datasource extends CI_Model {
     'LAST_MODIFIED_BY',
     'PROVINCE'
     ]],
-    'SF_CASE' => ['path' => 'SELECT * FROM CS_CASE_MGMT.SF_CASE', 'type' => 'oracle', 'headers' =>
+    'SF_CASE' => ['path' => 'SELECT * FROM CS_CASE_MGMT.SF_CASE',
+    'type' => 'oracle',
+    'headers' =>
     [
     'ID',
     'CASENUMBER',
@@ -310,6 +312,9 @@ class Datasource extends CI_Model {
     
     
     public function process_query($incoming) {
+        // Take a client model object, parse it into an SQL query,
+        // then execute that SQL query and return the results as an array of flat arrays
+        // representing result rows.
         $sql_string = $this->Queryparser->make_pivot_query($incoming);
         log_message('debug', $sql_string);
         
