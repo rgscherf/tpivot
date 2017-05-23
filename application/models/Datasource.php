@@ -315,6 +315,8 @@ class Datasource extends CI_Model {
         // Take a client model object, parse it into an SQL query,
         // then execute that SQL query and return the results as an array of flat arrays
         // representing result rows.
+        // An SQL error will return an object with the `error` flag set to true, and fields for the error code
+        // and the SQL string that was executed.
         $sql_string = $this->Queryparser->make_pivot_query($incoming);
         log_message('debug', $sql_string);
         
