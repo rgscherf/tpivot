@@ -48,15 +48,16 @@ var tpivot = (function () {
     var makeErrorPanel = function (resultsObj) {
         var errmsg = resultsObj.errmsg;
         var errsql = resultsObj.errsql;
-        var errDiv = $('<div></div>')
-            .attr('id', 'pivotTable');
-        errDiv.appendTo($('#pivotTarget'));
 
         var headline = $('<h1></h1>').html('Error in pivot query!').addClass('errorBanner');
         var sqlline = $('<h2></h2>').html('The SQL query');
         var sqltext = $('<div></div>').html(errsql).addClass('smallPadding');
         var msgline = $('<h2></h2>').html('Returned error message:');
         var msgtext = $('<div></div>').html(errmsg).addClass('smallPadding');
+
+        var errDiv = $('<div></div>')
+            .attr('id', 'pivotTable');
+        errDiv.appendTo($('#pivotTarget'));
         errDiv.append(headline, sqlline, sqltext, msgline, msgtext);
     }
 
@@ -67,9 +68,7 @@ var tpivot = (function () {
             makeErrorPanel(pivotData.results);
             return;
         }
-        var passedModel = pivotData.model;
-        var queryResults = pivotData.results.rows;
-        makeTable(queryResults);
+        makeTable(pivotData.results.rows);
     };
 
     return {

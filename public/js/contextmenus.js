@@ -200,7 +200,7 @@ var contextMenus = (function () {
         // with the new filter object.
         var fieldName = nameFromID($(event.target).closest('.sortableItem').attr('id'));
         var thingThatWasClicked = $(event.target).attr('id');
-        returnVal = {
+        var returnVal = {
             contextType: 'filter',
             filterWasApplied: false
         };
