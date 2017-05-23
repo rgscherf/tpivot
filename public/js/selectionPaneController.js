@@ -62,6 +62,7 @@ function initModel(colNames, fieldNames) {
 	return modelObject;
 };
 
+
 function resetState(colNames, selectedTableObject) {
 	var selectedFields = selectedTableObject.headers;
 	// remove any previous sortable elements
@@ -297,6 +298,28 @@ function sendConfig(model) {
 }
 
 
+// DYNAMIC DOM MODIFICATION FOR SELECTION PANEL
+
+function setPanelShowHideWidth() {
+	// correctly size the show/hide pane button to match the selection panel UI
+	var panelWidth = $('#pivotQuery').css('width');
+	$('#selectionPaneShowHide').css('width', panelWidth);
+}
+
+function setTableColumnListShape() {
+	// give the list of table fields a correct number of columns
+	// so that the whole list can be viewed without scrolling.
+	var ENTRIES_PER_COL = 20;
+	var numFields = $('.sortableItem').length;
+	var numCols = Math.min(3, Math.ceil(numFields / ENTRIES_PER_COL));
+	$('.tableColumnList').css('column-count', numCols);
+}
+
+function setSelectionPanelDynamicDOM() {
+	setTableColumnListShape();
+	setPanelShowHideWidth();
+}
+
 /////////////
 // CONTROLLER
 /////////////
@@ -320,6 +343,8 @@ $(function () {
 
 	var currentDataset = $('#tableSelector').val();
 	var model;
+
+	setSelectionPanelDynamicDOM();
 
 	// when adding/removing/reordering fields, we update the model and send it to server in the
 	// sortable list's `update` event. This event fires twice per user action: once for the item
@@ -350,7 +375,8 @@ $(function () {
 				var displayModel = {
 					Rows: model.Rows,
 					Columns: model.Columns,
-					Values: model.Values
+					Values: model.Values,
+					Filters: model.Filters
 				};
 				console.log(JSON.stringify(displayModel));
 			}
@@ -361,6 +387,7 @@ $(function () {
 		// Select a new table to configure. Resets the view and model.
 		currentDataset = $('#tableSelector').val();
 		model = resetState(colNames, availableTables[currentDataset]);
+		setSelectionPanelDynamicDOM();
 	});
 
 
@@ -373,9 +400,11 @@ $(function () {
 		if (selectionPaneHidden) {
 			$('#pivotQuery').show();
 			$(this).text("Hide query pane");
+			setSelectionPanelDynamicDOM();
 		} else {
 			$('#pivotQuery').hide();
 			$(this).text("Show query pane");
+			$(this).css('width', '120px');
 		}
 		selectionPaneHidden = !selectionPaneHidden;
 	});

@@ -1,5 +1,9 @@
 /*TOP LEVEL*/
 
+.sortableItemName {
+	font-size: 0.75em;
+}
+
 /*contains pivot app*/
 body {
 	font-family: "Segoe UI", "Helvetica", sans-serif;
@@ -20,11 +24,13 @@ body {
 
 
 #selectionPaneShowHide {
-	width: 250px;
+    width: 100px;
+    min-width: 80px;
 	text-align: center;
     padding: 3px;
 	border: 1px solid #CDCDCD;
 	margin-left: 10px;
+	margin-right: 10px;
 }
 
 
@@ -42,7 +48,16 @@ body {
 	display: flex;
 	flex-direction: column;
 	padding: 5px;
-	min-height: 300px;
+}
+
+#tableColumns {
+	overflow: auto;
+    height: 350px;
+}
+
+.tableColumnList {
+	column-count: 6;
+	column-gap: 5px;
 }
 
 #queryTableFieldSelector>div {

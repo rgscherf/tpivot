@@ -27,8 +27,8 @@
           <div class="headerText">
             Drag fields below to create query.
           </div>
-          <div class="indent">
-            <ul class="sortableList" id="sortCol-noField">
+          <div id="tableColumns" class="indent">
+            <ul class="tableColumnList sortableList" id="sortCol-noField">
             </ul>
           </div>
         </div>
