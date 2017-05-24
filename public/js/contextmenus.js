@@ -63,14 +63,19 @@ var contextMenus = (function () {
     ///////////////////////////////////////////////////
 
     var makeContextHtml = function (htmlString, event, elementToAppend) {
-        // purely side-effecting function to create the html for a new 
-        // filter/aggregator context menu and append it to the proper element.
-        $(htmlString)
-            // this append is important--we find the field name later b
-            // calling closest('.sortableItem').attr('id')
+        // Create the html for a new filter/aggregator context menu and append it to the proper element.
+        var contextMenu = $(htmlString);
+
+        // this append is important--we find the field name later by
+        // calling closest('.sortableItem').attr('id')
+        contextMenu
             .appendTo(elementToAppend)
-            .show(200)
-            .css({ top: event.pageY + 'px', left: event.pageX + 'px' });
+            .show(200);
+
+        // context menu should appear with mouse click position at lower left of the box.
+        var contextHeight = parseInt(contextMenu.css('height'), 10);
+        var contextTopPosition = event.pageY - contextHeight;
+        contextMenu.css({ top: contextTopPosition + 'px', left: event.pageX + 'px' });
     }
 
     var popAggregatorMenu = function (model, event, clickedSortList, clickedSortItem) {
