@@ -22,6 +22,57 @@ class Queryparser extends CI_Model {
     }
     
     
+    ///////////////
+    // WHERE CLAUSE
+    ///////////////
+    
+    private function valid_filters($filters) {
+        $valid_filters = [];
+        foreach($filters as $filter) {
+            $val = $filter['filterVal'];
+            if (!empty($val)) {
+                $valid_filters[] = $filter;
+            }
+        }
+        return $valid_filters;
+    }
+    
+    private function any_valid_filters($filters) {
+        $valid_filters = $this->valid_filters($filters);
+        return count($valid_filters) !== 0;
+    }
+    
+    private function make_single_filter($filter_obj) {
+        /* {"name":"WHEN_CREATED_YEAR","filterExistence":true,"filterOp":"less than","filterVal":"2016"}
+        */
+        $existence = $filter_obj['filterExistence'] ? '' : 'NOT ';
+        $field = $filter_obj['name'];
+        $available_operations = ['less than' => '<', 'greater than' => '>', 'equal to' => '=', 'like' => 'LIKE'];
+        $operation = $available_operations[$filter_obj['filterOp']];
+        $value = $filter_obj['filterVal'];
+        if ($operation == 'LIKE') {
+            return "$existence (regexp_like($field, '$value', 'i'))";
+        } else {
+            return "$existence ($field $operation $value)";
+        }
+    }
+    
+    private function make_filters($query_model) {
+        $filters = $query_model['Filters'];
+        if ($this->any_valid_filters($filters)) {
+            $filters = $this->valid_filters($filters);
+            $where_string = 'WHERE ';
+            foreach($filters as $filter) {
+                $this_filter = $this->make_single_filter($filter);
+                $where_string .= $where_string === 'WHERE ' ? $this_filter : ' AND ' . $this_filter;
+            }
+            return $where_string;
+        } else {
+            return '';
+        }
+    }
+    
+    
     ////////////////
     // SELECT CLAUSE
     ////////////////
@@ -56,6 +107,7 @@ class Queryparser extends CI_Model {
         $return_string = $select_distinct ? "SELECT DISTINCT \n" : "SELECT \n";
         $return_string .= join(",\n", $qualified_col_names);
         $return_string .= "\n FROM CE_CASE_MGMT.$table";
+        $return_string .= "\n" . $this->make_filters($query_model);
         return $return_string;
     }
     
@@ -129,13 +181,6 @@ private function make_selections($table, $query_model) {
 }
 
 
-///////////////
-// WHERE CLAUSE
-///////////////
-
-private function make_filters($query_model) {
-    return '';
-}
 
 
 //////////////////////////
@@ -270,7 +315,6 @@ private function query_shape_selector($query_model) {
 
 private function make_pivot_view($table, $query_model) {
     $from_selections = $this->make_selections($table, $query_model);
-    $where_filters = $this->make_filters($query_model);
     $aggregator = $this->make_aggregator($query_model);
     $columns = $this->make_columns($table, $query_model);
     $selected_rows = $this->get_row_names($query_model);
@@ -278,7 +322,6 @@ private function make_pivot_view($table, $query_model) {
     $sql_query = "
     SELECT * FROM (
     $from_selections
-    $where_filters
     )
     pivot
     (
@@ -293,12 +336,14 @@ private function make_pivot_view($table, $query_model) {
 private function make_spreadsheet_view($table, $query_model) {
     $selected_rows = $this->get_row_names($query_model);
     $aggregator = $this->make_aggregator($query_model);
+    $filters = $this->make_filters($query_model);
     
     $sql_query = "
     SELECT
     $selected_rows
     , $aggregator
     FROM CE_CASE_MGMT.$table
+    $filters
     GROUP BY
     $selected_rows
     ORDER BY $selected_rows
