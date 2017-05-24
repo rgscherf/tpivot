@@ -44,7 +44,7 @@ var contextMenus = (function () {
         '<option>less than</option>',
         '<option>equal to</option>',
         '<option>greater than</option>',
-        '<option>including</option>',
+        '<option>like</option>',
         '</select>',
         '</span>',
         '<span>',
