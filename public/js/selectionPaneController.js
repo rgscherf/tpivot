@@ -425,23 +425,28 @@ $(function () {
 	});
 
 	$(document).on('click', '.context', function (event) {
+		// Handle context menu clicks. If the click will change model state,
+		// update the model and send new model to the server.
+		// (For aggregator, any click is successful. 
+		// For filters, any click that produces a new filter.)
 		var clickInformation = contextMenus.getClickInformation(event, model);
 		if (!clickInformation || !clickInformation.contextType) { return; }
 		switch (clickInformation.contextType) {
 			case "aggregator":
 				setReducer(model, clickInformation);
 				modifyItemDOM(model, 'sortField-' + clickInformation.fieldName, "Values");
+				sendConfig(model);
 				break;
 			case "filter":
 				if (clickInformation.filterWasApplied) {
 					var newFilter = clickInformation.filter;
 					setFilter(model, newFilter);
 					modifyItemDOM(model, 'sortField-' + newFilter.name, "Filters");
+					sendConfig(model);
 				}
 				break;
 			default:
 				break;
 		}
-		sendConfig(model);
 	});
 });
