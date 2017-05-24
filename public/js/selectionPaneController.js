@@ -311,7 +311,7 @@ function setTableColumnListShape() {
 	// so that the whole list can be viewed without scrolling.
 	var ENTRIES_PER_COL = 20;
 	var numFields = $('.sortableItem').length;
-	var numCols = Math.min(3, Math.ceil(numFields / ENTRIES_PER_COL));
+	var numCols = Math.ceil(numFields / ENTRIES_PER_COL);
 	$('.tableColumnList').css('column-count', numCols);
 }
 
