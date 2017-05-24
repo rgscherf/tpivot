@@ -273,6 +273,7 @@ private function make_pivot_view($table, $query_model) {
     $where_filters = $this->make_filters($query_model);
     $aggregator = $this->make_aggregator($query_model);
     $columns = $this->make_columns($table, $query_model);
+    $selected_rows = $this->get_row_names($query_model);
     
     $sql_query = "
     SELECT * FROM (
@@ -283,7 +284,8 @@ private function make_pivot_view($table, $query_model) {
     (
     $aggregator
     $columns
-    )";
+    )
+    ORDER BY $selected_rows";
     
     return $sql_query;
 }
@@ -312,6 +314,7 @@ public function make_pivot_query($incoming) {
     
     log_message('debug', 'ROWS: ' . json_encode($query_model['Rows']));
     log_message('debug', 'COLS: ' . json_encode($query_model['Columns']));
+    log_message('debug', 'FILS: ' . json_encode($query_model['Filters']));
     log_message('debug', 'VALS: ' . json_encode($query_model['Values']));
     
     if (!$query_shape) {
