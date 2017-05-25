@@ -20,6 +20,7 @@ body {
 /*Contains query UI and pivot table (but not query hide button)*/
 #pivotAppContainer {
 	display: flex;
+	flex-direction: column;
 }
 
 
