@@ -317,6 +317,9 @@ class Datasource extends CI_Model {
         // representing result rows.
         // An SQL error will return an object with the `error` flag set to true, and fields for the error code
         // and the SQL string that was executed.
+        
+        set_time_limit(300);
+        
         $sql_string = $this->Queryparser->make_pivot_query($incoming);
         log_message('debug', $sql_string);
         
