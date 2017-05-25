@@ -386,6 +386,7 @@ $(function () {
 	$('#getTable').click(function () {
 		// Select a new table to configure. Resets the view and model.
 		currentDataset = $('#tableSelector').val();
+		$('#pivotTable').remove();
 		model = resetState(colNames, availableTables[currentDataset]);
 		setSelectionPanelDynamicDOM();
 	});
