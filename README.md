@@ -6,7 +6,7 @@ Also includes a basic jQuery-based pivot table explorer.
 
 ## Installation
 
-`Datastore.php` and `Queryparser.php` should live in your `/models` directory.
+`Datasource.php` and `Queryparser.php` should live in your `/models` directory.
 
 Ensure that CodeIgniter is properly configured with an Oracle database. Oracle version 11g or greater is required.
 
@@ -21,7 +21,7 @@ Note: pivot table terminology can be confusing, so I use the word *fields* to re
 - `Values`: The aggreate function(s) that will be calculated for every `Row`/`Column` intersection of the pivot table.
 - `Filters`: Only records meeting these requirements will be included in the pivot query.
 
-`make_pivot_query()` parses the query object and returns an SQL string. You may wish to execute the query using `Datastore->process_query()`, especially if you also plan to use the jQuery-based pivot explorer. `process_query()` returns additional metadata used by the explorer, for example in case of SQL errors.
+`make_pivot_query()` parses the query object and returns an SQL string. You may wish to execute the query using `Datasource->process_query()`, especially if you also plan to use the jQuery-based pivot explorer. `process_query()` returns additional metadata used by the explorer, for example in case of SQL errors.
 
 ### Queries
 
@@ -63,7 +63,7 @@ If using this library in conjuction with the tpivot jQuery library, you may noti
 
 ### Responses
 
-`make_pivot_query()` returns an SQL string. You can execute this string yourself, or wrap your use of `make_pivot_query()` in `Datastore->process_query()` to handle SQL execution and responses. This is convenient, and especially handy if you plan to use the tpivot front-end library.
+`make_pivot_query()` returns an SQL string. You can execute this string yourself, or wrap your use of `make_pivot_query()` in `Datasource->process_query()` to handle SQL execution and responses. This is convenient, and especially handy if you plan to use the tpivot front-end library.
 
 `process_query()` takes the same argument as `make_pivot_query()` and returns data in the shape of:
 
