@@ -6,24 +6,24 @@ var contextMenus = (function () {
     ///////////////////////////
 
     // HTML for the aggregator selection menu.
-    var aggregatorSelection = ['<div class="context sideby" data-contexttype="aggregator">',
-        '<div class="contextBackground">',
-        '<div class="metadataAnnotation" style="opacity:.8;margin-bottom:3px;">Summarize by</div>',
-        '<div class="contextItem" data-aggregator="listagg">List unique</div>',
-        '<div class="contextItem" data-aggregator="count">Count</div>',
-        '<div class="contextItem" data-aggregator="sum">Sum</div>',
-        '<div class="contextItem" data-aggregator="avg">Average</div>',
-        '<div class="contextItem" data-aggregator="min">Min</div>',
-        '<div class="contextItem" data-aggregator="max">Max</div>',
-        '<div class="contextItem" data-aggregator="stddev">Std. Dev.</div>',
-        '<div class="contextItem" data-aggregator="variance">Variance</div>',
+    var aggregatorSelection = ['<div class="context context__sideby" data-contexttype="aggregator">',
+        '<div class="context__background">',
+        '<div class="context__annotation" style="opacity:.8;margin-bottom:3px;">Summarize by</div>',
+        '<div class="context__aggregatorItem" data-aggregator="listagg">List unique</div>',
+        '<div class="context__aggregatorItem" data-aggregator="count">Count</div>',
+        '<div class="context__aggregatorItem" data-aggregator="sum">Sum</div>',
+        '<div class="context__aggregatorItem" data-aggregator="avg">Average</div>',
+        '<div class="context__aggregatorItem" data-aggregator="min">Min</div>',
+        '<div class="context__aggregatorItem" data-aggregator="max">Max</div>',
+        '<div class="context__aggregatorItem" data-aggregator="stddev">Std. Dev.</div>',
+        '<div class="context__aggregatorItem" data-aggregator="variance">Variance</div>',
         // '</div>',
-        // '<div class="contextBackground">',
-        // '<div class="metadataAnnotation" style="opacity:.8;margin-bottom:3px;">Display as</div>',
-        // '<div class="contextItem" data-displayas="raw">Raw value</div>',
-        // '<div class="contextItem" data-displayas="row">% row total</div>',
-        // '<div class="contextItem" data-displayas="col">% column total</div>',
-        // '<div class="contextItem" data-displayas="total">% grand total</div>',
+        // '<div class="context__background">',
+        // '<div class="context__annotation" style="opacity:.8;margin-bottom:3px;">Display as</div>',
+        // '<div class="context__aggregatorItem" data-displayas="raw">Raw value</div>',
+        // '<div class="context__aggregatorItem" data-displayas="row">% row total</div>',
+        // '<div class="context__aggregatorItem" data-displayas="col">% column total</div>',
+        // '<div class="context__aggregatorItem" data-displayas="total">% grand total</div>',
         '</div>',
         '</div >'].join("\n");
 
@@ -31,10 +31,10 @@ var contextMenus = (function () {
     // If you are adding a new value here, you MUST ADD a 
     // matching keyed predicate in tpivot.filterPredicates() 
     var filterSelection = [
-        '<div class="filterContext context contextBackground" data-contexttype="filter">',
-        '<div class="filterContextEntry" id="filterFieldNameEntry">',
+        '<div class="context_filter context context__background" data-contexttype="filter">',
+        '<div class="context__filterInput" id="filterFieldNameEntry">',
         'Show rows where $field</div>',
-        '<div class="filterContextEntry">',
+        '<div class="context__filterInput">',
         '<span><select id="filterContextExistence">',
         '<option>is</option>',
         '<option>is not</option>',
@@ -51,7 +51,7 @@ var contextMenus = (function () {
         '<input type="text" maxlength="18" id="filterContextValue">',
         '</span>',
         '</div>',
-        '<div class="filterContextEntry" style="justify-content:flex-end;">',
+        '<div class="context__filterInput" style="justify-content:flex-end;">',
         '<button id="filterContextCancel">Cancel</button>',
         '<button id="filterContextApply">Apply</button>',
         '</div>',
@@ -85,13 +85,13 @@ var contextMenus = (function () {
         var reducerObj = getAggregatorObj(model, fieldName);
         var currentlySelectedAggregator = reducerObj.reducer;
         var currentlySelectedDisplayAs = reducerObj.displayAs;
-        $('.contextItem')
+        $('.context__aggregatorItem')
             .filter("[data-aggregator='" + currentlySelectedAggregator + "']")
-            .addClass('selectedContextItem');
+            .addClass('context__aggregatorItem--selected');
         // display-as fields are deprecated for now. 
-        $('.contextItem')
+        $('.context__aggregatorItem')
             .filter("[data-displayas='" + currentlySelectedDisplayAs + "']")
-            .addClass('selectedContextItem');
+            .addClass('context__aggregatorItem--selected');
     }
 
     var popFilterMenu = function (model, event, clickedSortList, clickedSortItem) {

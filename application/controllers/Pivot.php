@@ -10,7 +10,7 @@ class Pivot extends CI_Controller {
     public function index() {
         $data['availableData'] = $this->Datasource->get_sources();
         $this->load->view('templates/header');
-        $this->load->view('templates/dataSelectionPane', $data);
+        $this->load->view('templates/selectionPane', $data);
         $this->load->view('templates/footer');
     }
     

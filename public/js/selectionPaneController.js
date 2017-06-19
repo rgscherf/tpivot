@@ -199,30 +199,6 @@ function getFilterObj(model, fieldName) {
 // MODIFYING THE VIEW
 /////////////////////
 
-var reducerSelect = ['<select class="additionalUI reducerSelect">',
-	'<option value="count" selected>Count</option>',
-	'<option value="sum">Sum</option>',
-	'<option value="average">Average</option>',
-	'<option value="min">Min</option>',
-	'<option value="max">Max</option>',
-	'<option value="countUnique">Count unique</option>',
-	'<option value="listUnique">List unique</option>',
-	'</select>'].join('\n');
-
-var filterOpSelect = ['<select class="additionalUI filterOp">',
-	'<option value="lt" selected><</option>',
-	'<option value="eq">==</option>',
-	'<option value="gt">></option>',
-	'<option value="has">has</option>',
-	'</select>'].join('\n');
-
-var filterExistenceSelect = ['<select class="additionalUI filterExist">',
-	'<option value="is" selected>is</option>',
-	'<option value="isNot">not</option>',
-	'</select>'].join('\n');
-
-var filterValText = '<input class="additionalUI filterVal" type="text" placeholder=" " maxlength="16">';
-
 function makeFilterText(model, fieldName) {
 	var filterObj = getFilterObj(model, fieldName);
 	var is = filterObj.filterExistence ? "is" : "is not";
@@ -298,28 +274,6 @@ function sendConfig(model) {
 }
 
 
-// DYNAMIC DOM MODIFICATION FOR SELECTION PANEL
-
-function setPanelShowHideWidth() {
-	// correctly size the show/hide pane button to match the selection panel UI
-	var panelWidth = $('#pivotQuery').css('width');
-	$('#selectionPaneShowHide').css('width', panelWidth);
-}
-
-function setTableColumnListShape() {
-	// give the list of table fields a correct number of columns
-	// so that the whole list can be viewed without scrolling.
-	var ENTRIES_PER_COL = 20;
-	var numFields = $('.sortableItem').length;
-	var numCols = Math.ceil(numFields / ENTRIES_PER_COL);
-	$('.tableColumnList').css('column-count', numCols);
-}
-
-function setSelectionPanelDynamicDOM() {
-	setTableColumnListShape();
-	setPanelShowHideWidth();
-}
-
 /////////////
 // CONTROLLER
 /////////////
@@ -344,7 +298,6 @@ $(function () {
 	var currentDataset = $('#tableSelector').val();
 	var model;
 
-	setSelectionPanelDynamicDOM();
 
 	// when adding/removing/reordering fields, we update the model and send it to server in the
 	// sortable list's `update` event. This event fires twice per user action: once for the item
@@ -388,7 +341,6 @@ $(function () {
 		currentDataset = $('#tableSelector').val();
 		$('#pivotTable').remove();
 		model = resetState(colNames, availableTables[currentDataset]);
-		setSelectionPanelDynamicDOM();
 	});
 
 
@@ -399,13 +351,11 @@ $(function () {
 	var selectionPaneHidden = false;
 	$('#selectionPaneShowHide').click(function () {
 		if (selectionPaneHidden) {
-			$('#pivotQuery').show();
+			$('.hideable').show();
 			$(this).text("Hide query pane");
-			setSelectionPanelDynamicDOM();
 		} else {
-			$('#pivotQuery').hide();
+			$('.hideable').hide();
 			$(this).text("Show query pane");
-			$(this).css('width', '120px');
 		}
 		selectionPaneHidden = !selectionPaneHidden;
 	});

@@ -10,6 +10,6 @@
   <script src="<?php echo base_url('public/js/selectionPaneController.js') ?>"></script>
   <script src="<?php echo base_url('public/js/tpivot.js') ?>"></script>
   <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
-  <link rel="stylesheet" type="text/css" href="<?php echo base_url('public/css/style.css') ?>" />
+  <link rel="stylesheet" type="text/css" href="<?php echo base_url('public/css/style-new.css') ?>" />
   <link rel="stylesheet" type="text/css" href="<?php echo base_url('public/css/pivot.css') ?>" />
 </head>

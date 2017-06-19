@@ -10,7 +10,7 @@ var tpivot = (function () {
             th.appendTo(tr);
         });
         tr.appendTo(tableComponent);
-    }
+    };
 
     var makeSingleTableRow = function (tableComponent, rowData) {
         // Make a single table body row and append it to a table component (most likely a `tbody`).
@@ -25,11 +25,10 @@ var tpivot = (function () {
         row.appendTo(tableComponent);
     };
 
-    var makeTable = function (pivotData) {
+    var makeTable = function (container, pivotData) {
         var table = $('<table></table>')
-            .attr("id", "pivotTable")
             .addClass("pvtTable");
-        table.appendTo($('#pivotTarget'));
+        table.appendTo(container);
 
         var thead = $('<thead></thead>');
         makeTableHeaderRow(thead, pivotData[0]);
@@ -45,30 +44,44 @@ var tpivot = (function () {
         tbody.appendTo(table);
     };
 
-    var makeErrorPanel = function (resultsObj) {
+    var makeErrorPanel = function (containerDiv, resultsObj) {
         var errmsg = resultsObj.errmsg;
         var errsql = resultsObj.errsql;
 
-        var headline = $('<h1></h1>').html('Error in pivot query!').addClass('errorBanner');
+        var headline = $('<h1></h1>').html('Error in pivot query!').addClass('pivot__errorBanner');
         var sqlline = $('<h2></h2>').html('The SQL query');
         var sqltext = $('<div></div>').html(errsql).addClass('smallPadding');
         var msgline = $('<h2></h2>').html('Returned error message:');
         var msgtext = $('<div></div>').html(errmsg).addClass('smallPadding');
 
         var errDiv = $('<div></div>')
-            .attr('id', 'pivotTable');
-        errDiv.appendTo($('#pivotTarget'));
+        errDiv.appendTo(containerDiv);
         errDiv.append(headline, sqlline, sqltext, msgline, msgtext);
-    }
+    };
+
+    var makePivotContainer = function () {
+        var containerDiv = $('<div></div>')
+            .attr('id', 'pivotTable');
+        var spacerDiv = $('<div></div>')
+            .addClass('queryBuilder__spacer');
+        var headerDiv = $('<div></div>')
+            .addClass('queryBuilder--headerText')
+            .text('Query results');
+
+        containerDiv.appendTo($('#pivotTarget'));
+        containerDiv.append(spacerDiv, headerDiv);
+        return containerDiv;
+    };
 
     var renderPivot = function (pivotData) {
         $('#pivotTable').remove();
         if (pivotData.results === false) { return; }
+        var container = makePivotContainer();
         if (pivotData.results.error) {
-            makeErrorPanel(pivotData.results);
+            makeErrorPanel(container, pivotData.results);
             return;
         }
-        makeTable(pivotData.results.rows);
+        makeTable(container, pivotData.results.rows);
     };
 
     return {
