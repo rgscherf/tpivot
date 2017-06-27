@@ -59,8 +59,8 @@
       Drag fields below to create query
     </div>
     <div id="tableColumns" class="queryBuilder__listOfAllFields queryBuilder--indent">
-      <ul class="tableColumnList sortableList" id="sortCol-noField">
-      </ul>
+      <div class="tableColumnList" id="sortCol-noField">
+      </div>
     </div>
   </div>
 <?php return ob_get_clean(); } ?>
@@ -75,8 +75,8 @@
       <i class="fa <?php echo $thisIconText;?>" aria-hidden="true"></i>
       <span class="sortingBucket--bold"><?php echo strtoupper($colName); ?></span>
     </div>
-    <ul class="sortableList" id="<?php echo 'sortCol-'.$colName; ?>">
-    </ul>
+    <div class="fieldReceiver" id="<?php echo 'sortCol-'.$colName; ?>">
+    </div>
   </div>
 <?php return ob_get_clean();} ?>
 

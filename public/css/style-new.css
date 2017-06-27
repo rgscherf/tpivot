@@ -1,90 +1,90 @@
 .pivotDiv {
-	margin: 10px;
-	font-family: "Segoe UI", "Helvetica", sans-serif;
+    margin: 10px;
+    font-family: "Segoe UI", "Helvetica", sans-serif;
 }
 
 .queryBuilder {
-	display: flex;
-	flex-direction: column;
-	height: 600px;
+    display: flex;
+    flex-direction: column;
+    height: 600px;
 }
 
 .queryBuilder__listOfAllFields {
-	overflow: auto;
-	height: 500px;
+    overflow: auto;
+    height: 500px;
 }
 
 .queryBuilder__horizContainer {
-	display: flex;
+    display: flex;
 }
 
 .queryBuilder__child {
-	padding: 10px;
-	margin-right: 5px;
+    padding: 10px;
+    margin-right: 5px;
 }
 
 .queryBuilder__child--fields {
-	min-width: 260px;
+    min-width: 260px;
 }
 
 .queryBuilder__spacer {
-	margin-top: 10px;
-	border-top: 1px dashed #CDCDCD;
+    margin-top: 10px;
+    border-top: 1px dashed #CDCDCD;
 }
 
 .queryBuilder--indent {
-	margin-left: 10px;
+    margin-left: 10px;
 }
 
 .queryBuilder--headerText {
-	font-variant: small-caps;
+    font-variant: small-caps;
 }
 
 .pvtTable {
-	margin-top: 10px;
+    margin-top: 10px;
 }
 
 .sortingBucket {
-	margin-top: 10px;
-	margin-left: 15px;
-	margin-bottom: 10px;
+    margin-top: 10px;
+    margin-left: 15px;
+    margin-bottom: 10px;
 }
 
 .sortingBucket__fieldContainer {
-	margin-bottom: 10px;
+    margin-bottom: 10px;
 }
 
 .sortingBucket__fieldContainer > ul {
-	margin-left: 15px;
+    margin-left: 15px;
 }
 
 .sortingBucket--bold {
-	font-weight: bold;
+    font-weight: bold;
 }
 
 
 ul {
-	list-style: none;
-	padding-left: 0px;
+    list-style: none;
+    padding-left: 0px;
 }
 
 .sortableList {
     padding: 5px 0px;
-	min-height: 1.5em;
-	margin-bottom: 0px;
+    min-height: 1.5em;
+    margin-bottom: 0px;
 }
 
 .selectionPaneShowHide {
     width: 260px;
-	text-align: center;
-	border: 1px solid #CDCDCD;
-	padding: 3px;
-	margin-left: 10px;
+    text-align: center;
+    border: 1px solid #CDCDCD;
+    padding: 3px;
+    margin-left: 10px;
 }
 
 .pivot__errorBanner {
-	color: orangered;
-	margin-bottom: 30px;
+    color: orangered;
+    margin-bottom: 30px;
 }
 
 
@@ -96,34 +96,34 @@ ul {
 /*INDIVIDUAL FIELD ITEMS*/
 
 .additionalUI {
-	font-size: 0.75em;
+    font-size: 0.75em;
 }
 
 input[type=text] {
-	line-height: 10px;
-	width: 80px;
+    line-height: 10px;
+    width: 80px;
 }
 
 /*.sortableItem {
-	cursor: move;
-	display: flex;
-	align-items: center;
+    cursor: move;
+    display: flex;
+    align-items: center;
     padding-left: 5px;
-	justify-content: space-between;
-	flex-wrap: wrap;
+    justify-content: space-between;
+    flex-wrap: wrap;
 }*/
 
 .context {
-	position:absolute;
-  	align-items: flex-start;
+    position:absolute;
+      align-items: flex-start;
 }
 
 .context__background {
-	z-index:1000;
-	border:1px solid #CDCDCD;
-	background-color: white;
-	padding:5px;
-	box-shadow: 3px 3px 2px #CDCDCD;
+    z-index:1000;
+    border:1px solid #CDCDCD;
+    background-color: white;
+    padding:5px;
+    box-shadow: 3px 3px 2px #CDCDCD;
 }
 
 .context__sideby {
@@ -136,17 +136,17 @@ input[type=text] {
 }
 
 .context__aggregatorItem {
-	border-radius: 2px;
-	padding: 2px;
+    border-radius: 2px;
+    padding: 2px;
 }
 
 .context__aggregatorItem--selected {
-	background-color: #CDCDCD;
+    background-color: #CDCDCD;
 }
 
 .context__annotation {
-	font-size: 0.75em;
-	font-style: italic;
+    font-size: 0.75em;
+    font-style: italic;
 }
 
 /*filter context menu*/
@@ -175,6 +175,6 @@ button {
 }
 
 .errorBanner {
-	color: orangered;
-	margin-bottom: 30px;
+    color: orangered;
+    margin-bottom: 30px;
 }
