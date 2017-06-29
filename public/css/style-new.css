@@ -96,6 +96,7 @@ ul {
 /*INDIVIDUAL FIELD ITEMS*/
 
 .additionalUI {
+    margin-left: 5px;
     font-size: 0.75em;
 }
 
@@ -177,4 +178,8 @@ button {
 .errorBanner {
     color: orangered;
     margin-bottom: 30px;
+}
+
+.fieldReceiver {
+    min-height: 1.5em;
 }

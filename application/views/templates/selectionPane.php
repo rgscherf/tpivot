@@ -66,16 +66,14 @@
 <?php return ob_get_clean(); } ?>
 
 
-<?php function buildSortableBucketFieldContainer($colName) {
+<?php function buildSortableBucketFieldContainer($bucketName) {
   $fontAwesomeDict = ["Filters" => "fa-filter", "Columns" => "fa-arrows-v", "Rows" => "fa-arrows-h", "Values" => "fa-cogs"];
-  $thisIconText = $fontAwesomeDict[$colName];
+  $thisIconText = $fontAwesomeDict[$bucketName];
   ob_start(); ?>
-  <div class="sortingBucket__fieldContainer">
+  <div class="sortingBucket__fieldContainer fieldReceiver" id="<?php echo 'sortCol-'.$bucketName; ?>" data-bucket="<?php echo $bucketName ?>">
     <div class="queryBuilder--headerText">
       <i class="fa <?php echo $thisIconText;?>" aria-hidden="true"></i>
-      <span class="sortingBucket--bold"><?php echo strtoupper($colName); ?></span>
-    </div>
-    <div class="fieldReceiver" id="<?php echo 'sortCol-'.$colName; ?>">
+      <span class="sortingBucket--bold"><?php echo strtoupper($bucketName); ?></span>
     </div>
   </div>
 <?php return ob_get_clean();} ?>

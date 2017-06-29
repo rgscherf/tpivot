@@ -84,23 +84,6 @@ var tpivot = (function () {
         }
 
         return [aggName, reducerFn]
-
-        // if (reducerObj.displayAs === 'raw') {
-        //     // no special display settings. user will see raw aggregated values.
-        //     if (reducer === 'count') {
-        //         return [aggName, function () { return templates[reducer]()(); }];
-        //     }
-        //     return [aggName, function () { return templates[reducer]()([rname]); }];
-        // } else {
-        //     // user wants a special display value.
-        //     // currently we only support "% of" displays. user selects viewing
-        //     // % of row total, col total, or grand total.
-        //     if (reducer === 'count') {
-        //         return [aggName, function () { return templates[reducer]()(); }];
-        //     }
-        //     return [aggName, function () { return templates[reducer]()([rname]); }];
-        // }
-
     };
 
     var getName = function (obj) { return obj.name };

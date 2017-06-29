@@ -58,6 +58,14 @@ var contextMenus = (function () {
         '</div>'].join("\n");
 
 
+    ////////
+    // UTILS
+    ////////
+
+    var textOf = function (jqElem) {
+        return jqElem.contents().get(0).nodeValue;
+    }
+
     ///////////////////////////////////////////////////
     // 'POP' CONTEXT MENUS TO INITIALIZE AND ADD TO DOM
     ///////////////////////////////////////////////////
@@ -81,8 +89,8 @@ var contextMenus = (function () {
     var popAggregatorMenu = function (model, event, clickedSortList, clickedSortItem) {
         makeContextHtml(aggregatorSelection, event, clickedSortItem);
         // highlight the current aggregator function
-        var fieldName = nameFromID($(clickedSortItem).attr('id'));
-        var reducerObj = getAggregatorObj(model, fieldName);
+        var fieldName = textOf(clickedSortItem);
+        var reducerObj = getAggregator(model, fieldName);
         var currentlySelectedAggregator = reducerObj.reducer;
         var currentlySelectedDisplayAs = reducerObj.displayAs;
         $('.context__aggregatorItem')
@@ -96,8 +104,8 @@ var contextMenus = (function () {
 
     var popFilterMenu = function (model, event, clickedSortList, clickedSortItem) {
         makeContextHtml(filterSelection, event, clickedSortItem);
-        var fieldName = nameFromID($(clickedSortItem).attr('id'));
-        var filter = getFilterObj(model, fieldName);
+        var fieldName = textOf(clickedSortItem);
+        var filter = getFilter(model, fieldName);
         $('#filterFieldNameEntry').text("Show rows where " + fieldName);
 
         var isOrIsNot = filter.filterExistence ? 'is' : 'is not';
@@ -110,12 +118,12 @@ var contextMenus = (function () {
         // Open the context menu. 
         // This event only fires on .sortableItem elements.
         // model is NOT mutated here; only read for initial element state.
-        if (!$(event.target).closest('.sortableItem').length > 0) {
+        if (!($(event.target).closest('.fieldList__item--inBucket').length > 0)) {
             return;
         }
         event.preventDefault();
-        var clickedSortItem = $(event.target).closest('.sortableItem');
-        var clickedSortList = $(event.target).closest('.sortableList').attr('id');
+        var clickedSortItem = $(event.target).closest('.fieldList__item--inBucket');
+        var clickedSortList = $(event.target).closest('.sortingBucket__fieldContainer').attr('id');
 
         switch (nameFromID(clickedSortList)) {
             // set base HTML for the new element
@@ -135,7 +143,7 @@ var contextMenus = (function () {
     ////////////////////
 
     var hideMenu = function (event) {
-        if (!$(event.target).parents('.context').length > 0) {
+        if (!($(event.target).parents('.context').length > 0)) {
             $('.context').remove();
         }
     }
@@ -147,13 +155,15 @@ var contextMenus = (function () {
     //////////////////////////////////////////////////////
 
     var getAggregatorClickInformation = function (event) {
-        var fieldName = nameFromID($(event.target).closest('.sortableItem').attr('id'));
+        var target = $(event.target);
+        var clickedField = target.closest('.fieldList__item--inBucket')
         return {
             contextType: "aggregator",
-            fieldName: fieldName,
-            selectedReducer: $(event.target).data("aggregator"),
+            clicked: clickedField,
+            fieldName: textOf(clickedField),
+            selectedReducer: target.data("aggregator"),
             // display-as fields are deprecated for now. 
-            selectedDisplayAs: $(event.target).data("displayas")
+            selectedDisplayAs: target.data("displayas")
         }
     }
 
@@ -167,7 +177,8 @@ var contextMenus = (function () {
         // filterContextOp - filterObj.filterOp
         // filterContextCancel - NA
         // filterContextApply - NA
-        var fieldName = nameFromID($(event.target).closest('.sortableItem').attr('id'));
+        var clickedField = $(event.target).closest('.fieldList__item--inBucket');
+        var fieldName = textOf(clickedField);
 
         var filterContextVal = $('#filterContextValue').val();
         if (filterContextVal === '') {
@@ -178,6 +189,8 @@ var contextMenus = (function () {
         }
 
         var ret = {
+            clicked: clickedField,
+            fieldName: fieldName,
             contextType: 'filter',
             filterWasApplied: true,
             filter: {
@@ -187,6 +200,7 @@ var contextMenus = (function () {
                 filterExistence: $('#filterContextExistence').val()
             }
         }
+
         $('.context').remove();
         return ret;
     };
@@ -203,7 +217,7 @@ var contextMenus = (function () {
         // if it is false (the default), the click handler is a no-op. 
         // If it's true, we're safe to modify the field's DOM and the model 
         // with the new filter object.
-        var fieldName = nameFromID($(event.target).closest('.sortableItem').attr('id'));
+        var fieldName = nameFromID($(event.target).closest('.fieldList__item--inBucket').text());
         var thingThatWasClicked = $(event.target).attr('id');
         var returnVal = {
             contextType: 'filter',

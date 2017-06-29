@@ -42,40 +42,65 @@ function getColNames(cols) {
     });
 }
 
+var textOf = function (jqElem) {
+    return jqElem.contents().get(0).nodeValue;
+}
+
 //////////////////////
 // MODIFYING THE MODEL 
 /////////////////////
 
 // INITIALIZE MODEL
 
-function initModel(colNames, fieldNames) {
-    // Take field names and set them to initial state.
-    var modelObject = {};
-    colNames.forEach(function (elem) {
-        modelObject[elem] = [];
-    });
-    fieldNames.map(function (elem) {
-        modelObject["noField"].push({
-            name: elem
-        });
-    });
-    return modelObject;
+function initModel() {
+    // Return initial model state.
+    return {
+        Columns: [],
+        Rows: [],
+        Filters: [],
+        Values: []
+    };
 };
 
 
-function resetState(colNames, selectedTableObject) {
+function resetState(selectedTableObject) {
     var selectedFields = selectedTableObject.headers;
     // remove any previous sortable elements
     removeSortableFieldsFromDOM();
     // now add sortable elements for new fields
     addSortableFieldsToDOM(selectedFields);
     // make + return a new model
-    return initModel(colNames, selectedFields);
+    return initModel();
 }
 
 
 // ADDING TO A COLUMN
 
+function addField(model, field, bucket) {
+    var fieldAsObject = { name: field };
+    switch (bucket) {
+        case "Filters":
+            fieldAsObject.filterExistence = true;
+            fieldAsObject.filterOp = "less than";
+            fieldAsObject.filterVal = "";
+            break;
+        case "Values":
+            fieldAsObject.reducer = "listagg";
+            fieldAsObject.displayAs = "raw";
+            break;
+        default:
+            break;
+    }
+    model[bucket].push(fieldAsObject);
+}
+
+function removeField(model, field, bucket) {
+    model[bucket] = model[bucket].filter(function (elem) {
+        return elem.name != field;
+    });
+}
+
+// DEPRECATED
 function addFieldToCol(model, fieldNameAsID, colNameAsID) {
     // update model object with item's location and default data.
     var colName = nameFromID(colNameAsID);
@@ -85,6 +110,7 @@ function addFieldToCol(model, fieldNameAsID, colNameAsID) {
     model[colName].push(item);
 };
 
+// DEPRECATED
 function constructFieldObj(fieldName, colName) {
     // init item's state upon moving it to a new field.
     var baseObj = {
@@ -109,6 +135,7 @@ function constructFieldObj(fieldName, colName) {
 
 // REMOVING FROM A COLUMN
 
+// DEPRECATED
 function removeFieldFromCol(model, fieldNameAsID, colNameAsID) {
     var fieldName = nameFromID(fieldNameAsID);
     var colName = nameFromID(colNameAsID);
@@ -155,17 +182,22 @@ function reorderFields(model, colNameAsID) {
 
 // SET FILTER AND VALUE OBJECTS
 
-function findObjInColumn(model, fieldName, colToSearch) {
-    return model[colToSearch].filter(function (elem) {
+function findObjInColumn(bucket, fieldName) {
+    return bucket.filter(function (elem) {
         return elem.name === fieldName;
     })[0];
 }
 
-function setReducer(model, newReducer) {
+// GET FILTER AND VALUE OBJECTS
+
+function getAggregator(model, fieldName) {
+    return findObjInColumn(model.Values, fieldName);
+}
+
+function setAggregator(model, newReducer) {
     // check contextmenu.getAggregatorClickInformation to see
     // the shape of the newReduer object.
-    var fieldName = newReducer.fieldName;
-    var reducerInModel = findObjInColumn(model, fieldName, "Values");
+    var reducerInModel = getAggregator(model, newReducer.fieldName);
 
     var selectedReducer = newReducer.selectedReducer;
     var selectedDisplayAs = newReducer.selectedDisplayAs;
@@ -177,21 +209,17 @@ function setReducer(model, newReducer) {
     }
 }
 
+function getFilter(model, fieldName) {
+    return findObjInColumn(model.Filters, fieldName);
+}
+
 function setFilter(model, newFilter) {
-    var oldFilter = findObjInColumn(model, newFilter.name, "Filters");
+    // check contextmenu.tryToApplyFilter to see
+    // the shape of the newFilter object.
+    var oldFilter = getFilter(model, newFilter.name);
     oldFilter.filterExistence = newFilter.filterExistence === 'is';
     oldFilter.filterOp = newFilter.filterOp;
     oldFilter.filterVal = newFilter.filterVal;
-}
-
-// GET FILTER AND VALUE OBJECTS
-
-function getAggregatorObj(model, fieldName) {
-    return findObjInColumn(model, fieldName, "Values");
-}
-
-function getFilterObj(model, fieldName) {
-    return findObjInColumn(model, fieldName, "Filters");
 }
 
 
@@ -200,40 +228,46 @@ function getFilterObj(model, fieldName) {
 /////////////////////
 
 function makeFilterText(model, fieldName) {
-    var filterObj = getFilterObj(model, fieldName);
+    var filterObj = getFilter(model, fieldName);
     var is = filterObj.filterExistence ? "is" : "is not";
     return "(" + is + " " + filterObj.filterOp + " " + filterObj.filterVal + ")";
 }
-function modifyItemDOM(model, fieldNameAsID, colName) {
-    // moving a field to/from the Filters or Values column will mutate its DOM
-    // to add additional options for that field.
-    // this function adds additional dom and binds events to act on the model
-    // in response to those events.
-    var fieldName = nameFromID(fieldNameAsID);
-    var findableFieldName = "#" + fieldNameAsID;
-    var itemFlexBox = $(findableFieldName);
-    // Remove filter/reducer UI. Remember that this fn only fires on moving to a new col,
-    // so there's no risk of losing additional UI that still contains pertinent info.
-    itemFlexBox.find('.additionalUI').remove();
-    switch (colName) {
-        case "Values":
-            var textOfAggregator = getAggregatorObj(model, fieldName).reducer;
-            $('<div class="additionalUI metadataAnnotation">(' + textOfAggregator + ')</div>')
-                .appendTo(itemFlexBox)
-            break;
-        case "Filters":
-            var textOfFilter = makeFilterText(model, fieldName);
-            $('<div class="additionalUI metadataAnnotation">' + textOfFilter + '</div>')
-                .appendTo(itemFlexBox)
-            break;
 
-        default:
-            break;
+function makeClickInformation(model, fieldName, bucket, appendElement) {
+    // Return click information (for modifyDOMFromClick) with arbitraty information.
+    if (bucket != 'Values' && bucket != 'Filters') { return null; }
+    return {
+        contextType: bucket == 'Values' ? 'aggregator' : 'filter',
+        fieldName: fieldName,
+        clicked: appendElement
     }
 }
 
+function makeAdditionalUI(model, clickInformation) {
+    clickInformation.clicked.find('.additionalUI').remove();
+    var text = '';
+    switch (clickInformation.contextType) {
+        case 'aggregator':
+            text = '(' + getAggregator(model, clickInformation.fieldName).reducer + ' of)';
+            break;
+        case 'filter':
+            text = makeFilterText(model, clickInformation.fieldName);
+            break;
+        default:
+            break;
+    }
+    if (text !== '') {
+        $('<span>')
+            .addClass('additionalUI')
+            .addClass('metadataAnnotation')
+            .text(text)
+            .appendTo(clickInformation.clicked)
+    }
+}
+
+
 function removeSortableFieldsFromDOM() {
-    $('.sortableItem').remove();
+    $('.fieldList__item').remove();
 }
 
 function spaceSafeFieldName(fieldName) {
@@ -242,18 +276,28 @@ function spaceSafeFieldName(fieldName) {
 
 function constructSortableField(fieldName) {
     var ssFieldName = spaceSafeFieldName(fieldName);
-    return ['<li class="sortableItem" id="sortField-' + ssFieldName + '">',
-    '<div class="sortableItemName">' + fieldName + '</div>',
-        '</li>'].join('\n');
+    var d = $('<div>')
+        .addClass('fieldList__item draggableItem field')
+        .attr('id', 'sortField-' + ssFieldName)
+        .text(ssFieldName)
+        .disableSelection()
+        .draggable({
+            helper: "clone",
+            revert: "invalid"
+        });
+    return d;
 }
+
 function addSortableFieldsToDOM(fieldsToAdd) {
     fieldsToAdd.forEach(function (elem) {
-        $(constructSortableField(elem)).appendTo('#sortCol-noField');
-    })
+        var field = constructSortableField(elem);
+        field.appendTo('#sortCol-noField');
+    });
 }
 
 
 function sendConfig(model) {
+    printObj(model, 'sending model: ');
     var currentTable = $("#tableSelector").val()
     var payload = {
         table: currentTable,
@@ -271,6 +315,28 @@ function sendConfig(model) {
             console.log(x, stat, err);
         }
     });
+}
+
+function canDropHere(container, droppedElement) {
+    console.log('canDropHere / container is: ');
+    console.log(container);
+    console.log('canDropHere / droppedElement: ');
+    console.log(droppedElement);
+    console.log('canDropHere / textOf dropped element');
+    console.log(textOf(droppedElement));
+
+    if (!container) { return false; }
+    if (!droppedElement.hasClass('field')) { return false; }
+    var ret = true;
+    container
+        .children()
+        .filter('.fieldList__item')
+        .each(function (idx, elem) {
+            if (textOf($(elem)) === textOf(droppedElement)) {
+                ret = false;
+            }
+        });
+    return ret;
 }
 
 
@@ -291,56 +357,68 @@ function refreshPivot(model) {
     }
 }
 
+function printObj(obj, prefix) {
+    var pre = prefix === undefined ? '' : prefix;
+    console.log(prefix + JSON.stringify(obj));
+}
+
+function removeDoubleClickedItem(element) {
+    var itemClass = 'fieldList__item--inBucket';
+
+    if (element.hasClass(itemClass)) {
+        element.remove();
+    } else {
+        element.closest('.' + itemClass).remove();
+    }
+}
+
 $(function () {
     var cols = ['#sortCol-noField', '#sortCol-Filters', '#sortCol-Rows', '#sortCol-Columns', '#sortCol-Values'];
     var colNames = getColNames(cols);
 
     var currentDataset = $('#tableSelector').val();
-    var model;
+    var model = {};
 
-
-    // when adding/removing/reordering fields, we update the model and send it to server in the
-    // sortable list's `update` event. This event fires twice per user action: once for the item
-    // leaving a list, and once for entering the new list. Therefore, we only want to act on every
-    // second firing of `update` when the model state is fully captured. 
-    // This var is checked in `update` and, if true, we continue with our logic. In either case, 
-    // its value is flipped.
-
-    // set up sortable lists
-    cols.map(function (elem) {
-        $(elem).sortable({
-            connectWith: cols,
-            dropOnEmpty: true,
-            placeholder: 'placeholder',
-            remove: function (event, ui) {
-                removeFieldFromCol(model, ui.item[0].id, event.target.id);
+    $('.fieldReceiver')
+        .sortable({
+            containment: 'parent',
+            axis: 'y',
+            items: '> .fieldList__item'
+            // TODO: arrange model based on this sort
+            // TODO: and send config
+        })
+        .disableSelection()
+        .droppable({
+            accept: function (droppedElement) {
+                return canDropHere($(this), $(droppedElement));
             },
-            receive: function (event, ui) {
-                var fieldNameAsID = ui.item[0].id;
-                var colNameAsID = event.target.id;
-                addFieldToCol(model, fieldNameAsID, colNameAsID);
-                modifyItemDOM(model, fieldNameAsID, nameFromID(colNameAsID));
-            },
-            stop: function (event, ui) {
-                var columnID = event.target.id;
-                reorderFields(model, columnID);
+            drop: function (event, ui) {
+                addField(model, ui.helper.text(), $(this).data('bucket'));
+                var d = $('<div>')
+                    .addClass('fieldList__item')
+                    .addClass('fieldList__item--inBucket')
+                    .text(ui.helper.text())
+                    .dblclick(function (event) {
+                        var target = $(event.target).closest('.fieldList__item--inBucket');
+                        var bucket = target.closest('.sortingBucket__fieldContainer').data('bucket');
+                        removeField(model, textOf(target), bucket)
+                        sendConfig(model);
+                        removeDoubleClickedItem(target);
+                    });
+                $(this).append(d);
+
+                var mockClick = makeClickInformation(model, ui.helper.text(), $(this).data('bucket'), d);
+                if (mockClick) { makeAdditionalUI(model, mockClick); }
+
                 sendConfig(model);
-                var displayModel = {
-                    Rows: model.Rows,
-                    Columns: model.Columns,
-                    Values: model.Values,
-                    Filters: model.Filters
-                };
-                console.log(JSON.stringify(displayModel));
             }
         });
-    });
 
     $('#getTable').click(function () {
         // Select a new table to configure. Resets the view and model.
         currentDataset = $('#tableSelector').val();
         $('#pivotTable').remove();
-        model = resetState(colNames, availableTables[currentDataset]);
+        model = resetState(availableTables[currentDataset]);
     });
 
 
@@ -384,15 +462,14 @@ $(function () {
         if (!clickInformation || !clickInformation.contextType) { return; }
         switch (clickInformation.contextType) {
             case "aggregator":
-                setReducer(model, clickInformation);
-                modifyItemDOM(model, 'sortField-' + clickInformation.fieldName, "Values");
+                setAggregator(model, clickInformation);
+                makeAdditionalUI(model, clickInformation);
                 sendConfig(model);
                 break;
             case "filter":
                 if (clickInformation.filterWasApplied) {
-                    var newFilter = clickInformation.filter;
-                    setFilter(model, newFilter);
-                    modifyItemDOM(model, 'sortField-' + newFilter.name, "Filters");
+                    setFilter(model, clickInformation.filter);
+                    makeAdditionalUI(model, clickInformation);
                     sendConfig(model);
                 }
                 break;
