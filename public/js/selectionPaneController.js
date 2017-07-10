@@ -317,14 +317,60 @@ function sendConfig(model) {
     });
 }
 
-function canDropHere(container, droppedElement) {
-    console.log('canDropHere / container is: ');
-    console.log(container);
-    console.log('canDropHere / droppedElement: ');
-    console.log(droppedElement);
-    console.log('canDropHere / textOf dropped element');
-    console.log(textOf(droppedElement));
 
+//////////////////////////////
+// CAN I DROP THIS FIELD HERE?
+//////////////////////////////
+
+// We are trying to mirror Excel's rules for which buckets can contain the same item.
+// Note: Excel will swap field locations when the field cannot drop. We choose to deny the drop
+// (so that filter/value selections don't get lost.)
+
+// Also, we allow filters to go with any field. Excel disallows duplicate fields in filters, but then
+// allows users to separately filter any field. We keep all filtering in the filter bucket.
+
+// In these tables:
+// Along top: field already in this bucket.
+// Along side: field wants to drop in this bucket.
+// F = filters, C = columns, R = rows, V = values.
+// X = no, O = yes
+
+// Here are Excel's rules:
+//   F C R V
+// F X X X O
+// C X X X O
+// R X X X O
+// V O O O X
+
+// Here are our rules:
+//   F C R V
+// F X O O O
+// C O X X O
+// R O X X O
+// V O O O X
+
+// So the only drops that are disallowed are:
+// - When the field already exists in the target bucket.
+// - When you are dropping into a row/col and the field exists in the opposite bucket.
+
+function isOpposingBucketClear(bucketToTest, droppedFieldName) {
+    // Given a field and a bucket, test whether the field already exists in the bucket.
+    // See above for discussion of which buckets are allowed to contain overlapping fields.
+    var bucketSelector = '[data-bucket="' + bucketToTest + '"]';
+    var bucketChildrenNames = [];
+    $(bucketSelector)
+        .children()
+        .filter('.fieldList__item')
+        .each(function (idx, elem) {
+            bucketChildrenNames.push(textOf($(elem)));
+        });
+
+    if (bucketChildrenNames.length == 0) { return true; }
+    else { return (bucketChildrenNames.indexOf(droppedFieldName) == -1); }
+}
+
+
+function canDropHere(container, droppedElement) {
     if (!container) { return false; }
     if (!droppedElement.hasClass('field')) { return false; }
     var ret = true;
@@ -336,6 +382,20 @@ function canDropHere(container, droppedElement) {
                 ret = false;
             }
         });
+
+    if (ret) {
+        var bucket = container.data('bucket');
+        switch (bucket) {
+            case 'Rows':
+                ret = isOpposingBucketClear('Columns', textOf(droppedElement));
+                break;
+            case 'Columns':
+                ret = isOpposingBucketClear('Rows', textOf(droppedElement));
+                break;
+            default:
+                break;
+        }
+    }
     return ret;
 }
 
