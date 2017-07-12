@@ -58,14 +58,6 @@ var contextMenus = (function () {
         '</div>'].join("\n");
 
 
-    ////////
-    // UTILS
-    ////////
-
-    var textOf = function (jqElem) {
-        return jqElem.contents().get(0).nodeValue;
-    }
-
     ///////////////////////////////////////////////////
     // 'POP' CONTEXT MENUS TO INITIALIZE AND ADD TO DOM
     ///////////////////////////////////////////////////
@@ -86,11 +78,11 @@ var contextMenus = (function () {
         contextMenu.css({ top: contextTopPosition + 'px', left: event.pageX + 'px' });
     }
 
-    var popAggregatorMenu = function (model, event, clickedSortList, clickedSortItem) {
+    var popAggregatorMenu = function (model, event, clickedSortItem) {
         makeContextHtml(aggregatorSelection, event, clickedSortItem);
         // highlight the current aggregator function
-        var fieldName = textOf(clickedSortItem);
-        var reducerObj = getAggregator(model, fieldName);
+        var fieldName = utils.textOf(clickedSortItem);
+        var reducerObj = data.getAggregator(model, fieldName);
         var currentlySelectedAggregator = reducerObj.reducer;
         var currentlySelectedDisplayAs = reducerObj.displayAs;
         $('.context__aggregatorItem')
@@ -102,10 +94,10 @@ var contextMenus = (function () {
             .addClass('context__aggregatorItem--selected');
     }
 
-    var popFilterMenu = function (model, event, clickedSortList, clickedSortItem) {
+    var popFilterMenu = function (model, event, clickedSortItem) {
         makeContextHtml(filterSelection, event, clickedSortItem);
-        var fieldName = textOf(clickedSortItem);
-        var filter = getFilter(model, fieldName);
+        var fieldName = utils.textOf(clickedSortItem);
+        var filter = data.getFilter(model, fieldName);
         $('#filterFieldNameEntry').text("Show rows where " + fieldName);
 
         var isOrIsNot = filter.filterExistence ? 'is' : 'is not';
@@ -123,15 +115,15 @@ var contextMenus = (function () {
         }
         event.preventDefault();
         var clickedSortItem = $(event.target).closest('.fieldList__item--inBucket');
-        var clickedSortList = $(event.target).closest('.sortingBucket__fieldContainer').attr('id');
+        var clickedSortList = $(event.target).closest('.sortingBucket__fieldContainer').data('bucket');
 
-        switch (nameFromID(clickedSortList)) {
+        switch (clickedSortList) {
             // set base HTML for the new element
             case 'Values':
-                popAggregatorMenu(model, event, clickedSortList, clickedSortItem);
+                popAggregatorMenu(model, event, clickedSortItem);
                 break;
             case 'Filters':
-                popFilterMenu(model, event, clickedSortList, clickedSortItem);
+                popFilterMenu(model, event, clickedSortItem);
                 break;
             default: return;
         }
@@ -160,7 +152,7 @@ var contextMenus = (function () {
         return {
             contextType: "aggregator",
             clicked: clickedField,
-            fieldName: textOf(clickedField),
+            fieldName: utils.textOf(clickedField),
             selectedReducer: target.data("aggregator"),
             // display-as fields are deprecated for now. 
             selectedDisplayAs: target.data("displayas")
@@ -178,7 +170,7 @@ var contextMenus = (function () {
         // filterContextCancel - NA
         // filterContextApply - NA
         var clickedField = $(event.target).closest('.fieldList__item--inBucket');
-        var fieldName = textOf(clickedField);
+        var fieldName = utils.textOf(clickedField);
 
         var filterContextVal = $('#filterContextValue').val();
         if (filterContextVal === '') {
@@ -217,7 +209,7 @@ var contextMenus = (function () {
         // if it is false (the default), the click handler is a no-op. 
         // If it's true, we're safe to modify the field's DOM and the model 
         // with the new filter object.
-        var fieldName = nameFromID($(event.target).closest('.fieldList__item--inBucket').text());
+        var fieldName = utils.textOf($(event.target).closest('.fieldList__item--inBucket'));
         var thingThatWasClicked = $(event.target).attr('id');
         var returnVal = {
             contextType: 'filter',
