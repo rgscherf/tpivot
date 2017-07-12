@@ -399,6 +399,31 @@ function canDropHere(container, droppedElement) {
     return ret;
 }
 
+function findObjectByName(array, objName) {
+    var ret = array.filter(function (elem) {
+        return elem.name == objName;
+    });
+    if (ret.length == 0) { throw new Error("Tried to find object in bucket by name, but it wasn't there."); }
+    else { return ret[0]; }
+}
+
+function reorderBucketItems(model, bucket) {
+    var bucketOnModel = model[bucket];
+    var bucketOnDom = $('[data-bucket="' + bucket + '"]');
+    var domBucketChildNames = [];
+    bucketOnDom
+        .children()
+        .filter('.fieldList__item--inBucket')
+        .each(function (idx, elem) {
+            domBucketChildNames.push(textOf($(elem)));
+        });
+    var newBucketOnModel = [];
+    domBucketChildNames.forEach(function (fieldName) {
+        var modelChild = findObjectByName(bucketOnModel, fieldName);
+        newBucketOnModel.push(modelChild);
+    });
+    model[bucket] = newBucketOnModel;
+}
 
 /////////////
 // CONTROLLER
@@ -443,9 +468,12 @@ $(function () {
         .sortable({
             containment: 'parent',
             axis: 'y',
-            items: '> .fieldList__item'
-            // TODO: arrange model based on this sort
-            // TODO: and send config
+            items: '> .fieldList__item',
+            update: function (event, ui) {
+                var bucket = ui.item.closest('.sortingBucket__fieldContainer').data('bucket');
+                reorderBucketItems(model, bucket);
+                sendConfig(model);
+            }
         })
         .disableSelection()
         .droppable({
