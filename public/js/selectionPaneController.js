@@ -26,12 +26,14 @@ Each obj in the model is one of (depending on its field in the model object):
 */
 
 
-function sendConfig(model) {
+function sendConfig(model, loadManager) {
     // Called any time:
     // - a field is added to a sorting bucket
     // - a field is removed from a sorting bucket
     // - a bucket is rearranged.
     console.log('Sending model: ' + JSON.stringify(model));
+    var loadId = loadManager.setId();
+    view.addLoadingSpinner();
     var currentTable = $("#tableSelector").val()
     var payload = {
         table: currentTable,
@@ -42,6 +44,9 @@ function sendConfig(model) {
         url: queryProcessURL,
         data: JSON.stringify(payload),
         success: function (returnData) {
+            if (loadManager && loadManager.checkId(loadId)) {
+                view.removeLoadingSpinner();
+            }
             tpivot.renderPivot(returnData);
         },
         error: function (x, stat, err) {
@@ -51,10 +56,24 @@ function sendConfig(model) {
     });
 }
 
+var LoadChecker = function () {
+    this.loadId = '';
+
+    this.setId = function () {
+        this.loadId = Math.random().toString();
+        return this.loadId;
+    }
+
+    this.checkId = function (id) {
+        return id === this.loadId;
+    }
+};
+
 
 $(function () {
     var currentDataset = $('#tableSelector').val();
     var model = data.init();
+    var loadManager = new LoadChecker();
 
     $('.fieldReceiver')
         .sortable({
@@ -64,7 +83,7 @@ $(function () {
             update: function (event, ui) {
                 var bucket = ui.item.closest('.sortingBucket__fieldContainer').data('bucket');
                 model = data.reorderItemsInBucket(model, bucket);
-                sendConfig(model);
+                sendConfig(model, loadManager);
             }
         })
         .disableSelection()
@@ -82,7 +101,7 @@ $(function () {
                         var target = $(event.target).closest('.fieldList__item--inBucket');
                         var bucket = target.closest('.sortingBucket__fieldContainer').data('bucket');
                         model = data.removeField(model, bucket, utils.textOf(target))
-                        sendConfig(model);
+                        sendConfig(model, loadManager);
                         view.removeDoubleClickedItem(target);
                     });
                 $(this).append(d);
@@ -90,7 +109,7 @@ $(function () {
                 var mockClick = view.makeClickInformation(model, ui.helper.text(), $(this).data('bucket'), d);
                 if (mockClick) { view.makeAdditionalUI(model, mockClick); }
 
-                sendConfig(model);
+                sendConfig(model, loadManager);
             }
         });
 
@@ -146,13 +165,13 @@ $(function () {
             case "aggregator":
                 model = data.setAggregator(model, clickInformation);
                 view.makeAdditionalUI(model, clickInformation);
-                sendConfig(model);
+                sendConfig(model, loadManager);
                 break;
             case "filter":
                 if (clickInformation.filterWasApplied) {
                     model = data.setFilter(model, clickInformation.filter);
                     view.makeAdditionalUI(model, clickInformation);
-                    sendConfig(model);
+                    sendConfig(model, loadManager);
                 }
                 break;
             default:

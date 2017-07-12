@@ -32,6 +32,27 @@
     border-top: 1px dashed #CDCDCD;
 }
 
+.queryBuilder__spinner {
+    animation-duration: 10s;
+    animation-name: load;
+    color: orangered;
+}
+
+@keyframes load {
+    from {
+        color: rgb(230, 238, 238);
+    }
+
+    to {
+        color: orangered;
+    }
+}
+
+.queryBuilder--itemMargin {
+    margin-top: 10px;
+}
+
+
 .queryBuilder--indent {
     margin-left: 10px;
 }
@@ -47,7 +68,7 @@
 .sortingBucket {
     margin-top: 10px;
     margin-left: 15px;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
 }
 
 .sortingBucket__fieldContainer {

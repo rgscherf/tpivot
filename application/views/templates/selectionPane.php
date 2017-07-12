@@ -14,6 +14,7 @@
         <div class="queryBuilder__child hideable">
           <!--Field sorting-->
           <?php echo buildSortingBucket(); ?>
+          <?php echo buildLoadingPane(); ?>
         </div>
         <div id="pivotContainer" class="queryBuilder__child">
           <div id="pivotTarget">
@@ -88,5 +89,10 @@
             echo buildSortableBucketFieldContainer("Rows");
             echo buildSortableBucketFieldContainer("Values"); ?>
     </div>
+  </div>
+<?php return ob_get_clean(); } ?>
+
+<?php function buildLoadingPane() { ob_start(); ?>
+  <div id="loadingContainer">
   </div>
 <?php return ob_get_clean(); } ?>

@@ -92,11 +92,28 @@ var view = (function () {
         }
     }
 
+    function removeLoadingSpinner() {
+        $('#loadingSpinner').remove();
+    }
+
+    function addLoadingSpinner() {
+        removeLoadingSpinner();
+        var d = $('<div>')
+            .addClass('queryBuilder--itemMargin')
+            .addClass('queryBuilder__spinner')
+            .attr('id', 'loadingSpinner')
+            .appendTo('#loadingContainer');
+        var content = $('<i class="fa fa-cog fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>')
+            .appendTo(d);
+    }
+
 
     return {
         resetState: resetState,
         makeAdditionalUI: makeAdditionalUI,
         makeClickInformation: makeClickInformation,
-        removeDoubleClickedItem: removeDoubleClickedItem
+        removeDoubleClickedItem: removeDoubleClickedItem,
+        removeLoadingSpinner: removeLoadingSpinner,
+        addLoadingSpinner: addLoadingSpinner
     }
 })();
