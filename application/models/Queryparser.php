@@ -222,6 +222,8 @@ private function make_aggregator($query_model) {
 ////////////////
 
 private function trimstr($str, $counter) {
+    // THIS FUNCTION IS CURRENTLY DEPRECATED.
+
     // Truncate a string to so it can be used as an Oracle column identifier.
     // Maxlen is set at 29. Max length for Oracle columns is 30 chars, but Oracle adds a trailing underscore.
     
@@ -267,8 +269,6 @@ private function trimstr($str, $counter) {
 
 private function get_distinct_entries($table, $col_name) {
     // Return the distinct entries in a given qualified column.
-    // Sanitizes column entries. See $this->trimstr()
-    
     $upper_table = 'CE_CASE_MGMT.' . strtoupper($table);
     $query = $this->db->query("SELECT DISTINCT $col_name as $col_name FROM $upper_table");
     $unique_trim_counter = 0;
@@ -308,7 +308,7 @@ private function make_columns($table, $query_model) {
 
 private function query_shape_selector($query_model) {
     // given a user query, pick the SQL 'template' that will be used.
-    // also does a simple validatation, rejecting query models that lack >0 rows and >0 values.
+    // also does a simple validatation, rejecting query models with ==0 rows and ==0 values.
     
     $model_is_renderable = count($query_model['Rows']) > 0 && count($query_model['Values']) > 0;
     
