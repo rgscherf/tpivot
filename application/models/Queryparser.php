@@ -187,20 +187,32 @@ private function make_selections($table, $query_model) {
 // PIVOT AGGREGATOR CLAUSE
 //////////////////////////
 
+private function make_single_aggregator($agg_object, $first_aggregator_in_array) {
+    $field_name = $this->field_name($agg_object);
+    $reducer_name = strtoupper($agg_object['reducer']);
+    // LISTAGG 'aggregation' works at the SELECT level to get distinct entries. The aggregator is always MAX.
+    // LISTAGG will therefore have undesirable behavior when it's not the only aggregator.
+    $reducer_name = $reducer_name == 'LISTAGG' ? 'MAX' : $reducer_name; 
+    $as_alias = $reducer_name . 'OF_' . $field_name;
+    $prefix = $first_aggregator_in_array ? '' : ', ';
+    return $prefix . $reducer_name . '(' . $field_name . ') as ' . $as_alias ;
+}
+
 private function make_aggregator($query_model) {
-    // if there are aggregator values in the client query,
-    // take the FIRST and combine its reducer name with its unqualified name.
+    // Generate aggregator line of the SQL query.
     // if there are no aggregator values in the client query,
     // take the FIRST entry in columns and return its count.
     if (count($query_model['Values']) === 0) {
         $first_col = $this->field_name($query_model['Columns'][0]);
         return "count(" . $first_col . ")";
     } else {
-        $first_val = $query_model['Values'][0];
-        $first_val_name = $this->field_name($first_val);
-        $reducer = strtoupper($first_val['reducer']);
-        $reducer = $reducer == "LISTAGG" ? "MAX" : $reducer; // listagg 'aggregation' works at the SELECT level to get distinct entries
-        return $reducer . "(" . $first_val_name . ")";
+        $ret = '';
+        $first_agg = true;
+        foreach ($query_model['Values'] as $aggregator_object) {
+            $ret = $ret . $this->make_single_aggregator($aggregator_object, $first_agg);
+            if ($first_agg) { $first_agg = false; }
+        }
+        return $ret;
     }
 }
 
@@ -262,12 +274,19 @@ private function get_distinct_entries($table, $col_name) {
     $unique_trim_counter = 0;
     $distinct_col_entries = null;
     foreach ($query->result_array() as $row) {
-        $trim_result = $this->trimstr($row[$col_name], $unique_trim_counter);
-        $distinct_entry_alias = $trim_result[0];
-        $unique_trim_counter = max([$unique_trim_counter, $trim_result[1]]);
-        
+        ///////////////////////////////////////////////////////////////////////////
+        // Column aliasing removed unless it causes problems later. 
+        // Aliasing is more 'correct' but uglifies column names way too much.
+        // RS 2017-07-14
+        //
+        // $trim_result = $this->trimstr($row[$col_name], $unique_trim_counter);
+        // $distinct_entry_alias = $trim_result[0];
+        // $unique_trim_counter = max([$unique_trim_counter, $trim_result[1]]);
+        // $alias_clause = $row[$col_name] == '' ? '' : " AS $distinct_entry_alias"; // Empty strings will be renamed 'NULL' at the display layer.
+        ///////////////////////////////////////////////////////////////////////////
+
+        $alias_clause = '';
         $append_start_char = !$distinct_col_entries ? '' : ', ';
-        $alias_clause = $row[$col_name] == '' ? '' : " AS $distinct_entry_alias"; // Empty strings will be renamed 'NULL' at the display layer.
         
         $distinct_col_entries .= $append_start_char . "q'[$row[$col_name]]'" . $alias_clause;
     }
