@@ -93,10 +93,12 @@ var view = (function () {
     }
 
     function removeLoadingSpinner() {
+        // Remove loading spinner element from DOM.
         $('#loadingSpinner').remove();
     }
 
     function addLoadingSpinner() {
+        // Add loading spinner element to DOM.
         removeLoadingSpinner();
         var d = $('<div>')
             .addClass('queryBuilder--itemMargin')
