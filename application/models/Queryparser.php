@@ -37,14 +37,8 @@ class Queryparser extends CI_Model {
         return $valid_filters;
     }
     
-    private function any_valid_filters($filters) {
-        $valid_filters = $this->valid_filters($filters);
-        return count($valid_filters) !== 0;
-    }
-    
     private function make_single_filter($filter_obj) {
-        /* {"name":"WHEN_CREATED_YEAR","filterExistence":true,"filterOp":"less than","filterVal":"2016"}
-        */
+        // Stringify the JSON representation of filters.
         $existence = $filter_obj['filterExistence'] ? '' : 'NOT ';
         $field = $filter_obj['name'];
         $available_operations = ['less than' => '<', 'greater than' => '>', 'equal to' => '=', 'like' => 'LIKE'];
@@ -58,9 +52,9 @@ class Queryparser extends CI_Model {
     }
     
     private function make_filters($query_model) {
-        $filters = $query_model['Filters'];
-        if ($this->any_valid_filters($filters)) {
-            $filters = $this->valid_filters($filters);
+        // Reduce through the filters array to get a SQL WHERE string.
+        $filters = $this->valid_filters( $query_model['Filters'] );
+        if (count($filters) > 0) {
             $where_string = 'WHERE ';
             foreach($filters as $filter) {
                 $this_filter = $this->make_single_filter($filter);
@@ -96,6 +90,7 @@ class Queryparser extends CI_Model {
     
     private function make_simple_selections($table, $query_model, $select_distinct=false) {
         // Return selected columns plus selected table.
+        // This is the 'basic' selection used in all cases except for LISTAGG.
         
         $qualified_col_names = [];
         $selected_columns = $this->get_selected_columns($query_model);
@@ -169,7 +164,7 @@ class Queryparser extends CI_Model {
 
 private function make_selections($table, $query_model) {
     // Construct the query's SELECT clause.
-    // make_simple_selections() constructs a basic select.
+    // make_simple_selections() constructs a basic select for most cases.
     // make_nested_selections() constructs select for LISTAGG queries.
     
     list($listagg_detected, $listagg_column) = $this->detect_listagg($query_model);
@@ -188,6 +183,7 @@ private function make_selections($table, $query_model) {
 //////////////////////////
 
 private function make_single_aggregator($agg_object, $first_aggregator_in_array) {
+    // Construct a single aggregator expression from a JSON aggregator object.
     $field_name = $this->field_name($agg_object);
     $reducer_name = strtoupper($agg_object['reducer']);
     // LISTAGG 'aggregation' works at the SELECT level to get distinct entries. The aggregator is always MAX.
@@ -199,7 +195,7 @@ private function make_single_aggregator($agg_object, $first_aggregator_in_array)
 }
 
 private function make_aggregator($query_model) {
-    // Generate aggregator line of the SQL query.
+    // Reduce through the Values array to make an SQL string of the user's desired aggregate fns.
     // if there are no aggregator values in the client query,
     // take the FIRST entry in columns and return its count.
     if (count($query_model['Values']) === 0) {
