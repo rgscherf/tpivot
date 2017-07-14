@@ -56,7 +56,7 @@ function sendConfig(model, loadManager) {
     });
 }
 
-var LoadChecker = function () {
+var LoadStatusChecker = function () {
     this.loadId = '';
 
     this.setId = function () {
@@ -73,7 +73,7 @@ var LoadChecker = function () {
 $(function () {
     var currentDataset = $('#tableSelector').val();
     var model = data.init();
-    var loadManager = new LoadChecker();
+    var loadManager = new LoadStatusChecker();
 
     $('.fieldReceiver')
         .sortable({
