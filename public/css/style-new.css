@@ -33,12 +33,13 @@
 }
 
 .queryBuilder__spinner {
+    margin-left: 5px;
     animation-duration: 10s;
-    animation-name: load;
+    animation-name: spinnerLoading;
     color: orangered;
 }
 
-@keyframes load {
+@keyframes spinnerLoading {
     from {
         color: rgb(230, 238, 238);
     }

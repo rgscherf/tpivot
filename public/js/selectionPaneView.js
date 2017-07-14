@@ -103,7 +103,7 @@ var view = (function () {
             .addClass('queryBuilder__spinner')
             .attr('id', 'loadingSpinner')
             .appendTo('#loadingContainer');
-        var content = $('<i class="fa fa-cog fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>')
+        var content = $('<i class="fa fa-refresh fa-spin fa-2x fa-fw"></i><span class="sr-only">Loading...</span>')
             .appendTo(d);
     }
 
