@@ -176,8 +176,6 @@ private function make_selections($table, $query_model) {
 }
 
 
-
-
 //////////////////////////
 // PIVOT AGGREGATOR CLAUSE
 //////////////////////////
@@ -218,7 +216,11 @@ private function make_aggregator($query_model) {
 ////////////////
 
 private function trimstr($str, $counter) {
+    /////////////////////////////////////////
     // THIS FUNCTION IS CURRENTLY DEPRECATED.
+    // Removed column aliasing until we determine how to present column names.
+    // Leaving this code here in case it's needed later.
+    /////////////////////////////////////////
 
     // Truncate a string to so it can be used as an Oracle column identifier.
     // Maxlen is set at 29. Max length for Oracle columns is 30 chars, but Oracle adds a trailing underscore.
@@ -263,38 +265,87 @@ private function trimstr($str, $counter) {
     return [$return_string, $return_counter];
 }
 
-private function get_distinct_entries($table, $col_name) {
-    // Return the distinct entries in a given qualified column.
+
+function cartesian_product($arrays) {
+    // Return the cartesian product of an array of flat arrays.
+    $result = array();
+    $arrays = array_values($arrays);
+    $sizeIn = sizeof($arrays);
+    $size = $sizeIn > 0 ? 1 : 0;
+    foreach ($arrays as $array)
+        $size = $size * sizeof($array);
+    for ($i = 0; $i < $size; $i ++)
+    {
+        $result[$i] = array();
+        for ($j = 0; $j < $sizeIn; $j ++)
+            array_push($result[$i], current($arrays[$j]));
+        for ($j = ($sizeIn -1); $j >= 0; $j --)
+        {
+            if (next($arrays[$j]))
+                break;
+            elseif (isset ($arrays[$j]))
+                reset($arrays[$j]);
+        }
+    }
+    return $result;
+}
+
+
+private function distinct_col_entries($table, $col_name) {
+    // Get the distinct entries for a given column in the given table.
     $upper_table = 'CE_CASE_MGMT.' . strtoupper($table);
     $query = $this->db->query("SELECT DISTINCT $col_name as $col_name FROM $upper_table");
-    $unique_trim_counter = 0;
-    $distinct_col_entries = null;
-    foreach ($query->result_array() as $row) {
-        ///////////////////////////////////////////////////////////////////////////
-        // Column aliasing removed unless it causes problems later. 
-        // Aliasing is more 'correct' but uglifies column names way too much.
-        // RS 2017-07-14
-        //
-        // $trim_result = $this->trimstr($row[$col_name], $unique_trim_counter);
-        // $distinct_entry_alias = $trim_result[0];
-        // $unique_trim_counter = max([$unique_trim_counter, $trim_result[1]]);
-        // $alias_clause = $row[$col_name] == '' ? '' : " AS $distinct_entry_alias"; // Empty strings will be renamed 'NULL' at the display layer.
-        ///////////////////////////////////////////////////////////////////////////
+    return $query->result_array();
+}
 
-        $alias_clause = '';
-        $append_start_char = !$distinct_col_entries ? '' : ', ';
-        
-        $distinct_col_entries .= $append_start_char . "q'[$row[$col_name]]'" . $alias_clause;
+private function format_cartesian_tuple($cart_tuple) {
+    // Turn a tuple of column values into a quoted string.
+    // This will form the first part of a column name so beware the 30 char limit.
+    $stringified_tuple = '';
+    foreach ($cart_tuple as $elems_as_associative_array) {
+        $flat_elems = array_values($elems_as_associative_array);
+        // cartesian_product returns each cart_tuple as a flat array of associative arrays in the format
+        // [{col_name => value}], and we want just the values.
+        foreach($flat_elems as $elem)
+        $append_start_char = $stringified_tuple === '' ? '' : ', ';
+        $stringified_tuple .= $append_start_char . "q'[$elem]'";
     }
-    return $distinct_col_entries;
+    return "($stringified_tuple)";
+}
+
+private function juxt_cols($table, $col_names) {
+    // Return, as a string, all the combinations of unique column values for the given column names in the given table.
+
+    // get an array of arrays containing all distinct column entries in request
+    $col_entries = [];
+    foreach($col_names as $col_name) {
+        $col_entries[] = $this->distinct_col_entries($table, $col_name);
+    }
+    // make a cartesian product of the entries
+    $cartesian_product_of_entries = $this->cartesian_product($col_entries);
+    // format the cartesian product arrays into array of quoted strings
+    $cartesian_strings = [];
+    foreach ($cartesian_product_of_entries as $cartesian_tuple) {
+        $cartesian_strings[] = $this->format_cartesian_tuple($cartesian_tuple);
+    }
+    // join and return the array of quoted strings
+    return join(',', $cartesian_strings);
 }
 
 private function make_columns($table, $query_model) {
-    // if there are entries in the column table, take the first and set its unique values as 'as'.
-    $first_val = $query_model['Columns'][0];
-    $col = $this->field_name($first_val);
-    $distinct_col_entries = $this->get_distinct_entries($table, $col);
-    return "FOR $col in ($distinct_col_entries)";
+    // Make column entries for the pivot query. 
+    $cols = [];
+    foreach($query_model['Columns'] as $col) {
+        $cols[] = $this->field_name($col);
+    }
+    $cols_string = join(', ', $cols);
+    $juxtaposed_cols = $this->juxt_cols($table, $cols);
+    return "
+    FOR
+    ( $cols_string )
+    IN  
+    ( $juxtaposed_cols )
+    ";
 }
 
 
