@@ -34,7 +34,7 @@
 
 .queryBuilder__spinner {
     margin-left: 5px;
-    animation-duration: 10s;
+    animation-duration: 20s;
     animation-name: spinnerLoading;
     color: orangered;
 }
