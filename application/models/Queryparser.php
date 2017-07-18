@@ -289,10 +289,31 @@ function cartesian_product($arrays) {
     return $result;
 }
 
-private function distinct_col_entries($table, $col_name) {
+private function get_filter_object_of_name($filters, $col_name) {
+    // Given a column name, get the matching filter from filter array.
+    // NB returns null if matching filter not found.
+    foreach ($filters as $filter) {
+        if ($filter['name'] == $col_name) {
+            return $filter;
+        }
+    }
+}
+
+private function distinct_col_entries($table, $filters, $col_name) {
     // Get the distinct entries for a given column in the given table.
+    // Searches filter array for a filter matching the given column name and inserts it into the query if found.
     $upper_table = 'CE_CASE_MGMT.' . strtoupper($table);
-    $query = $this->db->query("SELECT DISTINCT $col_name as $col_name FROM $upper_table");
+    $filter = $this->get_filter_object_of_name($filters, $col_name);
+
+    // A half-formed filter clause (e.g. filterVal == '') will bail on WHERE rather than cause an error. 
+    if ($filter && !$filter['filterVal']) { 
+        $filter = null; 
+    }
+
+    $filter = $filter ? $this->make_single_filter($filter) : $filter;
+    $filter_string = $filter ? "WHERE $filter" : '';
+
+    $query = $this->db->query("SELECT DISTINCT $col_name as $col_name FROM $upper_table $filter_string");
     return $query->result_array();
 }
 
@@ -311,13 +332,13 @@ private function format_cartesian_tuple($cart_tuple) {
     return "($stringified_tuple)";
 }
 
-private function juxt_cols($table, $col_names) {
+private function juxt_cols($table, $filters, $col_names) {
     // Return, as a string, all the combinations of unique column values for the given column names in the given table.
 
     // get an array of arrays containing all distinct column entries in request
     $col_entries = [];
     foreach($col_names as $col_name) {
-        $col_entries[] = $this->distinct_col_entries($table, $col_name);
+        $col_entries[] = $this->distinct_col_entries($table, $filters, $col_name);
     }
     // make a cartesian product of the entries
     $cartesian_product_of_entries = $this->cartesian_product($col_entries);
@@ -337,7 +358,7 @@ private function make_columns($table, $query_model) {
         $cols[] = $this->field_name($col);
     }
     $cols_string = join(', ', $cols);
-    $juxtaposed_cols = $this->juxt_cols($table, $cols);
+    $juxtaposed_cols = $this->juxt_cols($table, $query_model['Filters'], $cols);
     return "
     FOR
     ( $cols_string )
