@@ -62,8 +62,10 @@ var view = (function () {
         // When a given field is added to a sorting bucket, add a selection indicator to its entry in the field list.
         var indicator = findBucketIndicatorOfField(fieldName);
         if (!indicator) { return; }
-        var icon = $('<i class="fa fa-check" aria-hidden="true"></i>')
-            .appendTo(indicator);
+        if (indicator.children().length == 0) {
+            var icon = $('<i class="fa fa-check" aria-hidden="true"></i>')
+                .appendTo(indicator);
+        }
     }
 
 
@@ -71,7 +73,14 @@ var view = (function () {
         // When a given field is removed from a sorting bucket, also remove its selection indicator in the field list.
         var indicator = findBucketIndicatorOfField(fieldName);
         if (!indicator) { return; }
-        indicator.children().remove();
+        var occurrencesOfFieldInBuckets = $('.fieldList__item--inBucket')
+            .filter(function (idx, elem) {
+                return utils.textOf($(elem)) === fieldName;
+            })
+            .length;
+        if (occurrencesOfFieldInBuckets === 0) {
+            indicator.children().remove();
+        }
     }
 
 
