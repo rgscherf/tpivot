@@ -1,205 +1,186 @@
-/*TOP LEVEL*/
-
-.sortableItemName {
-	font-size: 0.75em;
+.pivotDiv {
+    margin: 10px;
+    font-family: "Segoe UI", "Helvetica", sans-serif;
 }
 
-/*contains pivot app*/
-body {
-	font-family: "Segoe UI", "Helvetica", sans-serif;
+.queryBuilder {
+    display: flex;
+    flex-direction: column;
+    height: 600px;
 }
 
-/*Contains entire pivot app*/
-#pivotDiv {
-    margin: 20px 20px;
-	margin-top: 30px;
-	display: flex;
-	flex-direction: column;
+.queryBuilder__listOfAllFields {
+    overflow: auto;
+    height: 500px;
 }
 
-/*Contains query UI and pivot table (but not query hide button)*/
-#pivotAppContainer {
-	display: flex;
-	flex-direction: column;
+.queryBuilder__horizContainer {
+    display: flex;
+}
+
+.queryBuilder__child {
+    padding: 10px;
+    margin-right: 5px;
+}
+
+.queryBuilder__child--fields {
+     min-width: 300px; 
+}
+
+.queryBuilder__spacer {
+    margin-top: 10px;
+    border-top: 1px dashed #CDCDCD;
+}
+
+.queryBuilder__spinner {
+    margin-left: 5px;
+    animation-duration: 10s;
+    animation-name: spinnerLoading;
+    color: orangered;
+}
+
+@keyframes spinnerLoading {
+    from {
+        color: rgb(230, 238, 238);
+    }
+
+    to {
+        color: orangered;
+    }
+}
+
+.queryBuilder__fieldListItemContainer {
+    display: flex;
+}
+
+.queryBuilder__bucketIndicator {
+    width: 20px;
+}
+
+.queryBuilder--itemMargin {
+    margin-top: 10px;
 }
 
 
-#selectionPaneShowHide {
-    width: 100px;
-    min-width: 80px;
-	text-align: center;
+.queryBuilder--indent {
+    margin-left: 10px;
+}
+
+.queryBuilder--headerText {
+    font-variant: small-caps;
+}
+
+.pvtTable {
+    margin-top: 10px;
+}
+
+.sortingBucket {
+    min-width: 250px; 
+    margin-top: 10px;
+    margin-left: 15px;
+    margin-bottom: 20px;
+}
+
+.sortingBucket__fieldContainer {
+    margin-bottom: 10px;
+}
+
+.sortingBucket__fieldContainer > ul {
+    margin-left: 15px;
+}
+
+.sortingBucket--bold {
+    font-weight: bold;
+}
+
+
+ul {
+    list-style: none;
+    padding-left: 0px;
+}
+
+.sortableList {
+    padding: 5px 0px;
+    min-height: 1.5em;
+    margin-bottom: 0px;
+}
+
+.selectionPaneShowHide {
+    width: 260px;
+    text-align: center;
+    border: 1px solid #CDCDCD;
     padding: 3px;
-	border: 1px solid #CDCDCD;
-	margin-left: 10px;
-	margin-right: 10px;
+    margin-left: 10px;
 }
 
-
-/*Query interface*/
-#pivotQuery {
-	border: 1px solid #CDCDCD;
-	display: flex;
-	flex-direction: column;
-	justify-content: flex-start;
-	min-height: 450px;
-	margin:10px;
+.pivot__errorBanner {
+    color: orangered;
+    margin-bottom: 30px;
 }
 
-#queryTableFieldSelector {
-	display: flex;
-	flex-direction: column;
-	padding: 5px;
-}
-
-#tableColumns {
-	overflow: auto;
-    min-height: 150px;
-    /*height: 350px;*/
-}
-
-.tableColumnList {
-	column-count: 6;
-	column-gap: 5px;
-}
-
-#queryTableFieldSelector>div {
-	margin-bottom: 7px;
-}
-
-.indent {
-	margin-left: 10px;
-}
-
-#queryTableFieldSorter {
-	display: flex;
-	flex-direction: column;
-}
-
-
-#fieldSorter {
-	display:flex;
-	flex-direction: column;
-}
-
-.sorterRow {
-	display: flex;
-}
-
-.selectionBucket {
-	padding: 10px;
-	width: 25%;
-	flex: 1 1 auto;
-	min-height: 75px;
-}
-
-#pivotContainer {
-	margin:10px;
-}
-
-.smallPadding {
-	padding: 5px;
-}
 
 /*INDIVIDUAL FIELD ITEMS*/
 
 .additionalUI {
-	font-size: 0.75em;
+    margin-left: 5px;
+    font-size: 0.75em;
 }
 
 input[type=text] {
-	line-height: 10px;
-	width: 80px;
-}
-
-.sortableItem {
-	cursor: move;
-	display: flex;
-	align-items: center;
-    padding-left: 5px;
-	justify-content: space-between;
-	flex-wrap: wrap;
-}
-
-ul {
-	list-style: none;
-	padding-left: 0px;
-}
-
-.placeholder {
-	background-color: #CDCDCD;
-	height: 1.5em;
-	margin-bottom: 5px;
-}
-
-
-/*SORTABLE LISTS*/
-
-.sortableList {
-    padding: 5px 0px;
-	min-height: 1.5em;
-	margin-bottom: 0px;
-}
-
-/*DEMO STUFF */
-#preamble {
-    max-width: 900px;
-	width: 90%;
-    margin: 40px 30px;
-
+    line-height: 10px;
+    width: 80px;
 }
 
 .context {
-	position:absolute;
-  	align-items: flex-start;
+    position:absolute;
+      align-items: flex-start;
 }
 
-.contextBackground {
-	z-index:1000;
-	border:1px solid #CDCDCD;
-	background-color: white;
-	padding:5px;
-	box-shadow: 3px 3px 2px #CDCDCD;
+.context__background {
+    z-index:1000;
+    border:1px solid #CDCDCD;
+    background-color: white;
+    padding:5px;
+    box-shadow: 3px 3px 2px #CDCDCD;
 }
 
-.sideby {
+.context__sideby {
   display: flex;
   width: 100px;
 }
 
-.sideby > div {
+.context__sideby > div {
   margin-right: 10px;
 }
 
-
-/*Aggregator context menu*/
-.contextItem {
-	border-radius: 2px;
-	padding: 2px;
+.context__aggregatorItem {
+    border-radius: 2px;
+    padding: 2px;
 }
 
-.selectedContextItem {
-	background-color: #CDCDCD;
+.context__aggregatorItem--selected {
+    background-color: #CDCDCD;
 }
 
-.metadataAnnotation {
-	font-size: 0.75em;
-	font-style:italic;
+.context__annotation {
+    font-size: 0.75em;
+    font-style: italic;
 }
 
 /*filter context menu*/
-.filterContext {
+.context__filter {
   padding:0px;
   display:inline-flex;
   flex-direction: column;
 }
 
-.filterContextEntry {
+.context__filterInput {
   align-items: center;
   display:flex;
   padding: 5px;
 }
 
-.filterContextEntry > span {
+.context__filterInput > span {
   margin: 0px 3px;
 }
 
@@ -212,6 +193,10 @@ button {
 }
 
 .errorBanner {
-	color: orangered;
-	margin-bottom: 30px;
+    color: orangered;
+    margin-bottom: 30px;
+}
+
+.fieldReceiver {
+    min-height: 1.5em;
 }
