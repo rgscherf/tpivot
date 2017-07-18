@@ -1,11 +1,6 @@
 <?php
 
 class Datasource extends CI_Model {
-    // $data is a map from data-source-title => data-path, column-titles, and csv-or-sql-flag.
-    // initially used to populate the list of possible data sources,
-    // once the user makes a selection of source/fields we come back to the map
-    // to pull rows for the pivot table.
-    
     private $sources;
 
     public function __construct() {
@@ -59,7 +54,56 @@ class Datasource extends CI_Model {
         }
         return $flat_results;
     }
-    
+
+    private function validate_model_field($field_name, $field_object) {
+        // Validate a single field object on the model. Here are the schema for query model objects:
+        //{name: $fieldname} <- for Rows, Columns
+        //{name: $fieldname, filterOp: $filterOpName, filterVal: $filterValName, filterExistence: $(true|false)} <- for Filters
+        //{name: $fieldname, reducer: $reducerFnName <- for Values
+        switch ($field_name) {
+            case 'Rows':
+                return is_string($field_object['name']);
+                break;
+            case 'Columns':
+                return is_string($field_object['name']);
+                break;
+            case 'Values':
+                return is_string($field_object['name']) && 
+                       is_string($field_object['reducer']);
+                break;
+            case 'Filters':
+                return is_string($field_object['name']) && 
+                       is_string($field_object['filterOp']) &&
+                       is_string($field_object['filterVal']) &&
+                       is_bool($field_object['filterExistence']);
+                break;
+        }
+    }
+
+    private function validate_query_model($incoming) {
+        // Validate the query model, returning true if valid.
+        $is_valid = true;
+
+        $is_valid = $is_valid && is_string($incoming['table']);
+
+        $model = $incoming['model'];
+        if ($model === null) { return false; }
+
+        $expected_fields = ['Rows', 'Columns', 'Values', 'Filters'];
+        foreach ($expected_fields as $expected_field) {
+
+            $field = $model[$expected_field];
+            if ($field === null) { return false; }
+
+            $is_valid = $is_valid && is_array($field);
+            if (count($field) > 0) {
+                foreach ($field as $field_entry) {
+                    $is_valid = $is_valid && $this->validate_model_field($expected_field, $field_entry);
+                }
+            }
+        }
+        return $is_valid;
+    }
     
     public function process_query($incoming) {
         // Take a client model object, parse it into an SQL query,
@@ -70,6 +114,10 @@ class Datasource extends CI_Model {
         
         set_time_limit(300);
         
+        if (!$this->validate_query_model($incoming)) {
+            return false;
+        }
+
         $sql_string = $this->Queryparser->make_pivot_query($incoming);
         log_message('debug', $sql_string);
         
