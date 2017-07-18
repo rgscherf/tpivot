@@ -24,7 +24,7 @@
 }
 
 .queryBuilder__child--fields {
-    min-width: 260px;
+     min-width: 300px; 
 }
 
 .queryBuilder__spacer {
@@ -49,6 +49,14 @@
     }
 }
 
+.queryBuilder__fieldListItemContainer {
+    display: flex;
+}
+
+.queryBuilder__bucketIndicator {
+    width: 20px;
+}
+
 .queryBuilder--itemMargin {
     margin-top: 10px;
 }
@@ -67,6 +75,7 @@
 }
 
 .sortingBucket {
+    min-width: 250px; 
     margin-top: 10px;
     margin-left: 15px;
     margin-bottom: 20px;
@@ -110,11 +119,6 @@ ul {
 }
 
 
-
-
-
-
-
 /*INDIVIDUAL FIELD ITEMS*/
 
 .additionalUI {
@@ -126,15 +130,6 @@ input[type=text] {
     line-height: 10px;
     width: 80px;
 }
-
-/*.sortableItem {
-    cursor: move;
-    display: flex;
-    align-items: center;
-    padding-left: 5px;
-    justify-content: space-between;
-    flex-wrap: wrap;
-}*/
 
 .context {
     position:absolute;

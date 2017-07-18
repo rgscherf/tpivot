@@ -6,10 +6,10 @@ var view = (function () {
     }
 
 
-    function constructSortableField(fieldName) {
+    function makeDraggableField(fieldName) {
         // Create a container element for a sortable field.
         var fieldNameSpaceSafe = fieldName.split(' ').join('-');
-        var d = $('<div>')
+        var field = $('<div>')
             .addClass('fieldList__item draggableItem field')
             .attr('id', 'sortField-' + fieldNameSpaceSafe)
             .text(fieldName)
@@ -18,7 +18,60 @@ var view = (function () {
                 helper: "clone",
                 revert: "invalid"
             });
-        return d;
+        return field;
+    }
+
+
+    function makeBucketIndicator() {
+        var indicator = $('<div>')
+            .addClass('queryBuilder__bucketIndicator');
+        return indicator;
+    }
+
+
+    function constructSortableField(fieldName) {
+        // Make a single entry in the field list.
+        // Entries are composed of two elements: 
+        // - a div for the selection indicator
+        // - a div for the field's name
+        var container = $('<div>')
+            .addClass('queryBuilder__fieldListItemContainer');
+        var draggableField = makeDraggableField(fieldName);
+        var indicator = makeBucketIndicator();
+        container.append(indicator, draggableField);
+        return container;
+    }
+
+
+    function findBucketIndicatorOfField(fieldName) {
+        var matchedElem = $('#sortCol-noField .fieldList__item')
+            .filter(function (idx, elem) {
+                return utils.textOf($(elem)) === fieldName;
+            })
+            .first();
+        if (!matchedElem) { return; }
+        var indicator = $(matchedElem)
+            .parent()
+            .find('.queryBuilder__bucketIndicator')
+            .first();
+        return $(indicator);
+    }
+
+
+    function addFieldToBucket(fieldName) {
+        // When a given field is added to a sorting bucket, add a selection indicator to its entry in the field list.
+        var indicator = findBucketIndicatorOfField(fieldName);
+        if (!indicator) { return; }
+        var icon = $('<i class="fa fa-check" aria-hidden="true"></i>')
+            .appendTo(indicator);
+    }
+
+
+    function removeFieldFromBucket(fieldName) {
+        // When a given field is removed from a sorting bucket, also remove its selection indicator in the field list.
+        var indicator = findBucketIndicatorOfField(fieldName);
+        if (!indicator) { return; }
+        indicator.children().remove();
     }
 
 
@@ -116,6 +169,8 @@ var view = (function () {
         makeClickInformation: makeClickInformation,
         removeDoubleClickedItem: removeDoubleClickedItem,
         removeLoadingSpinner: removeLoadingSpinner,
-        addLoadingSpinner: addLoadingSpinner
+        addLoadingSpinner: addLoadingSpinner,
+        addFieldToBucket: addFieldToBucket,
+        removeFieldFromBucket: removeFieldFromBucket
     }
 })();

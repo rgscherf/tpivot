@@ -93,6 +93,7 @@ $(function () {
             },
             drop: function (event, ui) {
                 model = data.addField(model, $(this).data('bucket'), ui.helper.text());
+                view.addFieldToBucket(ui.helper.text());
                 var d = $('<div>')
                     .addClass('fieldList__item')
                     .addClass('fieldList__item--inBucket')
@@ -100,9 +101,10 @@ $(function () {
                     .dblclick(function (event) {
                         var target = $(event.target).closest('.fieldList__item--inBucket');
                         var bucket = target.closest('.sortingBucket__fieldContainer').data('bucket');
-                        model = data.removeField(model, bucket, utils.textOf(target))
+                        model = data.removeField(model, bucket, utils.textOf(target));
                         sendConfig(model, loadManager);
                         view.removeDoubleClickedItem(target);
+                        view.removeFieldFromBucket(utils.textOf(target));
                     });
                 $(this).append(d);
 
