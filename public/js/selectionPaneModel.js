@@ -28,7 +28,7 @@ var data = (function () {
                 fieldAsObject.filterVal = "";
                 break;
             case "Values":
-                fieldAsObject.reducer = "listagg";
+                fieldAsObject.reducer = "count";
                 fieldAsObject.displayAs = "raw";
                 break;
             default:
