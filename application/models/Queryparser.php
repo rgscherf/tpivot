@@ -265,7 +265,6 @@ private function trimstr($str, $counter) {
     return [$return_string, $return_counter];
 }
 
-
 function cartesian_product($arrays) {
     // Return the cartesian product of an array of flat arrays.
     $result = array();
@@ -289,7 +288,6 @@ function cartesian_product($arrays) {
     }
     return $result;
 }
-
 
 private function distinct_col_entries($table, $col_name) {
     // Get the distinct entries for a given column in the given table.
