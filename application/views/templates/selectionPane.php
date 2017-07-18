@@ -73,7 +73,7 @@
   ob_start(); ?>
   <div class="sortingBucket__fieldContainer fieldReceiver" id="<?php echo 'sortCol-'.$bucketName; ?>" data-bucket="<?php echo $bucketName ?>">
     <div class="queryBuilder--headerText">
-      <i class="fa <?php echo $thisIconText;?>" aria-hidden="true"></i>
+      <i class="fa fa-fw <?php echo $thisIconText;?>" aria-hidden="true"></i>
       <span class="sortingBucket--bold"><?php echo strtoupper($bucketName); ?></span>
     </div>
   </div>
