@@ -215,6 +215,21 @@ var tpivot = (function () {
         errDiv.append(headline, sqlline, sqltext, msgline, msgtext);
     };
 
+    var makeTimeoutPanel = function (containerDiv) {
+        var headline = $('<h1></h1>')
+            .html('Error in pivot query!')
+            .addClass('pivot__errorBanner');
+        var subhead = $('<h2></h2>')
+            .html('Request timed out.');
+        var errorText = $('<div></div>')
+            .html('The database might be too busy right now. Pivot queries with many fields can also take too long to return.')
+            .addClass('smallPadding');
+
+        var errDiv = $('<div></div>')
+        errDiv.appendTo(containerDiv);
+        errDiv.append(headline, subhead, errorText);
+    }
+
     var makePivotContainer = function () {
         var containerDiv = $('<div></div>')
             .attr('id', 'pivotTable');
@@ -233,10 +248,14 @@ var tpivot = (function () {
         return containerDiv;
     };
 
-    var renderPivot = function (pivotData) {
+    var refreshPivotContainer = function () {
         $('#pivotTable').remove();
+        return makePivotContainer();
+    }
+
+    var renderPivot = function (pivotData) {
+        var container = refreshPivotContainer();
         if (pivotData.results === false) { return; }
-        var container = makePivotContainer();
         if (pivotData.results.error) {
             makeErrorPanel(container, pivotData.results);
             return;
@@ -244,7 +263,13 @@ var tpivot = (function () {
         makeTable(container, pivotData.results.rows, pivotData.model);
     };
 
+    var renderTimeout = function () {
+        var container = refreshPivotContainer();
+        makeTimeoutPanel(container);
+    }
+
     return {
-        renderPivot: renderPivot
+        renderPivot: renderPivot,
+        renderTimeout: renderTimeout
     };
 })();

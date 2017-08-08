@@ -52,6 +52,8 @@ function sendConfig(model, loadManager) {
         error: function (x, stat, err) {
             console.log("AJAX REQUEST FAILED");
             console.log(x, stat, err);
+            view.removeLoadingSpinner();
+            tpivot.renderTimeout();
         }
     });
 }
