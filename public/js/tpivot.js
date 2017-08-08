@@ -4,12 +4,12 @@ var tpivot = (function () {
     // UTILITY FNS
     //////////////
 
-    var tableRows = function () {
+    function tableRows() {
         // Return all tr elements of the sortable table.
         return $(".sortableTable__body > tr");
     }
 
-    var title = function (str) {
+    function title(str) {
         // Capitalize first letter of a string.
         return str.charAt(0).toUpperCase() + str.slice(1);
     }
@@ -19,7 +19,7 @@ var tpivot = (function () {
     // COLUMN HIDING
     ////////////////
 
-    var dehydrateColumn = function (event) {
+    function dehydrateColumn(event) {
         // Store column data in a button and remove column from the sortable table.
         var tar = $(event.target);
         var colData = tar.data("col");
@@ -47,7 +47,7 @@ var tpivot = (function () {
         });
     }
 
-    var hydrateColumn = function (event) {
+    function hydrateColumn(event) {
         var dat = $(event.target).data();
         var values = dat.column.values;
         var head = dat.column.header;
@@ -67,7 +67,7 @@ var tpivot = (function () {
         });
     }
 
-    var orderedValuesOfCol = function (colName) {
+    function orderedValuesOfCol(colName) {
         // Return all td elements matching a given th element.
         var ret = [];
         tableRows().each(function (idx, row) {
@@ -82,7 +82,7 @@ var tpivot = (function () {
     // COLUMN SORTING
     /////////////////
 
-    var sortcells = function (item) {
+    function sortCells(item) {
         // Move tds matching associated sorted th to the same index as the th.
         var newIndex = $(".sortableTable__header").children().index(item);
         var column = item.data("col");
@@ -93,7 +93,7 @@ var tpivot = (function () {
         });
     }
 
-    var getMatchingCell = function (container, columnData) {
+    function getMatchingCell(container, columnData) {
         // Retrieve elment from a collection matching certain data attribute.
         var ret = container
             .children()
@@ -104,7 +104,7 @@ var tpivot = (function () {
         return ret;
     }
 
-    var moveTo = function (container, index, element) {
+    function moveTo(container, index, element) {
         // Move an element to a certin index within a container.
         // Element is first removed from children(), then then inserted.
         // The length of children() may change in between.
@@ -122,7 +122,7 @@ var tpivot = (function () {
     // CREATION
     ///////////
 
-    var makeTableHeaderRow = function (tableComponent, headings, returnedModel) {
+    function makeTableHeaderRow(tableComponent, headings, returnedModel) {
         // Make a row of `th` cells and append to a table component (most likely a `thead`).
         var tr = $('<tr></tr>')
             .css('cursor', 'default')
@@ -141,7 +141,7 @@ var tpivot = (function () {
                     ui.placeholder.width(ui.item.width());
                 },
                 stop: function (event, ui) {
-                    sortcells(ui.item);
+                    sortCells(ui.item);
                 }
             })
             .disableSelection();
@@ -163,7 +163,7 @@ var tpivot = (function () {
         tr.appendTo(tableComponent);
     };
 
-    var makeSingleTableRow = function (tableComponent, rowData, headerRow) {
+    function makeSingleTableRow(tableComponent, rowData, headerRow) {
         // Make a single table body row and append it to a table component (most likely a `tbody`).
         var row = $('<tr></tr>');
         rowData.forEach(function (val, idx) {
@@ -179,7 +179,7 @@ var tpivot = (function () {
         row.appendTo(tableComponent);
     };
 
-    var makeTable = function (container, pivotData, returnedModel) {
+    function makeTable(container, pivotData, returnedModel) {
         var table = $('<table></table>')
             .addClass("pvtTable");
         table.appendTo(container);
@@ -200,7 +200,7 @@ var tpivot = (function () {
         tbody.appendTo(table);
     };
 
-    var makeErrorPanel = function (containerDiv, resultsObj) {
+    function makeErrorPanel(containerDiv, resultsObj) {
         var errmsg = resultsObj.errmsg;
         var errsql = resultsObj.errsql;
 
@@ -215,7 +215,7 @@ var tpivot = (function () {
         errDiv.append(headline, sqlline, sqltext, msgline, msgtext);
     };
 
-    var makeTimeoutPanel = function (containerDiv) {
+    function makeTimeoutPanel(containerDiv) {
         var headline = $('<h1></h1>')
             .html('Error in pivot query!')
             .addClass('pivot__errorBanner');
@@ -230,7 +230,7 @@ var tpivot = (function () {
         errDiv.append(headline, subhead, errorText);
     }
 
-    var makePivotContainer = function () {
+    function makePivotContainer() {
         var containerDiv = $('<div></div>')
             .attr('id', 'pivotTable');
         var spacerDiv = $('<div></div>')
@@ -248,11 +248,11 @@ var tpivot = (function () {
         return containerDiv;
     };
 
-    var removePivotContainer = function () {
+    function removePivotContainer() {
         $('#pivotTable').remove();
     }
 
-    var renderPivot = function (pivotData) {
+    function renderPivot(pivotData) {
         if (pivotData.results === false) { return; }
 
         removePivotContainer();
@@ -265,7 +265,7 @@ var tpivot = (function () {
         makeTable(container, pivotData.results.rows, pivotData.model);
     };
 
-    var renderTimeout = function () {
+    function renderTimeout() {
         removePivotContainer();
         var container = makePivotContainer();
         makeTimeoutPanel(container);
