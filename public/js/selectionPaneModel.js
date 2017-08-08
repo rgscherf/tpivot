@@ -188,14 +188,17 @@ var data = (function () {
         if (!container) { return false; }
         if (!droppedElement.hasClass('field')) { return false; }
         var ret = true;
-        container
-            .children()
-            .filter('.fieldList__item')
-            .each(function (idx, elem) {
-                if (utils.textOf($(elem)) === utils.textOf(droppedElement)) {
-                    ret = false;
-                }
-            });
+        // Check for duplicate fields, which are only allowed in Values
+        if (container.data('bucket') !== 'Values') {
+            container
+                .children()
+                .filter('.fieldList__item')
+                .each(function (idx, elem) {
+                    if (utils.textOf($(elem)) === utils.textOf(droppedElement)) {
+                        ret = false;
+                    }
+                });
+        }
         if (ret) {
             var bucket = container.data('bucket');
             switch (bucket) {

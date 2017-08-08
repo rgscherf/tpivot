@@ -85,7 +85,18 @@ class Queryparser extends CI_Model {
         $rows = $query_model['Rows'];
         $cols = $query_model['Columns'];
         $vals = $query_model['Values'];
-        return array_merge($rows, $cols, $vals);
+        $all_columns = array_merge($rows, $cols, $vals);
+
+        $selected_names = [];
+        $selected_columns = [];
+
+        foreach ($all_columns as $col) {
+            if ( !in_array($col['name'], $selected_names) ) {
+                $selected_names[] = $col['name'];
+                $selected_columns[] = $col;
+            }
+        }
+        return $selected_columns;
     }
     
     private function make_simple_selections($table, $query_model, $select_distinct=false) {
