@@ -75,6 +75,8 @@ $(function () {
     var model = data.init();
     var loadManager = new LoadStatusChecker();
 
+    $('.queryBuilder__child--notSelectable').disableSelection();
+
     $('.fieldReceiver')
         .sortable({
             containment: 'parent',

@@ -1,5 +1,5 @@
 <div id="pivotDiv" class="pivotDiv">
-  <div id="selectionPaneShowHide" class="selectionPaneShowHide">
+  <div id="selectionPaneShowHide" class="selectionPaneShowHide queryBuilder__child--notSelectable">
     Hide query pane
   </div>
   <div id="pivotAppContainer">
@@ -7,11 +7,11 @@
       <!--table selector-->
       <?php echo buildTableSelector($availableData); ?>
       <div class="queryBuilder__horizContainer">
-        <div class="queryBuilder__child queryBuilder__child--fields hideable">
+        <div class="queryBuilder__child queryBuilder__child--fields queryBuilder__child--notSelectable hideable">
           <!--field selector-->
           <?php echo buildListOfAllFields(); ?>
         </div>
-        <div class="queryBuilder__child hideable">
+        <div class="queryBuilder__child queryBuilder__child--notSelectable hideable">
           <!--Field sorting-->
           <?php echo buildSortingBucket(); ?>
           <?php echo buildLoadingPane(); ?>
@@ -32,7 +32,7 @@
 
 
 <?php function buildTableSelector($availableData) { ob_start(); ?>
-  <div class="queryBuilder__child hideable">
+  <div class="queryBuilder__child queryBuilder__child--notSelectable hideable">
     <div class="queryBuilder--headerText">
       Data source
     </div>

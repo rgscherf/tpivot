@@ -122,9 +122,10 @@ var tpivot = (function () {
     // CREATION
     ///////////
 
-    var makeTableHeaderRow = function (tableComponent, headings) {
+    var makeTableHeaderRow = function (tableComponent, headings, returnedModel) {
         // Make a row of `th` cells and append to a table component (most likely a `thead`).
         var tr = $('<tr></tr>')
+            .css('cursor', 'default')
             .addClass('sortableTable__header')
             .sortable({
                 placeholder: "placeholder",
@@ -144,15 +145,18 @@ var tpivot = (function () {
                 }
             })
             .disableSelection();
-        headings.forEach(function (elem) {
+        headings.forEach(function (elem, idx) {
             // A blank column header ('') is a NULL value.
             var data = elem == "''" ? "NULL" : elem;
             var th = $('<th></th>')
-                .addClass('value')
                 .attr('data-col', data)
                 .dblclick(function (event) {
                     dehydrateColumn(event);
                 });
+            console.log(returnedModel['Rows']);
+            if (returnedModel['Rows'] && idx >= returnedModel['Rows'].length) {
+                th.addClass('value');
+            }
             th.html(data);
             th.appendTo(tr);
         });
@@ -175,14 +179,14 @@ var tpivot = (function () {
         row.appendTo(tableComponent);
     };
 
-    var makeTable = function (container, pivotData) {
+    var makeTable = function (container, pivotData, returnedModel) {
         var table = $('<table></table>')
             .addClass("pvtTable");
         table.appendTo(container);
 
         var thead = $('<thead></thead>')
             .addClass('sortableTable');
-        makeTableHeaderRow(thead, pivotData[0]);
+        makeTableHeaderRow(thead, pivotData[0], returnedModel);
         thead.appendTo(table);
 
         var tbody = $('<tbody></tbody>')
@@ -218,6 +222,8 @@ var tpivot = (function () {
             .addClass('queryBuilder__spacer');
         var headerDiv = $('<div></div>')
             .addClass('queryBuilder--headerText')
+            .addClass('queryBuilder__child--notSelectable')
+            .disableSelection()
             .text('Query results');
         var discard = $('<div>')
             .addClass('sortableTable__discard');
@@ -235,7 +241,7 @@ var tpivot = (function () {
             makeErrorPanel(container, pivotData.results);
             return;
         }
-        makeTable(container, pivotData.results.rows);
+        makeTable(container, pivotData.results.rows, pivotData.model);
     };
 
     return {
