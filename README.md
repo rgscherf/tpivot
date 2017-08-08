@@ -29,7 +29,7 @@ tpivot represents a pivot query as having four parts (called `buckets` in the co
 
 The visual query builder represents the query object (called the `model` in code) with a JS object of the following shape: 
 
-```json
+```javascript
 {
     // Top-level keys are capitalized!
 
@@ -103,7 +103,7 @@ Datasource.php returns one of three values in response to a query object:
 
 Result objects have the shape:
 
-```json
+```javascript
 {
     model: query_model, // query object that was sent to the server
     results: ( error_description | pivot_data )
