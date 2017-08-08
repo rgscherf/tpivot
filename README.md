@@ -1,81 +1,125 @@
 # tpivot
 
-A CodeIgniter library for querying and rendering Oracle pivot tables. Runs a pivot query from a given JSON query object, and returns the contents of the pivot table.
+A CodeIgniter/jQuery app for querying and rendering Oracle pivot tables, based on the Microsoft Excel pivot table GUI.
 
-Also includes a basic jQuery-based pivot table explorer.
+Build a pivot query with a visual editor. View the results of your query in an interactive HTML table.
 
-## Installation
 
-`Datasource.php` and `Queryparser.php` should live in your `/models` directory.
+## Lifecycle of a pivot query
 
-Ensure that CodeIgniter is properly configured with an Oracle database. Oracle version 11g or greater is required.
+The visual editor is used to define the constraits of a pivot query. This query is represented in JSON by the `query object`. 
 
-## Using the library
+The query object is sent to the server, where it is parsed into an SQL string. The SQL is executed and its result is returned to the client as an array of arrays representing the rows of the result.
 
-Note: pivot table terminology can be confusing, so I use the word *fields* to represent the columns in a spreadsheet/table.
+The client renders the result array as an HTML table. The result table can be manipulated by manual sorting, removing unwanted columns, etc.
 
-`Queryparser->make_pivot_query()` takes a JSON object representing the fields of a pivot table query. These fields resemble the ones you would use to build a pivot table in Excel:
+
+## Parts of a query
+
+Note: pivot table terminology can be confusing, so I use the word *fields* to represent the columns in a spreadsheet/table. *Columns* are the columns of the pivot table that will be returned.
+
+tpivot represents a pivot query as having four parts (called `buckets` in the code). You will recognize them from Excel.
 
 - `Rows`: Each distinct value in these fields will be a row of the pivot table. If multiple values are added to `Rows`, the pivot table will generate a row for each unique combination of row entries.
-- `Columns`: The above definition applies to `Columns`, but entry names may be mangled to comply with Oracles column naming rules.
-- `Values`: The aggreate function(s) that will be calculated for every `Row`/`Column` intersection of the pivot table.
-- `Filters`: Only records meeting these requirements will be included in the pivot query.
+- `Columns`: Similar to `Rows`. Because Oracle column names are subject to special naming rules, column names are displayed in the result table as `"colValue1"[... "colValueN"]_AGGREGATOR-NAME_AGGREGATED-FIELD`. Note that identifiers in the column name are separated by underscores, and that column values are placed inside double quotes. 
+- `Values`: Aggregate function(s) that will be calculated for every `Row`/`Column` intersection of the pivot table. You can ask for a pivot table with multiple aggregates, either on different fields or the same one.
+- `Filters`: These represent parts of an SQL `where` clause. Only records meeting these requirements will be included in the pivot query.
 
-`make_pivot_query()` parses the query object and returns an SQL string. You may wish to execute the query using `Datasource->process_query()`, especially if you also plan to use the jQuery-based pivot explorer. `process_query()` returns additional metadata used by the explorer, for example in case of SQL errors.
+### Representing the query object in code
 
-### Queries
+The visual query builder represents the query object (called the `model` in code) with a JS object of the following shape: 
 
-`Queryparser->make_pivot_query()` expects a JSON *query object* of the following shape:
-
-```
+```json
 {
-    table: string_table_name,
-    model: {
-        Rows: [field_template],
-        Columns: [field_tempalte],
-        Values: [value_template]
-    }
+    // Top-level keys are capitalized!
+
+    Rows:    [ basic_field_template ],
+    Columns: [ basic_field_template ],
+    Filters: [ filter_template ],
+    Values:  [ value_tempalte ]
 }
-```
 
-Note that query object's `model` keys are capitalized.
 
-A field template has this shape:
+// BASIC_FIELD_TEMPLATE
 
-```
-{name: string_column_name}
-```
+// basic_field_template fills out the query's SELECT clause
+// when the same field doesn't appear in a filter_template or value_tempalte.
+{ 
+    // string_column_name is read-only and given by the server.
+    name: string_column_name 
+}
 
-Note that `string_column_name` must match the DB column name of interest. This means capitalization must be correct.
 
-A value template has this shape:
+// FILTER_TEMPALTE
 
-```
-{name: string_column_name,
-reducer: oracle_agg_fn}
-```
+// filter_template values are chained together with AND
+// to form the query's WHERE clause. Each filter_template has the shape:
+{ 
+    name: string_column_name,
+    
+    // if false, indicates that this filter represents the form
+    // 'WHERE (field) NOT (expression)', otherwise
+    // 'WHERE (field) (expression)'
+    filterExistence: bool, 
 
-`reducer` is one of the Oracle aggregate functions. Any aggregate function will do, but beware that aggregate functions will only operate on an appropriate datatype. The `make_pivot_query()` will return an error object if asked to take, for example, the average of a VARCHAR2 column. Take special care with the `LISTAGG` function, which is handled specially to return only unique entries for a given row/column intersection.
+    // one of 'less than', 'equal to', 'greater than', or 'like'.
+    // this is converted to an equivalent symbol on the server.
+    filterOp: string_operation,
 
-**TODO describe LISTAGG handling**
+    // the value of interest for filtering. e.g.:
+    // 'WHERE (field) LIKE (filterVal)
+    filterVal: any_string
+}
 
-If using this library in conjuction with the tpivot jQuery library, you may notice that query objects have some additional fields. The query object may include a `noField` entry, for all the columns in a given table/view that have not been included in the rows/columns/values. Value objects may include a `displayAs` field. You can safely ignore all of these fields.
 
-### Responses
+// VALUE_TEMPLATE
 
-`make_pivot_query()` returns an SQL string. You can execute this string yourself, or wrap your use of `make_pivot_query()` in `Datasource->process_query()` to handle SQL execution and responses. This is convenient, and especially handy if you plan to use the tpivot front-end library.
-
-`process_query()` takes the same argument as `make_pivot_query()` and returns data in the shape of:
-
-```
-// JS object notation
+// value_template describes the aggregate function to be applied to a field.
+// Each value_template has the shape:
 {
-    rows: array_of_rows,
-    error: did_sql_throw_error?,
-    errmsg: string_oracle_err_msg_with_err_code,
-    errsql: sql_that_was_executed
+    name: string_column_name,
+
+    // The name of an Oracle aggregator function.
+    // An informative error object will be returned if a reducer is applied to the wrong type.
+    reducer: string_aggregator_name,
+
+    // Deprecated. Has no effect.
+    displayAs: any_string
 }
+
 ```
 
-Where `array_of_rows` is an array of arrays. The array at index 0, the header array, contains string column names. Subsequent arrays contain table data.
+## Parsing the query object
 
+On the server, Pivot.php contains a controller which catches the JSON query object and passes it to the `Queryparser` class. There, the query object is parsed into an SQL query and executed by the `process_query` method of Datasource.php.
+
+Datasource.php returns one of three values in response to a query object:
+
+- `false`, indicating the query was invalid in some way and no changes should be made to the result table DOM. A query object is invalid when it cannot be parsed into a sensible SQL query. A query object with Filter entries but no Rows, Columns, or Values might be invalid, for example.
+
+- a *result object* containing data from the SQL query.
+
+- a *result object* containing an error thrown by the database.
+
+Result objects have the shape:
+
+```json
+{
+    model: query_model, // query object that was sent to the server
+    results: ( error_description | pivot_data )
+}
+
+// An error_description has the shape:
+{
+    error: true,
+    errmsg: any_string // oracle-provided error message, with error #
+    errsql: any_string // SQL query generated by Queryparser
+}
+
+// pivot_data has the shape:
+{
+    error: false,
+    rows: [ row_data ] // rows[0] contains column labels
+}
+
+```
