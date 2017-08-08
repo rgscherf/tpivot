@@ -248,14 +248,16 @@ var tpivot = (function () {
         return containerDiv;
     };
 
-    var refreshPivotContainer = function () {
+    var removePivotContainer = function () {
         $('#pivotTable').remove();
-        return makePivotContainer();
     }
 
     var renderPivot = function (pivotData) {
-        var container = refreshPivotContainer();
         if (pivotData.results === false) { return; }
+
+        removePivotContainer();
+        var container = makePivotContainer();
+
         if (pivotData.results.error) {
             makeErrorPanel(container, pivotData.results);
             return;
@@ -264,7 +266,8 @@ var tpivot = (function () {
     };
 
     var renderTimeout = function () {
-        var container = refreshPivotContainer();
+        removePivotContainer();
+        var container = makePivotContainer();
         makeTimeoutPanel(container);
     }
 
