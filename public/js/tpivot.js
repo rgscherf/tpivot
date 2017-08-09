@@ -134,7 +134,6 @@ var tpivot = (function () {
                 revert: 150,
                 axis: "x",
                 change: function (event, ui) {
-                    console.log(ui.placeholder);
                     ui.placeholder.width(ui.helper.width);
                 },
                 start: function (event, ui) {
@@ -153,7 +152,6 @@ var tpivot = (function () {
                 .dblclick(function (event) {
                     dehydrateColumn(event);
                 });
-            console.log(returnedModel['Rows']);
             if (returnedModel['Rows'] && idx >= returnedModel['Rows'].length) {
                 th.addClass('value');
             }
