@@ -115,6 +115,8 @@ class Datasource extends CI_Model {
         set_time_limit(300);
         
         if (!$this->validate_query_model($incoming)) {
+            log_message('debug', "Got invalid model:");
+            log_message('debug', json_encode($incoming));
             return false;
         }
 

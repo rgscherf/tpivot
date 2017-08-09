@@ -385,22 +385,25 @@ private function make_columns($table, $query_model) {
 
 private function query_shape_selector($query_model) {
     // given a user query, pick the SQL 'template' that will be used.
-    // also does a simple validatation, rejecting query models with ==0 rows and ==0 values.
     
-    $model_is_renderable = count($query_model['Rows']) > 0 && count($query_model['Values']) > 0;
-    
-    if (!$model_is_renderable) {
-        return false;
-    }
-    
+    $rows_requested = count($query_model['Rows']) > 0;
+    $cols_requested = count($query_model['Columns']) > 0;
+    $vals_requested = count($query_model['Values']) > 0;
+    $fils_requested = count($query_model['Filters']) > 0;
+
     $ret = '';
-    if (count($query_model['Columns']) === 0) {
+    if (!$rows_requested && !$cols_requested && $vals_requested) {
+        $ret = 'values_only';
+    } else if (!$rows_requested && !$cols_requested && !$vals_requested && $fils_requested) {
+        $ret = 'values_only';
+    } else if (!$cols_requested && $rows_requested) {
         // 'spreadsheet' view only includes row and value columns.
         $ret = 'spreadsheet';
     } else {
         // 'pivot' view is values with row/col intersections.
         $ret = 'pivot';
     }
+    log_message('debug', 'Selected query shape: ' . $ret);
     return $ret;
 }
 
@@ -413,7 +416,10 @@ private function make_pivot_view($table, $query_model) {
     $from_selections = $this->make_selections($table, $query_model);
     $aggregator = $this->make_aggregator($query_model);
     $columns = $this->make_columns($table, $query_model);
-    $selected_rows = $this->get_row_names($query_model);
+
+    if (count($query_model['Values']) === 0) {
+        $aggregator = "COUNT(*) as COUNTOF";
+    }
     
     $sql_query = "
     SELECT * FROM (
@@ -424,16 +430,25 @@ private function make_pivot_view($table, $query_model) {
     $aggregator
     $columns
     )
-    ORDER BY $selected_rows";
+    ";
+
+    if (count($query_model['Rows']) > 0) {
+        $selected_rows = $this->get_row_names($query_model);
+        $sql_query .= "ORDER BY $selected_rows";
+    }
     
     return $sql_query;
 }
 
 private function make_spreadsheet_view($table, $query_model) {
     $selected_rows = $this->get_row_names($query_model);
-    $aggregator = $this->make_aggregator($query_model);
+    if (count($query_model['Values']) === 0) {
+        $aggregator = "COUNT(*)";
+    } else {
+        $aggregator = $this->make_aggregator($query_model);
+    }
     $filters = $this->make_filters($query_model);
-    
+
     $sql_query = "
     SELECT
     $selected_rows
@@ -445,6 +460,27 @@ private function make_spreadsheet_view($table, $query_model) {
     ORDER BY $selected_rows
     ";
     
+    return $sql_query;
+}
+
+private function make_values_view($table, $query_model) {
+    if (count($query_model['Values']) === 0) {
+        $aggregator = "COUNT(*)";
+    } else {
+        $aggregator = $this->make_aggregator($query_model);
+    }
+
+    $sql_query = "
+    SELECT $aggregator 
+    FROM CE_CASE_MGMT.$table
+    ";
+
+    $filters_in_query = count($query_model['Filters']) > 0;
+    if($filters_in_query) {
+        $filters = $this->make_filters($query_model);
+        $sql_query.= $filters;
+    }
+
     return $sql_query;
 }
 
@@ -465,6 +501,9 @@ public function make_pivot_query($incoming) {
     
     $sql_query = "";
     switch ($query_shape) {
+        case 'values_only':
+            $sql_query = $this->make_values_view($table, $query_model);
+            break;
         case 'spreadsheet':
             $sql_query = $this->make_spreadsheet_view($table, $query_model);
             break;
