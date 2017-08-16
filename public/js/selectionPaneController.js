@@ -31,7 +31,7 @@ function sendConfig() {
     // - a field is added to a sorting bucket
     // - a field is removed from a sorting bucket
     // - a bucket is rearranged.
-    var model = window.model;
+    var model = data.model;
     var loadManager = window.loadManager;
     console.log('Sending model: ' + JSON.stringify(model));
     var loadId = loadManager.setId();
@@ -75,39 +75,43 @@ var LoadStatusChecker = function () {
 
 // SAVE-LOAD QUERIES
 
-function saveQuery(storage, table, model) {
+function makeNewStorageKey(storage) {
     var localLength = storage.length;
     var storageKey = 'model' + localLength.toString();
-    var storedData = { table: table, model: model };
+    return storageKey;
+}
+
+function saveQuery(storage, table) {
+    var storageKey = makeNewStorageKey(storage);
+    var storedData = { table: table, model: data.model };
     storage.setItem(storageKey, JSON.stringify(storedData));
 }
 
-function loadMostRecentQuery(loadFieldFn, storage, availableTables) {
+function loadMostRecentQuery(storage, availableTables) {
     var storelen = storage.length;
     if (storelen === 0) { return; }
     var storageKey = 'model' + (storelen - 1);
     var loadedModel = JSON.parse(storage.getItem(storageKey));
     console.log('loading model: ' + JSON.stringify(loadedModel));
-
-    loadQueryFromModel(loadFieldFn, availableTables, loadedModel);
+    loadQueryFromModel(availableTables, loadedModel);
 }
 
-function loadQueryFromModel(loadFieldFn, availableTables, newModel) {
+function loadQueryFromModel(availableTables, newModel) {
     $('#tableSelector').val(newModel.table);
     $('#pivotTable').remove();
     view.resetState(availableTables[newModel.table]);
+    data.model = newModel.model;
     var buckets = ["Values", "Filters", "Rows", "Columns"];
     buckets.forEach(function (buck) {
-        var bucketarr = newModel.model[buck];
+        var bucketarr = data.model[buck];
         bucketarr.forEach(function (elem) {
-            loadFieldFn(newModel.model, buck, elem.name);
+            addFieldToBucket(buck, elem.name);
         });
     });
-    window.model = newModel.model;
-    sendConfig(window.model, window.loadManager);
+    sendConfig();
 }
 
-function addFieldToBucket(_model, bucket, fieldName) {
+function addFieldToBucket(bucket, fieldName) {
     view.addFieldToBucket(fieldName);
     var d = $('<div>')
         .addClass('fieldList__item')
@@ -116,34 +120,31 @@ function addFieldToBucket(_model, bucket, fieldName) {
         .dblclick(function (event) {
             var target = $(event.target).closest('.fieldList__item--inBucket');
             var bucket = target.closest('.sortingBucket__fieldContainer').data('bucket');
-            window.model = data.removeField(window.model, bucket, utils.textOf(target));
-            sendConfig(window.model, window.loadManager);
+            data.removeField(bucket, utils.textOf(target));
+            sendConfig();
             view.removeDoubleClickedItem(target);
             view.removeFieldFromBucket(utils.textOf(target));
         });
     var bucketSelector = '[data-bucket="' + bucket + '"]';
     $(bucketSelector).append(d);
 
-    var mockClick = view.makeClickInformation(_model, fieldName, bucket, d);
-    if (mockClick) { view.makeAdditionalUI(_model, mockClick); }
+    var mockClick = view.makeClickInformation(fieldName, bucket, d);
+    if (mockClick) { view.makeAdditionalUI(mockClick); }
 }
 
-var model = {};
-var loadManager;
 
 $(function () {
-    model = data.init();
-    loadManager = new LoadStatusChecker();
+    window.loadManager = new LoadStatusChecker();
 
     var currentDataset = $('#tableSelector').val();
     var storage = window.localStorage;
 
     $('#storeQuery__save').click(function (event) {
-        saveQuery(storage, currentDataset, model);
+        saveQuery(storage, currentDataset);
     });
 
     $('#storeQuery__load').click(function (event) {
-        loadMostRecentQuery(addFieldToBucket, storage, window.availableTables);
+        loadMostRecentQuery(storage, window.availableTables);
     });
 
     $('.queryBuilder__child--notSelectable').disableSelection();
@@ -155,8 +156,8 @@ $(function () {
             items: '> .fieldList__item',
             update: function (event, ui) {
                 var bucket = ui.item.closest('.sortingBucket__fieldContainer').data('bucket');
-                model = data.reorderItemsInBucket(model, bucket);
-                sendConfig(model, loadManager);
+                data.reorderItemsInBucket(bucket);
+                sendConfig();
             }
         })
         .disableSelection()
@@ -165,26 +166,11 @@ $(function () {
                 return data.canDropHere($(this), $(droppedElement));
             },
             drop: function (event, ui) {
-                model = data.addField(model, $(this).data('bucket'), ui.helper.text());
-                view.addFieldToBucket(ui.helper.text());
-                var d = $('<div>')
-                    .addClass('fieldList__item')
-                    .addClass('fieldList__item--inBucket')
-                    .text(ui.helper.text())
-                    .dblclick(function (event) {
-                        var target = $(event.target).closest('.fieldList__item--inBucket');
-                        var bucket = target.closest('.sortingBucket__fieldContainer').data('bucket');
-                        model = data.removeField(model, bucket, utils.textOf(target));
-                        sendConfig(model, loadManager);
-                        view.removeDoubleClickedItem(target);
-                        view.removeFieldFromBucket(utils.textOf(target));
-                    });
-                $(this).append(d);
-
-                var mockClick = view.makeClickInformation(model, ui.helper.text(), $(this).data('bucket'), d);
-                if (mockClick) { view.makeAdditionalUI(model, mockClick); }
-
-                sendConfig(model, loadManager);
+                data.addField($(this).data('bucket'), ui.helper.text());
+                var bucket = $(this).data('bucket');
+                var fieldName = ui.helper.text();
+                addFieldToBucket(bucket, fieldName);
+                sendConfig();
             }
         });
 
@@ -194,8 +180,7 @@ $(function () {
         currentDataset = $('#tableSelector').val();
         $('#pivotTable').remove();
         view.resetState(availableTables[currentDataset]);
-        model = data.init();
-
+        data.init();
     });
 
 
@@ -223,7 +208,7 @@ $(function () {
     $(document).on('contextmenu', function (event) {
         // We pass model to make initial transformations
         // such as highlighting default values.
-        contextMenus.popMenu(model, event);
+        contextMenus.popMenu(data.model, event);
     });
 
     $(document).on('mousedown', function (event) {
@@ -239,15 +224,15 @@ $(function () {
         if (!clickInformation || !clickInformation.contextType) { return; }
         switch (clickInformation.contextType) {
             case "aggregator":
-                model = data.setAggregator(model, clickInformation);
-                view.makeAdditionalUI(model, clickInformation);
-                sendConfig(model, loadManager);
+                data.setAggregator(clickInformation);
+                view.makeAdditionalUI(clickInformation);
+                sendConfig();
                 break;
             case "filter":
                 if (clickInformation.filterWasApplied) {
-                    model = data.setFilter(model, clickInformation.filter);
-                    view.makeAdditionalUI(model, clickInformation);
-                    sendConfig(model, loadManager);
+                    data.setFilter(clickInformation.filter);
+                    view.makeAdditionalUI(clickInformation);
+                    sendConfig();
                 }
                 break;
             default:

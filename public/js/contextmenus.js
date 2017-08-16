@@ -82,7 +82,7 @@ var contextMenus = (function () {
         makeContextHtml(aggregatorSelection, event, clickedSortItem);
         // highlight the current aggregator function
         var fieldName = utils.textOf(clickedSortItem);
-        var reducerObj = data.getAggregator(model, fieldName);
+        var reducerObj = data.getAggregator(fieldName);
         var currentlySelectedAggregator = reducerObj.reducer;
         var currentlySelectedDisplayAs = reducerObj.displayAs;
         $('.context__aggregatorItem')
@@ -97,7 +97,7 @@ var contextMenus = (function () {
     var popFilterMenu = function (model, event, clickedSortItem) {
         makeContextHtml(filterSelection, event, clickedSortItem);
         var fieldName = utils.textOf(clickedSortItem);
-        var filter = data.getFilter(model, fieldName);
+        var filter = data.getFilter(fieldName);
         $('#filterFieldNameEntry').text("Show rows where " + fieldName);
 
         var isOrIsNot = filter.filterExistence ? 'is' : 'is not';

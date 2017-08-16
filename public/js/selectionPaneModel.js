@@ -1,11 +1,10 @@
 var data = (function () {
-    function copy(model) {
-        return $.extend({}, model);
-    }
+    var model = {};
+    init();
 
     function init() {
         // Create intitial model state.
-        return {
+        this.model = {
             Columns: [],
             Rows: [],
             Filters: [],
@@ -18,8 +17,7 @@ var data = (function () {
     // ADD/REMOVE FIELDS IN MODEL OBJ
     /////////////////////////////////
 
-    function addField(_model, bucket, field) {
-        var model = copy(_model);
+    function addField(bucket, field) {
         var fieldAsObject = { name: field };
         switch (bucket) {
             case "Filters":
@@ -34,16 +32,13 @@ var data = (function () {
             default:
                 break;
         }
-        model[bucket].push(fieldAsObject);
-        return model;
+        this.model[bucket].push(fieldAsObject);
     }
 
-    function removeField(_model, bucket, field) {
-        var model = copy(_model);
-        model[bucket] = _model[bucket].filter(function (elem) {
+    function removeField(bucket, field) {
+        this.model[bucket] = this.model[bucket].filter(function (elem) {
             return elem.name != field;
         });
-        return model;
     }
 
 
@@ -66,16 +61,15 @@ var data = (function () {
         }
     }
 
-    function getAggregator(model, field) {
+    function getAggregator(field) {
         // Retrieve an existing aggregator object.
-        return findFieldInBucket(model.Values, field);
+        return findFieldInBucket(this.model.Values, field);
     }
 
-    function setAggregator(_model, incomingReducer) {
+    function setAggregator(incomingReducer) {
         // Modify an existing aggregator's value. Returns a new model.
         // Check contextmenu.getAggregatorClickInformation to see the shape of the incoming reducer object.
-        var model = copy(_model);
-        var reducerInModel = getAggregator(model, incomingReducer.fieldName);
+        var reducerInModel = getAggregator.call(this, incomingReducer.fieldName);
 
         var selectedReducer = incomingReducer.selectedReducer;
         var selectedDisplayAs = incomingReducer.selectedDisplayAs;
@@ -85,30 +79,26 @@ var data = (function () {
         if (selectedDisplayAs) {
             reducerInModel.displayAs = selectedDisplayAs;
         }
-        return model;
     }
 
-    function getFilter(model, fieldName) {
+    function getFilter(fieldName) {
         // Retrieve an existing filter object.
-        return findFieldInBucket(model.Filters, fieldName);
+        return findFieldInBucket(this.model.Filters, fieldName);
     }
 
     function setFilter(_model, incomingFilter) {
         // Modify an existing filter value. Returns a new model.
         // Check contextmenu.tryToApplyFilter to see the shape of the incoming filter object.
-        var model = copy(_model);
-        var oldFilter = getFilter(model, incomingFilter.name);
+        var oldFilter = getFilter(incomingFilter.name);
         oldFilter.filterExistence = incomingFilter.filterExistence === 'is';
         oldFilter.filterOp = incomingFilter.filterOp;
         oldFilter.filterVal = incomingFilter.filterVal;
-        return model;
     }
 
-    function reorderItemsInBucket(_model, bucket) {
+    function reorderItemsInBucket(bucket) {
         // Given a bucket name, return a new model where entries in that bucket 
         // are sorted in the same order as that bucket's DOM representation.
-        var model = copy(_model);
-        var bucketOnModel = model[bucket];
+        var bucketOnModel = this.model[bucket];
         var bucketOnDom = $('[data-bucket="' + bucket + '"]');
         var domBucketChildNames = [];
         bucketOnDom
@@ -122,8 +112,7 @@ var data = (function () {
             var modelChild = findFieldInBucket(bucketOnModel, fieldName);
             newBucketOnModel.push(modelChild);
         });
-        model[bucket] = newBucketOnModel;
-        return model;
+        this.model[bucket] = newBucketOnModel;
     }
 
 
@@ -217,6 +206,7 @@ var data = (function () {
 
 
     return {
+        model: model,
         init: init,
         addField: addField,
         removeField: removeField,

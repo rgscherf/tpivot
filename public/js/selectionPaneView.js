@@ -103,22 +103,22 @@ var view = (function () {
 
     function makeFilterText(model, fieldName) {
         // Stringify a filter object.
-        var filterObj = data.getFilter(model, fieldName);
+        var filterObj = data.getFilter(fieldName);
         var is = filterObj.filterExistence ? "is" : "is not";
         return "(" + is + " " + filterObj.filterOp + " " + filterObj.filterVal + ")";
     }
 
 
-    function makeAdditionalUI(model, clickInformation) {
+    function makeAdditionalUI(clickInformation) {
         // Construct filter/reducer guide text and add it to the DOM.
         clickInformation.clicked.find('.additionalUI').remove();
         var text = '';
         switch (clickInformation.contextType) {
             case 'aggregator':
-                text = '(' + data.getAggregator(model, clickInformation.fieldName).reducer + ' of)';
+                text = '(' + data.getAggregator(clickInformation.fieldName).reducer + ' of)';
                 break;
             case 'filter':
-                text = makeFilterText(model, clickInformation.fieldName);
+                text = makeFilterText(data.model, clickInformation.fieldName);
                 break;
             default:
                 break;
@@ -133,7 +133,7 @@ var view = (function () {
     }
 
 
-    function makeClickInformation(model, fieldName, bucket, appendElement) {
+    function makeClickInformation(fieldName, bucket, appendElement) {
         // Populate an object on field instantiation that can be passed to makeAdditionUI. 
         // This way, filter/value fields can show defauly guide text.
         if (bucket != 'Values' && bucket != 'Filters') { return null; }
