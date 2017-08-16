@@ -1,3 +1,11 @@
+.ui-tooltip {
+    width: 300px;
+    border:1px solid #CDCDCD;
+    background-color: white;
+    padding:5px;
+    box-shadow: 3px 3px 2px #CDCDCD;
+}
+
 .pivotDiv {
     margin: 10px;
     font-family: "Segoe UI", "Helvetica", sans-serif;
@@ -53,6 +61,11 @@
     }
 }
 
+.queryBuilder--alignInHoriz {
+    display:flex;
+    align-items: center;
+}
+
 .queryBuilder__fieldListItemContainer {
     display: flex;
 }
@@ -64,7 +77,6 @@
 .queryBuilder--itemMargin {
     margin-top: 10px;
 }
-
 
 .queryBuilder--indent {
     margin-left: 10px;

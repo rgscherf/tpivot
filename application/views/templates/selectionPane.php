@@ -4,8 +4,11 @@
   </div>
   <div id="pivotAppContainer">
     <div id="pivotQuery" class="queryBuilder">
-      <!--table selector-->
-      <?php echo buildTableSelector($availableData); ?>
+      <!--toolbar area-->
+      <div class="queryBuilder__horizContainer">
+        <?php echo buildTableSelector($availableData); ?>
+        <?php echo buildStoredQueryContainer(); ?>
+      </div>
       <div class="queryBuilder__horizContainer">
         <div class="queryBuilder__child queryBuilder__child--fields queryBuilder__child--notSelectable hideable">
           <!--field selector-->
@@ -31,17 +34,43 @@
 </script>
 
 
-<?php function buildTableSelector($availableData) { ob_start(); ?>
+<?php function buildStoredQueryContainer() { ob_start(); ?>
   <div class="queryBuilder__child queryBuilder__child--notSelectable hideable">
+    <div class="queryBuilder__spacer">
+    </div>
+    <div class="queryBuilder--headerText">
+      Stored Queries
+    </div>
+    <div style="display:flex;flex-direction:column;">
+      <div class="queryBuilder--indent queryBuilder--itemMargin" >
+        <button id="storeQuery__save" class="queryBuilder--alignInHoriz" style="width:100%" title="Save current pivot configuration so you can load it later with fresh data. The pivot configuration is the arrangement of table fields into Filters, Columns, Rows, and Values.">
+          <i class="fa fa-fw fa-floppy-o" aria-hidden="true"></i>
+          <span class="queryBuilder--indent">Save current query</span>
+        </button>
+      </div>
+      <div class="queryBuilder--indent">
+        <button id="storeQuery__load" class="queryBuilder--alignInHoriz" style="width:100%" title="Load a previously-saved pivot configuration and construct a pivot table with fresh data.">
+          <i class="fa fa-fw fa-folder-open-o" aria-hidden="true"></i>
+          <span class="queryBuilder--indent">Load saved query</span>
+        </button>
+      </div>
+    </div>
+  </div>
+<?php return ob_get_clean(); } ?>
+
+<?php function buildtableselector($availableData) { ob_start(); ?>
+  <div class="queryBuilder__child queryBuilder__child--notselectable hideable">
+    <div class="queryBuilder__spacer">
+    </div>
     <div class="queryBuilder--headerText">
       Data source
     </div>
-    <div class="queryBuilder--indent" style="display:flex; align-items:center;">
+    <div class="queryBuilder--indent queryBuilder--itemMargin" style="display:flex; align-items:center;">
       <div>
         <select id="tableSelector">
-          <?php foreach ($availableData as $tableName => $tableFields): ?>
-            <option value="<?php echo $tableName; ?>">
-              <?php echo $tableName; ?>
+          <?php foreach ($availableData as $tablename => $tablefields): ?>
+            <option value="<?php echo $tablename; ?>">
+              <?php echo $tablename; ?>
             </option>
             <?php endforeach; ?>
         </select>

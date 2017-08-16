@@ -3,6 +3,7 @@ var view = (function () {
     function removeSortableFieldsFromDOM() {
         // Remove all sortable field elements.
         $('.fieldList__item').remove();
+        $('.queryBuilder__fieldListItemContainer').remove();
     }
 
 

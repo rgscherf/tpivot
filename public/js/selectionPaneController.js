@@ -26,11 +26,13 @@ Each obj in the model is one of (depending on its field in the model object):
 */
 
 
-function sendConfig(model, loadManager) {
+function sendConfig() {
     // Called any time:
     // - a field is added to a sorting bucket
     // - a field is removed from a sorting bucket
     // - a bucket is rearranged.
+    var model = window.model;
+    var loadManager = window.loadManager;
     console.log('Sending model: ' + JSON.stringify(model));
     var loadId = loadManager.setId();
     view.addLoadingSpinner();
@@ -71,11 +73,78 @@ var LoadStatusChecker = function () {
     }
 };
 
+// SAVE-LOAD QUERIES
+
+function saveQuery(storage, table, model) {
+    var localLength = storage.length;
+    var storageKey = 'model' + localLength.toString();
+    var storedData = { table: table, model: model };
+    storage.setItem(storageKey, JSON.stringify(storedData));
+}
+
+function loadMostRecentQuery(loadFieldFn, storage, availableTables) {
+    var storelen = storage.length;
+    if (storelen === 0) { return; }
+    var storageKey = 'model' + (storelen - 1);
+    var loadedModel = JSON.parse(storage.getItem(storageKey));
+    console.log('loading model: ' + JSON.stringify(loadedModel));
+
+    loadQueryFromModel(loadFieldFn, availableTables, loadedModel);
+}
+
+function loadQueryFromModel(loadFieldFn, availableTables, newModel) {
+    $('#tableSelector').val(newModel.table);
+    $('#pivotTable').remove();
+    view.resetState(availableTables[newModel.table]);
+    var buckets = ["Values", "Filters", "Rows", "Columns"];
+    buckets.forEach(function (buck) {
+        var bucketarr = newModel.model[buck];
+        bucketarr.forEach(function (elem) {
+            loadFieldFn(newModel.model, buck, elem.name);
+        });
+    });
+    window.model = newModel.model;
+    sendConfig(window.model, window.loadManager);
+}
+
+function addFieldToBucket(_model, bucket, fieldName) {
+    view.addFieldToBucket(fieldName);
+    var d = $('<div>')
+        .addClass('fieldList__item')
+        .addClass('fieldList__item--inBucket')
+        .text(fieldName)
+        .dblclick(function (event) {
+            var target = $(event.target).closest('.fieldList__item--inBucket');
+            var bucket = target.closest('.sortingBucket__fieldContainer').data('bucket');
+            window.model = data.removeField(window.model, bucket, utils.textOf(target));
+            sendConfig(window.model, window.loadManager);
+            view.removeDoubleClickedItem(target);
+            view.removeFieldFromBucket(utils.textOf(target));
+        });
+    var bucketSelector = '[data-bucket="' + bucket + '"]';
+    $(bucketSelector).append(d);
+
+    var mockClick = view.makeClickInformation(_model, fieldName, bucket, d);
+    if (mockClick) { view.makeAdditionalUI(_model, mockClick); }
+}
+
+var model = {};
+var loadManager;
 
 $(function () {
+    model = data.init();
+    loadManager = new LoadStatusChecker();
+
     var currentDataset = $('#tableSelector').val();
-    var model = data.init();
-    var loadManager = new LoadStatusChecker();
+    var storage = window.localStorage;
+
+    $('#storeQuery__save').click(function (event) {
+        saveQuery(storage, currentDataset, model);
+    });
+
+    $('#storeQuery__load').click(function (event) {
+        loadMostRecentQuery(addFieldToBucket, storage, window.availableTables);
+    });
 
     $('.queryBuilder__child--notSelectable').disableSelection();
 
@@ -118,6 +187,7 @@ $(function () {
                 sendConfig(model, loadManager);
             }
         });
+
 
     $('#getTable').click(function () {
         // Select a new table to configure. Resets the view and model.
