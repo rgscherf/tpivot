@@ -90,6 +90,8 @@ class Datasource extends CI_Model {
         if ($model === null) { return false; }
 
         $expected_fields = ['Rows', 'Columns', 'Values', 'Filters'];
+        $more_than_zero_fields_requested = true;
+        $total_entries_in_query = 0;
         foreach ($expected_fields as $expected_field) {
 
             $field = $model[$expected_field];
@@ -97,11 +99,13 @@ class Datasource extends CI_Model {
 
             $is_valid = $is_valid && is_array($field);
             if (count($field) > 0) {
+                $total_entries_in_query += count($field);
                 foreach ($field as $field_entry) {
                     $is_valid = $is_valid && $this->validate_model_field($expected_field, $field_entry);
                 }
             }
         }
+        $is_valid = $is_valid && ($total_entries_in_query > 0);
         return $is_valid;
     }
     

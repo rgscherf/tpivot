@@ -5,7 +5,7 @@
   <div id="pivotAppContainer">
     <div id="pivotQuery" class="queryBuilder">
       <!--toolbar area-->
-      <div class="queryBuilder__horizContainer">
+      <div class="queryBuilder__horizContainer" style="min-height:87px;">
         <?php echo buildTableSelector($availableData); ?>
         <?php echo buildStoredQueryContainer(); ?>
       </div>
@@ -41,8 +41,8 @@
     <div class="queryBuilder--headerText">
       Stored Queries
     </div>
-    <div style="display:flex;flex-direction:column;">
-      <div class="queryBuilder--indent queryBuilder--itemMargin" >
+    <div class="queryBuilder--itemMargin" style="display:flex;align-items:center;">
+      <div class="queryBuilder--indent" >
         <button id="storeQuery__save" class="queryBuilder--alignInHoriz" style="width:100%" title="Save current pivot configuration so you can load it later with fresh data. The pivot configuration is the arrangement of table fields into Filters, Columns, Rows, and Values.">
           <i class="fa fa-fw fa-floppy-o" aria-hidden="true"></i>
           <span class="queryBuilder--indent">Save current query</span>
