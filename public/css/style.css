@@ -216,3 +216,69 @@ button {
 .fieldReceiver {
     min-height: 1.5em;
 }
+
+
+.ui-widget-overlay {
+    opacity: 0.5;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 1001;
+    background-color: black;
+}
+
+.loadMenu__ui-dialog {
+    z-index: 1002;
+    background-color: white;
+    max-width: 75%;
+}
+
+.loadMenu {
+    display:flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+.loadMenu table {
+    /* width: 100%; */
+}
+
+.loadMenu td {
+    cursor: pointer;
+    padding: 5px;
+}
+
+.loadMenu th {
+    padding: 5px;
+    font-size: 1.15em;
+    background-color: #e6EEEE;
+    border: 1px solid #CDDCCD;
+}
+
+.loadMenu tr {
+    border: 1px solid #CDDCCD;
+}
+
+.loadMenu__ui-dialog-titlebar {
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 20px;
+}
+
+.loadMenu__ui-dialog-title {
+    font-size: 1.25em;
+}
+.loadMenu__ui-dialog-close:after {
+    font-family: FontAwesome;
+    content: "\F00D";
+}
+.loadMenu__ui-dialog-close {
+    outline: none;
+}

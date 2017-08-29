@@ -73,44 +73,6 @@ var LoadStatusChecker = function () {
     }
 };
 
-// SAVE-LOAD QUERIES
-
-function makeNewStorageKey(storage) {
-    var localLength = storage.length;
-    var storageKey = 'model' + localLength.toString();
-    return storageKey;
-}
-
-function saveQuery(storage, table) {
-    var storageKey = makeNewStorageKey(storage);
-    var storedData = { table: table, model: data.model };
-    storage.setItem(storageKey, JSON.stringify(storedData));
-}
-
-function loadMostRecentQuery(storage, availableTables) {
-    var storelen = storage.length;
-    if (storelen === 0) { return; }
-    var storageKey = 'model' + (storelen - 1);
-    var loadedModel = JSON.parse(storage.getItem(storageKey));
-    console.log('loading model: ' + JSON.stringify(loadedModel));
-    loadQueryFromModel(availableTables, loadedModel);
-}
-
-function loadQueryFromModel(availableTables, newModel) {
-    $('#tableSelector').val(newModel.table);
-    $('#pivotTable').remove();
-    view.resetState(availableTables[newModel.table]);
-    data.model = newModel.model;
-    var buckets = ["Values", "Filters", "Rows", "Columns"];
-    buckets.forEach(function (buck) {
-        var bucketarr = data.model[buck];
-        bucketarr.forEach(function (elem) {
-            addFieldToBucket(buck, elem.name);
-        });
-    });
-    sendConfig();
-}
-
 function addFieldToBucket(bucket, fieldName) {
     view.addFieldToBucket(fieldName);
     var d = $('<div>')
@@ -127,24 +89,23 @@ function addFieldToBucket(bucket, fieldName) {
         });
     var bucketSelector = '[data-bucket="' + bucket + '"]';
     $(bucketSelector).append(d);
-
     var mockClick = view.makeClickInformation(fieldName, bucket, d);
     if (mockClick) { view.makeAdditionalUI(mockClick); }
 }
+
 
 
 $(function () {
     window.loadManager = new LoadStatusChecker();
 
     var currentDataset = $('#tableSelector').val();
-    var storage = window.localStorage;
 
     $('#storeQuery__save').click(function (event) {
-        saveQuery(storage, currentDataset);
+        queryStore.saveQuery(currentDataset, data.model);
     });
 
     $('#storeQuery__load').click(function (event) {
-        loadMostRecentQuery(storage, window.availableTables);
+        queryStore.loadQueryMenu(window.availableTables);
     });
 
     $('.queryBuilder__child--notSelectable').disableSelection();
@@ -208,6 +169,7 @@ $(function () {
     $(document).on('contextmenu', function (event) {
         // We pass model to make initial transformations
         // such as highlighting default values.
+        console.log('got contextmenu from: ' + event.target);
         contextMenus.popMenu(data.model, event);
     });
 
