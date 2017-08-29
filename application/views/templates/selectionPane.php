@@ -8,6 +8,7 @@
       <div class="queryBuilder__horizContainer" style="min-height:87px;">
         <?php echo buildTableSelector($availableData); ?>
         <?php echo buildStoredQueryContainer(); ?>
+        <?php echo buildChartingControlsContainer(); ?>
       </div>
       <div class="queryBuilder__horizContainer">
         <div class="queryBuilder__child queryBuilder__child--fields queryBuilder__child--notSelectable hideable">
@@ -33,6 +34,29 @@
   var availableTables = <?php echo json_encode($availableData); ?>;
 </script>
 
+<?php function buildChartingControlsContainer() { ob_start(); ?>
+  <div class="queryBuilder__child queryBuilder__child--notSelectable hideable">
+    <div class="queryBuilder__spacer">
+    </div>
+    <div class="queryBuilder--headerText">
+      Charting
+    </div>
+    <div class="queryBuilder--itemMargin" style="display:flex;align-items:center;">
+      <div class="queryBuilder--indent" >
+        <button id="charting__showBar" class="queryBuilder--alignInHoriz" style="width:100%" title="Save current pivot configuration so you can load it later with fresh data. The pivot configuration is the arrangement of table fields into Filters, Columns, Rows, and Values.">
+          <i class="fa fa-fw fa-bar-chart" aria-hidden="true"></i>
+          <span class="queryBuilder--indent">Show bar chart</span>
+        </button>
+      </div>
+      <div class="queryBuilder--indent">
+        <button id="charting__showLine" class="queryBuilder--alignInHoriz" style="width:100%" title="Load a previously-saved pivot configuration and construct a pivot table with fresh data.">
+          <i class="fa fa-fw fa-line-chart" aria-hidden="true"></i>
+          <span class="queryBuilder--indent">Show line chart</span>
+        </button>
+      </div>
+    </div>
+  </div>
+<?php return ob_get_clean(); } ?>
 
 <?php function buildStoredQueryContainer() { ob_start(); ?>
   <div class="queryBuilder__child queryBuilder__child--notSelectable hideable">

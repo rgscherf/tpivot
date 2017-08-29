@@ -3,45 +3,6 @@ var queryStore = (function () {
         return window.localStorage;
     }
 
-    function describeModel(model) {
-        // Return a string description of model.
-        // e.g. "Count(ID); Rows: x, y; "
-        var description = '';
-        if (model['Values'].length > 0) {
-            var vals = model['Values'];
-            vals.forEach(function (elem, idx) {
-                if (idx > 0) {
-                    description += ", ";
-                }
-                description += "(" + elem.reducer + " of " + elem.name + ")";
-            });
-        }
-        if (model['Rows'].length > 0) {
-            description += " by ";
-            var cols = model['Rows'];
-            cols.forEach(function (elem, idx) {
-                if (idx > 0) {
-                    description += ", ";
-                }
-                description += elem.name;
-            });
-        }
-        if (model['Columns'].length > 0) {
-            description += " by ";
-            var cols = model['Columns'];
-            cols.forEach(function (elem, idx) {
-                if (idx > 0) {
-                    description += ", ";
-                }
-                description += elem.name;
-            });
-        }
-        if (model['Filters'].length > 0) {
-            description += "with filters.";
-        }
-        return description;
-    }
-
     function getStoredQueries() {
         var queries = JSON.parse(storage().getItem('savedQueries'));
         return (queries || []);
@@ -71,7 +32,8 @@ var queryStore = (function () {
 
     function loadQueryFromModel(availableTables, newModel) {
         $('#tableSelector').val(newModel.table);
-        $('#pivotTable').remove();
+        tpivot.removePivot();
+        tchart.removeChart();
         view.resetState(availableTables[newModel.table]);
         data.model = newModel.model;
         var buckets = ["Values", "Filters", "Rows", "Columns"];
@@ -99,7 +61,7 @@ var queryStore = (function () {
                     $('.loadQueryMenu').dialog("close");
                 })
                 .append($('<td>').text(elem.table))
-                .append($('<td>').text(describeModel(elem.model)))
+                .append($('<td>').text(tutils.describeModel(elem.model)))
                 .append($('<td>').text(elem.date))
                 .disableSelection();
             q.appendTo(d);

@@ -246,47 +246,15 @@ var tpivot = (function () {
         return containerDiv;
     };
 
-    function removePivotContainer() {
+    function removePivot() {
         $('#pivotTable').remove();
     }
 
-    function makeChart(resultRows) {
-        var colors = [
-            'rgba(255,99,132,1)',
-            'rgba(54, 162, 235, 1)',
-            'rgba(255, 206, 86, 1)',
-            'rgba(75, 192, 192, 1)',
-            'rgba(153, 102, 255, 1)',
-            'rgba(255, 159, 64, 1)'
-        ]
-        $('#pivotChart').remove();
-        var horizLabels = resultRows[0].slice(1);
-        var datums = resultRows.slice(1).map(function (elem, idx) {
-            return {
-                label: elem[0],
-                data: elem.slice(1),
-                borderColor: colors[idx],
-                fill: false
-            };
-        })
-        var canvas = $('<canvas id="pivotChart" width="400" height="400">')
-            .appendTo($('#pivotTarget'));
-        var chart = new Chart(canvas, {
-            type: 'line',
-            data: {
-                labels: horizLabels,
-                datasets: datums
-            },
-            options: {
-                responsive: false
-            }
-        });
-    }
 
     function renderPivot(pivotData) {
         if (pivotData.results === false) { return; }
 
-        removePivotContainer();
+        removePivot();
         var container = makePivotContainer();
 
         if (pivotData.results.error) {
@@ -294,17 +262,18 @@ var tpivot = (function () {
             return;
         }
         makeTable(container, pivotData.results.rows, pivotData.model);
-        makeChart(pivotData.results.rows);
+        tchart.renderChart(pivotData.model, pivotData.results.rows);
     };
 
     function renderTimeout() {
-        removePivotContainer();
+        removePivot();
         var container = makePivotContainer();
         makeTimeoutPanel(container);
     }
 
     return {
         renderPivot: renderPivot,
-        renderTimeout: renderTimeout
+        renderTimeout: renderTimeout,
+        removePivot: removePivot
     };
 })();
