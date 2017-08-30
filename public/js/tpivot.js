@@ -262,7 +262,8 @@ var tpivot = (function () {
             return;
         }
         makeTable(container, pivotData.results.rows, pivotData.model);
-        tchart.renderChart(pivotData.model, pivotData.results.rows);
+        window.currentPivotResult = pivotData;
+        //tchart.renderChart(pivotData.model, pivotData.results.rows, 'line');
     };
 
     function renderTimeout() {

@@ -108,6 +108,14 @@ $(function () {
         queryStore.loadQueryMenu(window.availableTables);
     });
 
+    $('#charting__showLine').click(function (event) {
+        tchart.renderChartDialog(window.currentPivotResult, 'line');
+    });
+
+    $('#charting__showBar').click(function (event) {
+        tchart.renderChartDialog(window.currentPivotResult, 'bar');
+    });
+
     $('.queryBuilder__child--notSelectable').disableSelection();
 
     $('.fieldReceiver')
