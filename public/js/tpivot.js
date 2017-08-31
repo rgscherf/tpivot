@@ -19,9 +19,9 @@ var tpivot = (function () {
     // COLUMN HIDING
     ////////////////
 
-    function dehydrateColumn(event) {
+    function dehydrateColumn(target) {
         // Store column data in a button and remove column from the sortable table.
-        var tar = $(event.target);
+        var tar = $(target);
         var colData = tar.data("col");
 
         if (!colData) { return; }
@@ -51,13 +51,21 @@ var tpivot = (function () {
         var dat = $(event.target).data();
         var values = dat.column.values;
         var head = dat.column.header;
-        var th = $("<th>")
+        var th = $('<th>')
             .text(title(head))
-            .attr("data-col", head)
-            .addClass("value")
-            .addClass("ui-sortable-handle")
-            .dblclick(function (event) {
-                dehydrateColumn(event);
+            .attr('data-col', head)
+            .addClass('value')
+            .addClass('ui-sortable-handle')
+            .addClass('pivotHeaderCell')
+            .hover(function enter(event) {
+                $(tutils.closeButton)
+                    .appendTo($(this))
+                    .addClass('closeButton')
+                    .click(function (event) {
+                        dehydrateColumn($(event.target).closest($('.pivotHeaderCell')));
+                    });
+            }, function exit(event) {
+                $(this).children('.closeButton').remove();
             });
         $(".sortableTable__header").append(th);
         event.target.remove();
@@ -149,8 +157,16 @@ var tpivot = (function () {
             var data = elem == "''" ? "NULL" : elem;
             var th = $('<th></th>')
                 .attr('data-col', data)
-                .dblclick(function (event) {
-                    dehydrateColumn(event);
+                .addClass('pivotHeaderCell')
+                .hover(function enter(event) {
+                    $(tutils.closeButton)
+                        .appendTo($(this))
+                        .addClass('closeButton')
+                        .click(function (event) {
+                            dehydrateColumn($(event.target).closest($('.pivotHeaderCell')));
+                        });
+                }, function exit(event) {
+                    $(this).children('.closeButton').remove();
                 });
             if (returnedModel['Rows'] && idx >= returnedModel['Rows'].length) {
                 th.addClass('value');
@@ -263,7 +279,6 @@ var tpivot = (function () {
         }
         makeTable(container, pivotData.results.rows, pivotData.model);
         window.currentPivotResult = pivotData;
-        //tchart.renderChart(pivotData.model, pivotData.results.rows, 'line');
     };
 
     function renderTimeout() {

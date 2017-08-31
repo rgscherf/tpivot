@@ -73,26 +73,33 @@ var LoadStatusChecker = function () {
     }
 };
 
+
 function addFieldToBucket(bucket, fieldName) {
     view.addFieldToBucket(fieldName);
     var d = $('<div>')
         .addClass('fieldList__item')
         .addClass('fieldList__item--inBucket')
         .text(fieldName)
-        .dblclick(function (event) {
-            var target = $(event.target).closest('.fieldList__item--inBucket');
-            var bucket = target.closest('.sortingBucket__fieldContainer').data('bucket');
-            data.removeField(bucket, utils.textOf(target));
-            sendConfig();
-            view.removeDoubleClickedItem(target);
-            view.removeFieldFromBucket(utils.textOf(target));
+        .hover(function enter(event) {
+            $(tutils.closeButton)
+                .appendTo($(this))
+                .addClass('closeButton')
+                .click(function (event) {
+                    var target = $(event.target).closest('.fieldList__item--inBucket');
+                    var bucket = target.closest('.sortingBucket__fieldContainer').data('bucket');
+                    data.removeField(bucket, utils.textOf(target));
+                    sendConfig();
+                    view.removeDoubleClickedItem(target);
+                    view.removeFieldFromBucket(utils.textOf(target));
+                });
+        }, function exit(event) {
+            $(this).children('.closeButton').remove();
         });
     var bucketSelector = '[data-bucket="' + bucket + '"]';
     $(bucketSelector).append(d);
     var mockClick = view.makeClickInformation(fieldName, bucket, d);
     if (mockClick) { view.makeAdditionalUI(mockClick); }
 }
-
 
 
 $(function () {

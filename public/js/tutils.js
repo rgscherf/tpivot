@@ -1,4 +1,6 @@
 var tutils = (function () {
+    var closeButton = ['<div>', '<i class="fa fa-fw fa-window-close" aria-hidden="true"></i>', '</div>'].join('\n');
+
     function deinterleaveFrom(guide, subject) {
         // Deinterleave a subject array into pieces of length guide.length.
         // Returns an array of arrays, where array order corresponds to ordering of guide.
@@ -53,6 +55,7 @@ var tutils = (function () {
     }
 
     return {
+        closeButton: closeButton,
         describeModel: describeModel,
         deinterleaveFrom: deinterleaveFrom
     };

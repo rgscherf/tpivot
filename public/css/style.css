@@ -278,3 +278,20 @@ button {
 .loadMenu__ui-dialog-close {
     outline: none;
 }
+
+.fieldList__item--inBucket {
+    position: relative;
+}
+
+.pivotHeaderCell {
+    position: relative;
+}
+
+.closeButton {
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    width: auto;
+    height: auto;
+    background-color: white;
+}
