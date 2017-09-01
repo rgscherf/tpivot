@@ -1,32 +1,26 @@
-<div id="pivotDiv" class="pivotDiv">
-  <div id="selectionPaneShowHide" class="selectionPaneShowHide queryBuilder__child--notSelectable">
-    Hide query pane
-  </div>
-  <div id="pivotAppContainer">
-    <div id="pivotQuery" class="queryBuilder">
+<div id="pivotDiv" class="pivotDiv queryBuilder">
       <!--toolbar area-->
-      <div class="queryBuilder__horizContainer" style="min-height:87px;">
-        <?php echo buildTableSelector($availableData); ?>
+      <div class="toolbar__dummy">
+      </div>
+      <div class="toolbar queryBuilder__horizContainer queryBuilder__child--notSelectable">
+        <?php echo buildSelectionVisibilityContainer(); ?>
         <?php echo buildStoredQueryContainer(); ?>
         <?php echo buildChartingControlsContainer(); ?>
       </div>
       <div class="queryBuilder__horizContainer">
-        <div class="queryBuilder__child queryBuilder__child--fields queryBuilder__child--notSelectable hideable">
+        <div class="selectionContainer queryBuilder__child--fields queryBuilder__child--notSelectable hideable">
           <!--field selector-->
+          <?php echo buildSelectionTitle(); ?>
+          <?php echo buildTableSelector($availableData); ?>
           <?php echo buildListOfAllFields(); ?>
-        </div>
-        <div class="queryBuilder__child queryBuilder__child--notSelectable hideable">
-          <!--Field sorting-->
           <?php echo buildSortingBucket(); ?>
           <?php echo buildLoadingPane(); ?>
         </div>
-        <div id="pivotContainer" class="queryBuilder__child">
+        <div id="pivotContainer">
           <div id="pivotTarget">
           </div>
         </div>
       </div>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -34,73 +28,112 @@
   var availableTables = <?php echo json_encode($availableData); ?>;
 </script>
 
+<?php function buildSelectionVisibilityContainer() { ob_start(); ?>
+  <div class="toolbar__section">
+    <div class="toolbar__sectionButtons">
+      <button type="button" id="selectionPaneShowHide" class="btn btn-default">
+        <div class="toolbar__button">
+          <div>
+            <i class="fa fa-2x fa-eye-slash" aria-hidden="true"></i>
+          </div>
+          <div class="toolbar__buttonLabel">
+            Hide Builder              
+          </div>
+        </div>
+      </button>
+    </div>
+    <div class="toolbar__sectionLabel">
+      Visibility
+    </div>
+  </div>
+<?php return ob_get_clean(); } ?>
+
 <?php function buildChartingControlsContainer() { ob_start(); ?>
-  <div class="queryBuilder__child queryBuilder__child--notSelectable hideable">
-    <div class="queryBuilder__spacer">
+  <div class="toolbar__section">
+    <div class="toolbar__sectionButtons">
+      <button type="button" id="charting__showBar" class="btn btn-default">
+        <div class="toolbar__button">
+          <div>
+            <i class="fa fa-2x fa-bar-chart" aria-hidden="true"></i>
+          </div>
+          <div class="toolbar__buttonLabel">
+            Bar Chart
+          </div>
+        </div>
+      </button>
+      <button type="button" id="charting__showLine" class="btn btn-default">
+        <div class="toolbar__button">
+          <div>
+            <i class="fa fa-2x fa-line-chart" aria-hidden="true"></i>
+          </div>
+          <div class="toolbar__buttonLabel">
+            Line chart
+          </div>
+        </div>
+      </button>
     </div>
-    <div class="queryBuilder--headerText">
+    <div class="toolbar__sectionLabel">
       Charting
-    </div>
-    <div class="queryBuilder--itemMargin" style="display:flex;align-items:center;">
-      <div class="queryBuilder--indent" >
-        <button id="charting__showBar" class="queryBuilder--alignInHoriz" style="width:100%" title="Save current pivot configuration so you can load it later with fresh data. The pivot configuration is the arrangement of table fields into Filters, Columns, Rows, and Values.">
-          <i class="fa fa-fw fa-bar-chart" aria-hidden="true"></i>
-          <span class="queryBuilder--indent">Show bar chart</span>
-        </button>
-      </div>
-      <div class="queryBuilder--indent">
-        <button id="charting__showLine" class="queryBuilder--alignInHoriz" style="width:100%" title="Load a previously-saved pivot configuration and construct a pivot table with fresh data.">
-          <i class="fa fa-fw fa-line-chart" aria-hidden="true"></i>
-          <span class="queryBuilder--indent">Show line chart</span>
-        </button>
-      </div>
     </div>
   </div>
 <?php return ob_get_clean(); } ?>
 
 <?php function buildStoredQueryContainer() { ob_start(); ?>
-  <div class="queryBuilder__child queryBuilder__child--notSelectable hideable">
-    <div class="queryBuilder__spacer">
+  <div class="toolbar__section">
+    <div class="toolbar__sectionButtons">
+      <button type="button" id="storeQuery__save" class="btn btn-default">
+        <div class="toolbar__button">
+          <div>
+            <i class="fa fa-2x fa-floppy-o" aria-hidden="true"></i>
+          </div>
+          <div class="toolbar__buttonLabel">
+            Save query
+          </div>
+        </div>
+      </button>
+      <button type="button" id="storeQuery__load" class="btn btn-default">
+        <div class="toolbar__button">
+          <div>
+            <i class="fa fa-2x fa-folder-open-o" aria-hidden="true"></i>
+          </div>
+          <div class="toolbar__buttonLabel">
+            Load query
+          </div>
+        </div>
+      </button>
     </div>
-    <div class="queryBuilder--headerText">
-      Stored Queries
-    </div>
-    <div class="queryBuilder--itemMargin" style="display:flex;align-items:center;">
-      <div class="queryBuilder--indent" >
-        <button id="storeQuery__save" class="queryBuilder--alignInHoriz" style="width:100%" title="Save current pivot configuration so you can load it later with fresh data. The pivot configuration is the arrangement of table fields into Filters, Columns, Rows, and Values.">
-          <i class="fa fa-fw fa-floppy-o" aria-hidden="true"></i>
-          <span class="queryBuilder--indent">Save current query</span>
-        </button>
-      </div>
-      <div class="queryBuilder--indent">
-        <button id="storeQuery__load" class="queryBuilder--alignInHoriz" style="width:100%" title="Load a previously-saved pivot configuration and construct a pivot table with fresh data.">
-          <i class="fa fa-fw fa-folder-open-o" aria-hidden="true"></i>
-          <span class="queryBuilder--indent">Load saved query</span>
-        </button>
-      </div>
+    <div class="toolbar__sectionLabel">
+      Storage
     </div>
   </div>
 <?php return ob_get_clean(); } ?>
 
+
+<?php function buildSelectionTitle() { ob_start(); ?>
+  <div class="selectionContainer__title">
+    Pivot Table Fields
+  </div>
+<?php return ob_get_clean(); } ?>
+
 <?php function buildtableselector($availableData) { ob_start(); ?>
-  <div class="queryBuilder__child queryBuilder__child--notselectable hideable">
-    <div class="queryBuilder__spacer">
+  <div class="selectionContainer__section">
+    <div class="selectionContainer__sectionLabel">
+      Choose data source for report:
     </div>
-    <div class="queryBuilder--headerText">
-      Data source
-    </div>
-    <div class="queryBuilder--indent queryBuilder--itemMargin" style="display:flex; align-items:center;">
-      <div>
-        <select id="tableSelector">
+    <div class="queryBuilder--marginLeft queryBuilder--marginTop" style="display:flex; align-items:center;">
+        <select id="tableSelector" >
           <?php foreach ($availableData as $tablename => $tablefields): ?>
             <option value="<?php echo $tablename; ?>">
               <?php echo $tablename; ?>
             </option>
             <?php endforeach; ?>
         </select>
-      </div>
-      <div style="margin-left: 5px">
-        <button id="getTable">Load</button>
+      <div style="margin-left: 10px">
+        <button type="button" id="getTable" class="btn btn-warning btn-sm">
+          <div>
+            <span style="margin-left:2px;">Load</span>
+          </div>
+        </button>
       </div>
     </div>
   </div>
@@ -108,11 +141,11 @@
 
 
 <?php function buildListOfAllFields() { ob_start(); ?>
-  <div id="queryTableFieldSelector" class="queryBuilder__spacer">
-    <div class="queryBuilder--headerText">
+  <div id="queryTableFieldSelector" class="selectionContainer__section">
+    <div class="selectionContainer__sectionLabel">
       Drag fields below to create query
     </div>
-    <div id="tableColumns" class="queryBuilder__listOfAllFields queryBuilder--indent">
+    <div id="tableColumns" class="queryBuilder__listOfAllFields queryBuilder--marginLeft queryBuilder--marginTop">
       <div class="tableColumnList" id="sortCol-noField">
       </div>
     </div>
@@ -125,18 +158,20 @@
   $thisIconText = $fontAwesomeDict[$bucketName];
   ob_start(); ?>
   <div class="sortingBucket__fieldContainer fieldReceiver" id="<?php echo 'sortCol-'.$bucketName; ?>" data-bucket="<?php echo $bucketName ?>">
-    <div class="queryBuilder--headerText">
+    <div>
       <i class="fa fa-fw <?php echo $thisIconText;?>" aria-hidden="true"></i>
-      <span class="sortingBucket--bold"><?php echo strtoupper($bucketName); ?></span>
+      <span><?php echo strtoupper($bucketName); ?></span>
     </div>
   </div>
 <?php return ob_get_clean();} ?>
 
 
 <?php function buildSortingBucket() { ob_start(); ?>
-  <div id="queryTableFieldSorter">
-    <div class="queryBuilder--headerText queryBuilder__spacer">Right-click a Filter or Value for options.</div>
-    <div class="sortingBucket">
+  <div id="queryTableFieldSorter" class="selectionContainer__section">
+    <div class="selectionContainer__sectionLabel">
+      Right-click a Filter or Value for options.
+    </div>
+    <div class="queryBuilder--marginLeft queryBuilder--marginTop">
       <?php echo buildSortableBucketFieldContainer("Filters");
             echo buildSortableBucketFieldContainer("Columns");
             echo buildSortableBucketFieldContainer("Rows");

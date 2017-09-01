@@ -79,6 +79,7 @@ function addFieldToBucket(bucket, fieldName) {
     var d = $('<div>')
         .addClass('fieldList__item')
         .addClass('fieldList__item--inBucket')
+        .addClass('sortingBucket--bold')
         .text(fieldName)
         .hover(function enter(event) {
             $(tutils.closeButton)
@@ -108,18 +109,22 @@ $(function () {
     var currentDataset = $('#tableSelector').val();
 
     $('#storeQuery__save').click(function (event) {
+        $(this).blur();
         queryStore.saveQuery(currentDataset, data.model);
     });
 
     $('#storeQuery__load').click(function (event) {
+        $(this).blur();
         queryStore.loadQueryMenu(window.availableTables);
     });
 
     $('#charting__showLine').click(function (event) {
+        $(this).blur();
         tchart.renderChartDialog(window.currentPivotResult, 'line');
     });
 
     $('#charting__showBar').click(function (event) {
+        $(this).blur();
         tchart.renderChartDialog(window.currentPivotResult, 'bar');
     });
 
@@ -153,6 +158,10 @@ $(function () {
 
     $('#getTable').click(function () {
         // Select a new table to configure. Resets the view and model.
+        $(this)
+            .blur()
+            .removeClass('btn-warning')
+            .addClass('btn-default');
         currentDataset = $('#tableSelector').val();
         $('#pivotTable').remove();
         view.resetState(availableTables[currentDataset]);
@@ -166,12 +175,15 @@ $(function () {
 
     var selectionPaneHidden = false;
     $('#selectionPaneShowHide').click(function () {
+        $(this).blur();
         if (selectionPaneHidden) {
             $('.hideable').show();
-            $(this).text("Hide query pane");
+            $(this).find('.toolbar__buttonLabel').text("Hide builder");
+            $(this).find('i').removeClass('fa-eye').addClass('fa-eye-slash');
         } else {
             $('.hideable').hide();
-            $(this).text("Show query pane");
+            $(this).find('.toolbar__buttonLabel').text("Show builder");
+            $(this).find('i').removeClass('fa-eye-slash').addClass('fa-eye');
         }
         selectionPaneHidden = !selectionPaneHidden;
     });

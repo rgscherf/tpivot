@@ -195,6 +195,7 @@ var tpivot = (function () {
 
     function makeTable(container, pivotData, returnedModel) {
         var table = $('<table></table>')
+            .addClass('queryBuilder--marginLeft queryBuilder--marginTop')
             .addClass("pvtTable");
         table.appendTo(container);
 
@@ -244,21 +245,25 @@ var tpivot = (function () {
         errDiv.append(headline, subhead, errorText);
     }
 
-    function makePivotContainer() {
+    function makePivotContainer(model) {
         var containerDiv = $('<div></div>')
+            .addClass('pivotContainer')
+            .addClass('queryBuilder--marginLeft')
             .attr('id', 'pivotTable');
-        var spacerDiv = $('<div></div>')
-            .addClass('queryBuilder__spacer');
-        var headerDiv = $('<div></div>')
-            .addClass('queryBuilder--headerText')
+        var headerDiv = $('<div class="pivotContainer__titleContainer"></div>')
             .addClass('queryBuilder__child--notSelectable')
             .disableSelection()
-            .text('Query results');
+            .append($('<div>')
+                .addClass('pivotContainer__titleText')
+                .text('Pivot Query Results: '))
+            .append($('<div>')
+                .addClass('pivotContainer__titleModelDescription')
+                .text(tutils.describeModel(model)));
         var discard = $('<div>')
             .addClass('sortableTable__discard');
 
         containerDiv.appendTo($('#pivotTarget'));
-        containerDiv.append(spacerDiv, headerDiv, discard);
+        containerDiv.append(headerDiv, discard);
         return containerDiv;
     };
 
@@ -271,7 +276,7 @@ var tpivot = (function () {
         if (pivotData.results === false) { return; }
 
         removePivot();
-        var container = makePivotContainer();
+        var container = makePivotContainer(pivotData.model);
 
         if (pivotData.results.error) {
             makeErrorPanel(container, pivotData.results);

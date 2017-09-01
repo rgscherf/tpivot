@@ -7,19 +7,17 @@
 }
 
 .pivotDiv {
-    margin: 10px;
     font-family: "Segoe UI", "Helvetica", sans-serif;
 }
 
 .queryBuilder {
     display: flex;
     flex-direction: column;
-    height: 600px;
 }
 
 .queryBuilder__listOfAllFields {
     overflow: auto;
-    height: 500px;
+    height: 200px;
 }
 
 .queryBuilder__horizContainer {
@@ -74,11 +72,11 @@
     width: 20px;
 }
 
-.queryBuilder--itemMargin {
+.queryBuilder--marginTop {
     margin-top: 10px;
 }
 
-.queryBuilder--indent {
+.queryBuilder--marginLeft {
     margin-left: 10px;
 }
 
@@ -86,23 +84,9 @@
     font-variant: small-caps;
 }
 
-.pvtTable {
-    margin-top: 10px;
-}
-
-.sortingBucket {
-    min-width: 250px; 
-    margin-top: 10px;
-    margin-left: 15px;
-    margin-bottom: 20px;
-}
-
 .sortingBucket__fieldContainer {
     margin-bottom: 10px;
-}
-
-.sortingBucket__fieldContainer > ul {
-    margin-left: 15px;
+    min-height: 30px;
 }
 
 .sortingBucket--bold {
@@ -200,29 +184,16 @@ input[type=text] {
   margin: 0px 3px;
 }
 
-input[type=text] {
-  width: 70px;
-}
-
-button {
-  margin: 3px;
-}
-
 .errorBanner {
     color: orangered;
     margin-bottom: 30px;
 }
 
-.fieldReceiver {
-    min-height: 1.5em;
-}
-
-
 .ui-widget-overlay {
     opacity: 0.5;
-    height: 100%;
-    width: 100%;
-    position: absolute;
+    height: 100000%;
+    width: 100000%;
+    position: fixed;
     left: 0;
     top: 0;
     z-index: 1001;
@@ -294,4 +265,113 @@ button {
     width: auto;
     height: auto;
     background-color: white;
+}
+
+.toolbar__button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 55px;
+    height: 55px;
+}
+
+.toolbar__buttonLabel {
+    margin-top: 5px;
+    font-size: 1rem;
+}
+
+.toolbar__section {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 10px;
+    padding-bottom: 5px;
+    border-right: 1px solid #CDCDCD;
+}
+
+.toolbar__sectionLabel {
+    font-size: 1.25rem;
+    margin-top: 10px;
+    opacity: 0.75;
+}
+
+.toolbar__sectionButtons {
+    display: flex;
+    align-items: center;
+}
+
+.toolbar__dummy {
+    height: 125px;
+}
+
+.toolbar {
+    z-index: 999;
+    width:100%;
+    position:fixed;
+    top:0px;
+    left:0px;
+    background-color: #fefefe;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #CDCDCD;
+}
+
+.toolbar__sectionButtons button:not(:first-child) {
+    margin-left: 5px;
+}
+
+.selectionContainer {
+    background-color: #fefefe;
+    padding-top: 10px;
+    padding-right: 5px;
+    border-right: 1px solid #CDCDCD;
+    padding-left: 5px;
+}
+
+.btn-default {
+    background-color: #fefefe;
+}
+
+select {
+    background-color: #fefefe;
+}
+
+.selectionContainer__title {
+    font-size: 2.5rem;
+    padding-bottom: 10px;
+    border-bottom: 1px dotted #CDCDCD
+}
+
+.selectionContainer__section {
+    margin-top: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px dotted #CDCDCD
+}
+
+.selectionContainer__sectionLabel {
+    font-size: 1.25rem;
+    margin-top: 10px;
+    opacity: 0.75;
+}
+
+.pivotContainer {
+    padding-top: 10px;
+}
+
+.pivotContainer__titleContainer {
+    display:flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    padding-bottom: 10px;
+    border-bottom: 1px dotted #CDCDCD
+}
+
+.pivotContainer__titleText {
+    font-size: 2.5rem;
+}
+
+.pivotContainer__titleModelDescription {
+    opacity: 0.75;
+    margin-left: 5px;
 }

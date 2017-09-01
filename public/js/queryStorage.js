@@ -31,6 +31,7 @@ var queryStore = (function () {
     }
 
     function loadQueryFromModel(availableTables, newModel) {
+        $('#getTable').removeClass('btn-warning').addClass('btn-default');
         $('#tableSelector').val(newModel.table);
         tpivot.removePivot();
         tchart.removeChart();
