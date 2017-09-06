@@ -157,19 +157,16 @@ var view = (function () {
 
     function removeLoadingSpinner() {
         // Remove loading spinner element from DOM.
-        $('#loadingSpinner').remove();
+        $('#loadingSpinner').children().remove();
+        $('#loadingSpinner').append('<i class="fa fa-2x fa-refresh" aria-hidden="true"></i>');
+        $('#loadingLabel').text('Awaiting Input');
     }
 
     function addLoadingSpinner() {
         // Add loading spinner element to DOM.
-        removeLoadingSpinner();
-        var d = $('<div>')
-            .addClass('queryBuilder--itemMargin')
-            .addClass('queryBuilder__spinner')
-            .attr('id', 'loadingSpinner')
-            .appendTo('#loadingContainer');
-        var content = $('<i class="fa fa-refresh fa-spin fa-2x fa-fw"></i><span class="sr-only">Loading...</span>')
-            .appendTo(d);
+        $('#loadingSpinner').children().remove();
+        $('#loadingSpinner').append('<i class="fa fa-2x fa-refresh fa-spin" aria-hidden="true"></i>');
+        $('#loadingLabel').text('Awaiting Data');
     }
 
 

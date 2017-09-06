@@ -6,6 +6,7 @@
         <?php echo buildSelectionVisibilityContainer(); ?>
         <?php echo buildStoredQueryContainer(); ?>
         <?php echo buildChartingControlsContainer(); ?>
+        <?php echo buildLoadingContainer(); ?>
       </div>
       <div class="queryBuilder__horizContainer">
         <div class="selectionContainer queryBuilder__child--fields queryBuilder__child--notSelectable hideable">
@@ -14,7 +15,6 @@
           <?php echo buildTableSelector($availableData); ?>
           <?php echo buildListOfAllFields(); ?>
           <?php echo buildSortingBucket(); ?>
-          <?php echo buildLoadingPane(); ?>
         </div>
         <div id="pivotContainer">
           <div id="pivotTarget">
@@ -108,6 +108,36 @@
   </div>
 <?php return ob_get_clean(); } ?>
 
+<?php function buildLoadingContainer() { ob_start(); ?>
+  <div class="toolbar__section">
+    <div class="toolbar__sectionButtons">
+      <button type="button" id="loading__indicator" class="btn btn-default" disabled="disabled">
+        <div class="toolbar__button">
+          <div id="loadingSpinner">
+            <i class="fa fa-2x fa-refresh" aria-hidden="true"></i>
+          </div>
+          <div class="toolbar__buttonLabel" id="loadingLabel">
+            Awaiting Input
+          </div>
+        </div>
+      </button>
+      <button type="button" id="loading__stopLoad" class="btn btn-default" disabled="disabled">
+        <div class="toolbar__button">
+          <div>
+            <i class="fa fa-2x fa-ban" aria-hidden="true"></i>
+          </div>
+          <div class="toolbar__buttonLabel">
+            Stop Requests
+          </div>
+        </div>
+      </button>
+    </div>
+    <div class="toolbar__sectionLabel">
+      Server Communication
+    </div>
+  </div>
+<?php return ob_get_clean(); } ?>
+
 
 <?php function buildSelectionTitle() { ob_start(); ?>
   <div class="selectionContainer__title">
@@ -177,10 +207,5 @@
             echo buildSortableBucketFieldContainer("Rows");
             echo buildSortableBucketFieldContainer("Values"); ?>
     </div>
-  </div>
-<?php return ob_get_clean(); } ?>
-
-<?php function buildLoadingPane() { ob_start(); ?>
-  <div id="loadingContainer">
   </div>
 <?php return ob_get_clean(); } ?>
