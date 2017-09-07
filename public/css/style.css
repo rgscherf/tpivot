@@ -17,7 +17,7 @@
 
 .queryBuilder__listOfAllFields {
     overflow: auto;
-    height: 200px;
+    height: 170px;
 }
 
 .queryBuilder__horizContainer {
@@ -43,19 +43,18 @@
 }
 
 .queryBuilder__spinner {
-    margin-left: 5px;
     animation-duration: 20s;
     animation-name: spinnerLoading;
-    color: orangered;
+    color: red;
 }
 
 @keyframes spinnerLoading {
     from {
-        color: rgb(230, 238, 238);
+        color: #f0ad4e
     }
 
     to {
-        color: orangered;
+        color: red;
     }
 }
 

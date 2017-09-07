@@ -34,42 +34,81 @@ function sendConfig() {
     var model = data.model;
     var loadManager = window.loadManager;
     console.log('Sending model: ' + JSON.stringify(model));
-    var loadId = loadManager.setId();
+    var loadId = loadManager.registerId();
     view.addLoadingSpinner();
     var currentTable = $("#tableSelector").val()
     var payload = {
         table: currentTable,
         model: model
     };
+    $('#loading__stopLoad').prop('disabled', false);
     $.ajax({
         type: "post",
         url: queryProcessURL,
         data: JSON.stringify(payload),
         success: function (returnData) {
-            if (loadManager && loadManager.checkId(loadId)) {
-                view.removeLoadingSpinner();
+            if (loadManager && loadManager.idIsInBuffer(loadId)) {
+                if (loadManager.isMostRecentId(loadId)) {
+                    view.removeLoadingSpinner();
+                }
+                if (loadManager.bufferIsEmpty()) {
+                    $('#loading__stopLoad').prop('disabled', 'disabled');
+                }
+                tpivot.renderPivot(returnData);
             }
-            tpivot.renderPivot(returnData);
         },
         error: function (x, stat, err) {
             console.log("AJAX REQUEST FAILED");
             console.log(x, stat, err);
             view.removeLoadingSpinner();
             tpivot.renderTimeout();
+
+            if (loadManager.bufferIsEmpty()) {
+                $('#loading__stopLoad').prop('disabled', 'disabled');
+            }
         }
     });
 }
 
-var LoadStatusChecker = function () {
-    this.loadId = '';
+var RequestLoadManager = function () {
+    /*
+    when a request is sent, its id is added to a buffer here.
+    when a response is received,
+        if its id is still in the buffer, remove id from buffer and proceed with response
+            and if it's the most recent response sent (by checking that id is last element of buffer), remove load spinner.
+        else discard response
+    user can clear the buffer at any time thru UI.
+    */
+    this.loadBuffer = [];
 
-    this.setId = function () {
-        this.loadId = Math.random().toString();
-        return this.loadId;
+    this.registerId = function () {
+        var loadId = Math.random().toString();
+        this.loadBuffer.push(loadId);
+        return loadId;
     }
 
-    this.checkId = function (id) {
-        return id === this.loadId;
+    this.isMostRecentId = function (id) {
+        var lastElementInBuffer = this.loadBuffer[this.loadBuffer.length - 1];
+        if (id === lastElementInBuffer) {
+            this.loadBuffer.pop();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    this.idIsInBuffer = function (id) {
+        return this.loadBuffer.indexOf(id) !== -1;
+    }
+
+    this.clearBuffer = function () {
+        view.removeLoadingSpinner();
+        $('#loading__stopLoad').prop('disabled', 'disabled');
+        this.loadBuffer = [];
+    }
+
+    this.bufferIsEmpty = function () {
+        return this.loadBuffer.length === 0;
     }
 };
 
@@ -104,7 +143,7 @@ function addFieldToBucket(bucket, fieldName) {
 
 
 $(function () {
-    window.loadManager = new LoadStatusChecker();
+    window.loadManager = new RequestLoadManager();
 
     var currentDataset = $('#tableSelector').val();
 
@@ -126,6 +165,13 @@ $(function () {
     $('#charting__showBar').click(function (event) {
         $(this).blur();
         tchart.renderChartDialog(window.currentPivotResult, 'bar');
+    });
+
+    $('#loading__stopLoad').click(function (event) {
+        if (window.loadManager) {
+            $(this).blur();
+            window.loadManager.clearBuffer();
+        }
     });
 
     $('.queryBuilder__child--notSelectable').disableSelection();

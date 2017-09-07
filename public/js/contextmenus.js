@@ -73,9 +73,7 @@ var contextMenus = (function () {
             .show(200);
 
         // context menu should appear with mouse click position at lower left of the box.
-        var contextHeight = parseInt(contextMenu.css('height'), 10);
-        var contextTopPosition = event.pageY - contextHeight;
-        contextMenu.css({ top: contextTopPosition + 'px', left: event.pageX + 'px' });
+        contextMenu.css({ bottom: '5px', left: event.pageX - 15 + 'px' });
     }
 
     var popAggregatorMenu = function (model, event, clickedSortItem) {

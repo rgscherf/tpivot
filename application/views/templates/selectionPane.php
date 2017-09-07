@@ -127,13 +127,13 @@
             <i class="fa fa-2x fa-ban" aria-hidden="true"></i>
           </div>
           <div class="toolbar__buttonLabel">
-            Stop Requests
+            Cancel Pending
           </div>
         </div>
       </button>
     </div>
     <div class="toolbar__sectionLabel">
-      Server Communication
+      Server
     </div>
   </div>
 <?php return ob_get_clean(); } ?>
