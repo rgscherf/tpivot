@@ -126,8 +126,8 @@
           <div>
             <i class="fa fa-2x fa-ban" aria-hidden="true"></i>
           </div>
-          <div class="toolbar__buttonLabel">
-            Cancel Pending
+          <div class="toolbar__buttonLabel" id="stopLoadLabel">
+            Nothing Pending
           </div>
         </div>
       </button>

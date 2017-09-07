@@ -164,6 +164,7 @@ var view = (function () {
             .removeClass('queryBuilder__spinner')
             .append('<i class="fa fa-2x fa-refresh" aria-hidden="true"></i>');
         $('#loadingLabel').text('Awaiting Input');
+        $('#stopLoadLabel').text('Nothing Pending');
     }
 
     function addLoadingSpinner() {
@@ -175,6 +176,7 @@ var view = (function () {
             .addClass('queryBuilder__spinner')
             .append('<i class="fa fa-2x fa-refresh fa-spin" aria-hidden="true"></i>');
         $('#loadingLabel').text('Getting Data');
+        $('#stopLoadLabel').text('Cancel Pending');
     }
 
 

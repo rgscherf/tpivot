@@ -311,7 +311,7 @@ input[type=text] {
     position:fixed;
     top:0px;
     left:0px;
-    background-color: #fefefe;
+    background-color: #fbfbfb;
     padding-bottom: 5px;
     border-bottom: 1px solid #CDCDCD;
 }
@@ -321,7 +321,7 @@ input[type=text] {
 }
 
 .selectionContainer {
-    background-color: #fefefe;
+    background-color: #fbfbfb;
     padding-top: 10px;
     padding-right: 5px;
     border-right: 1px solid #CDCDCD;
@@ -329,11 +329,11 @@ input[type=text] {
 }
 
 .btn-default {
-    background-color: #fefefe;
+    background-color: #fbfbfb;
 }
 
 select {
-    background-color: #fefefe;
+    background-color: #fbfbfb;
 }
 
 .selectionContainer__title {
