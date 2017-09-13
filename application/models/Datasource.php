@@ -108,6 +108,90 @@ class Datasource extends CI_Model {
         $is_valid = $is_valid && ($total_entries_in_query > 0);
         return $is_valid;
     }
+
+    public function log($msg) {
+        log_message('debug', json_encode($msg));
+    }
+
+    public function jsonize_coord($coordArray) {
+        return '[' . implode(', ', $coordArray) . ']';
+    }
+
+    public function express_data($client_query, $db_results) {
+        // Transform result data into nested hashmaps where cell values are located by their row->column->aggregate coordinates.
+        // Also build the metadata declaring which row/col/aggregate labels exist and the order of those parent fields.
+        log_message('debug', '---- META OBJECT DEBUG START ----');
+
+        // this is the front-end query model.
+        $query_model = $client_query['model'];
+
+        // $meta_output['rows'] and $meta_output['columns'] are arrays of arrays. 
+        // The top level arrays describe the order of row/column fields requested in the query model.
+        // The bottom level arrays describe the VALUES of selected row/column fields found in the pivot query.
+        // $meta_output['aggregators'] is always an array with the aggregators for each row/column intersection.
+        $meta_output = [];
+
+        // Get the names of row fields from the query model. 
+        // These are keys for result row arrays, and their values are labels inserted at the appropriate place in $meta_output['rows'].
+        // You can picture the shape of $meta_output['rows'] as the first level of arrays tied to the values of $selected_row_names,
+        // And the second level of arrays being the result of using those values as keys in the query result rows.
+        $selected_row_names = array_map(function($elem) {
+            return $elem['name'];
+        }, $query_model['Rows']);
+
+        // Get the names of column fields from the query model.
+        $selected_col_names = array_map(function($elem) {
+            return $elem['name'];
+        }, $query_model['Columns']);
+
+        // $metaRows will become the 'rows' key for $meta_output.
+        $meta_rows = array_map(function($elem) { return []; }, $query_model['Rows']);
+
+        // $expr_results, 'expressive results', is a nested hashmap where each 'cell' in the pivot table is indexed by its row/column/aggregate coordinates.
+        // A coordinate might be indexed by $expr_results["['2017', '12']"]["['Open', 'True']"]["count"].
+        // Note that because PHP does not allow array keys, keys must be stringified before they are added to the map.
+        // This is fine on the client side, as we will ask the map for array keys which the browser will stringify before lookup.
+        $expr_results = [];
+
+        foreach($db_results as $result_row) {
+            $row_coord = [];
+            //$this->log($result_row);
+            foreach ($selected_row_names as $idx=>$rowName) {
+                $row_label = $result_row[$rowName];
+                $row_coord[] = $row_label;
+
+                // If $meta_rows doesn't have this label in the given row field yet, add it.
+                if (!in_array($row_label, $meta_rows[$idx])) {
+                     $meta_rows[$idx][] = $row_label;
+                }
+            }
+            $jsonized_row_coord = $this->jsonize_coord($row_coord);
+
+            // Now we want to iterate through the [colcoord/aggregatecoord=>cell value] properties of the row,
+            // So we'll chop off the [row name=>row label] properties.
+            $row_without_labels = array_slice($result_row, count($selected_row_names));
+            foreach ($row_without_labels as $combinedCoord=>$cellValue) {
+                // First split $combinedCoord into row coords and aggregate coords.
+                // TODO!
+
+                // Update $metaCols if we can.
+                // TODO!
+
+                // Now we have row, col, and aggregate coords. Insert this cell into $expr_results.
+                $colCoordForThisCell = $this->jsonize_coord(explode('_', $combinedCoord));
+                $expr_results[$jsonized_row_coord][$colCoordForThisCell]['count']['value'] = $cellValue;
+            }
+        }
+
+        $meta_output['rows'] = $meta_rows;
+        $this->log('META IS');
+        $this->log($meta_output);
+
+        $this->log('EXPR-RESULT IS');
+        $this->log($expr_results);
+
+        log_message('debug', '---- META OBJECT DEBUG END ----');
+    }
     
     public function process_query($incoming) {
         // Take a client model object, parse it into an SQL query,
@@ -140,6 +224,9 @@ class Datasource extends CI_Model {
             $query_result = $query->result_array();
             $header = $this->make_header_row($incoming, $query_result);
             $flat_results = $this->flatten_result_array($header, $query_result);
+
+            $this->express_data($incoming, $query_result);
+
             return ['error' => false, 'rows' => $flat_results];
         }
     }
