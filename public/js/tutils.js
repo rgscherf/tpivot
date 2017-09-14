@@ -54,9 +54,47 @@ var tutils = (function () {
         return description;
     }
 
+    function cartesianProduct(arr) {
+        return arr.reduce(function (a, b) {
+            return a.map(function (x) {
+                return b.map(function (y) {
+                    return x.concat(y);
+                })
+            }).reduce(function (a, b) { return a.concat(b) }, [])
+        }, [[]]);
+    }
+
+    function allMetaCoordinates(data) {
+        return {
+            rowCoords: cartesianProduct(data.meta.rows)
+            , colCoords: cartesianProduct(data.meta.columns)
+            , aggCoords: data.meta.aggregators
+        }
+    }
+
+    function sortMetaCols(meta) {
+        meta.columns.forEach(function (arr) {
+            arr.sort(function (a, b) {
+                if (a === 'null') {
+                    return 1;
+                } else if (b === 'null') {
+                    return -1;
+                } else if ($.isNumeric(a) && $.isNumeric(b)) {
+                    return a > b ? 1 : -1;
+                }
+                else {
+                    return a > b ? 1 : -1;
+                }
+            });
+        });
+    }
+
     return {
         closeButton: closeButton,
         describeModel: describeModel,
-        deinterleaveFrom: deinterleaveFrom
+        deinterleaveFrom: deinterleaveFrom,
+        cartesianProduct: cartesianProduct,
+        allMetaCoordinates: allMetaCoordinates,
+        sortMetaCols: sortMetaCols
     };
 })();

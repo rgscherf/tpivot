@@ -114,7 +114,8 @@ class Datasource extends CI_Model {
     }
 
     public function jsonize_coord($coordArray) {
-        return '[' . implode(', ', $coordArray) . ']';
+        //return '[' . implode(', ', $coordArray) . ']';
+        return implode(',', $coordArray);
     }
 
     public function express_data($client_query, $db_results) {
@@ -163,6 +164,7 @@ class Datasource extends CI_Model {
             $row_coord = [];
             foreach ($selected_row_names as $idx=>$rowName) {
                 $row_label = $result_row[$rowName];
+                $row_label = $row_label === null ? 'null' : $row_label;
                 $row_coord[] = $row_label;
 
                 // If $meta_rows doesn't have this label in the given row field yet, add it.

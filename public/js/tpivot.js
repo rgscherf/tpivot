@@ -272,6 +272,96 @@ var tpivot = (function () {
     }
 
 
+    function makeExpressiveTable(containerElement, data) {
+        var meta = data.meta;
+        var results = data.results;
+
+        tutils.sortMetaCols(meta);
+        var headerRowContent = tutils.cartesianProduct(meta.columns);
+        var allCoords = tutils.allMetaCoordinates(data);
+        var rowCoords = allCoords.rowCoords;
+        var colCoords = headerRowContent;
+        var aggCoords = allCoords.aggCoords;
+
+        console.log(results);
+
+        // create the table header.
+        var thead = $('<thead>');
+        meta.columns.map(function (colArray, colArrayPosition) {
+            var tr = $('<tr>');
+            if (colArrayPosition === 0) {
+                var initialTrBlock =
+                    $('<th>')
+                        .attr({
+                            colspan: (meta.rows.length),
+                            rowspan: (meta.columns.length)
+                        })
+                        .appendTo(tr);
+            }
+            headerRowContent
+                .map(function (coord) {
+                    return coord[colArrayPosition];
+                })
+                .reduce(function (acc, next) {
+                    if (acc.length === 0) {
+                        return [next];
+                    }
+                    if (acc[acc.length - 1] === next) {
+                        return acc;
+                    } else {
+                        return acc.concat([next]);
+                    }
+                }, [])
+                .map(function (elem, _, arr) {
+                    var th =
+                        $('<th>')
+                            .addClass('table__colHeader')
+                            .attr({
+                                colspan: (headerRowContent.length / arr.length),
+                            })
+                            .text(elem)
+                            .appendTo(tr);
+                });
+            tr.appendTo(thead);
+        });
+
+
+        var tbody = $('<tbody>');
+        rowCoords.map(function (rowCoord) {
+            var tr = $('<tr>');
+            rowCoord.map(function (elem) {
+                var td =
+                    $('<td>')
+                        .text(elem)
+                        .addClass('table__rowHeader')
+                        .appendTo(tr);
+            });
+            colCoords.map(function (colCoord) {
+                aggCoords.map(function (aggCoord) {
+                    var cellValue = '';
+                    if (results[rowCoord]
+                        && results[rowCoord][colCoord]
+                        && results[rowCoord][colCoord][aggCoord]
+                        && results[rowCoord][colCoord][aggCoord].value) {
+                        cellValue = results[rowCoord][colCoord][aggCoord].value;
+                    }
+                    var td =
+                        $('<td>')
+                            .text(cellValue)
+                            .appendTo(tr);
+                });
+            });
+            tr.appendTo(tbody);
+        });
+
+
+        var table = $('<table>').addClass('table table-bordered table-hover');
+        thead.appendTo(table);
+        tbody.appendTo(table);
+        table.appendTo(containerElement);
+    }
+
+
     function renderPivot(pivotData) {
         if (pivotData.results === false) { return; }
 
@@ -282,7 +372,8 @@ var tpivot = (function () {
             makeErrorPanel(container, pivotData.results);
             return;
         }
-        makeTable(container, pivotData.results.rows, pivotData.model);
+        //makeTable(container, pivotData.results.rows, pivotData.model);
+        makeExpressiveTable(container, pivotData.results.rows);
         window.currentPivotResult = pivotData;
     };
 

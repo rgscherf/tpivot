@@ -374,3 +374,11 @@ select {
     opacity: 0.75;
     margin-left: 5px;
 }
+
+.table__colHeader {
+    text-align: center;
+}
+
+.table__rowHeader {
+    font-weight: bold;
+}
