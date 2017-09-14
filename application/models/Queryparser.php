@@ -2,6 +2,10 @@
 
 class Queryparser extends CI_Model {
     private $distinct_columns_seen = [];
+    public $name_map = [];
+
+    private $names_human_to_machine = [];
+    private $names_machine_to_human = [];
     
     public function __construct() {
         parent::__construct();
@@ -19,6 +23,32 @@ class Queryparser extends CI_Model {
     
     private function field_name($field) {
         return strtoupper($field['name']);
+    }
+
+    private function make_mangled_identifier() {
+        $length = 4;
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $char_len = strlen($chars) - 1;
+        $ret_string = '';
+        foreach(range(0,$length) as $l) {
+            $ret_string .= $chars[mt_rand(0,$char_len)];
+        }
+        return $ret_string;
+    }
+
+    private function register_alias($true_name) {
+        if (isset($this->names_human_to_machine[$true_name])) {
+            return $this->names_human_to_machine[$true_name];
+        } else {
+            $alias = $this->make_mangled_identifier();
+            $this->names_human_to_machine[$true_name] = $alias;
+            $this->names_machine_to_human[$alias] = $true_name;
+            return $alias;
+        }
+    }
+
+    public function get_name_map() {
+        return $this->names_machine_to_human;
     }
     
     
@@ -198,9 +228,11 @@ private function make_single_aggregator($agg_object, $first_aggregator_in_array)
     // LISTAGG 'aggregation' works at the SELECT level to get distinct entries. The aggregator is always MAX.
     // LISTAGG will therefore have undesirable behavior when it's not the only aggregator.
     $reducer_name = $reducer_name == 'LISTAGG' ? 'MAX' : $reducer_name; 
-    $as_alias = $reducer_name . 'OF_' . $field_name;
+
+    $intended_alias = "$reducer_name($field_name)";
+    $mangled_alias = $this->register_alias($intended_alias);
     $prefix = $first_aggregator_in_array ? '' : ', ';
-    return $prefix . $reducer_name . '(' . $field_name . ') as ' . $as_alias ;
+    return $prefix . $reducer_name . '(' . $field_name . ') as ' . $mangled_alias ;
 }
 
 private function make_aggregator($query_model) {
@@ -330,17 +362,24 @@ private function distinct_col_entries($table, $filters, $col_name) {
 
 private function format_cartesian_tuple($cart_tuple) {
     // Turn a tuple of column values into a quoted string.
-    // This will form the first part of a column name so beware the 30 char limit.
+    // Provides a mangled alias for the column values so they will not be truncated/ambiguously defined/etc.
+    // When there are multiple columns in a pivot, col values in the alias are delimited by '#$#' escape seq.
     $stringified_tuple = '';
+    $mangled_elems = [];
     foreach ($cart_tuple as $elems_as_associative_array) {
-        $flat_elems = array_values($elems_as_associative_array);
         // cartesian_product returns each cart_tuple as a flat array of associative arrays in the format
         // [{col_name => value}], and we want just the values.
-        foreach($flat_elems as $elem)
-        $append_start_char = $stringified_tuple === '' ? '' : ', ';
-        $stringified_tuple .= $append_start_char . "q'[$elem]'";
+        $flat_elems = array_values($elems_as_associative_array);
+
+        foreach($flat_elems as $elem) {
+            $append_start_char = $stringified_tuple === '' ? '' : ', ';
+            $stringified_tuple .= $append_start_char . "q'[$elem]'";
+            $mangled_elem = $this->register_alias($elem);
+            $mangled_elems[] = $mangled_elem;
+        }
     }
-    return "($stringified_tuple)";
+    $mangled_elems_str = implode('#$#', $mangled_elems);
+    return "($stringified_tuple) " . $mangled_elems_str;
 }
 
 private function juxt_cols($table, $filters, $col_names) {
@@ -359,7 +398,7 @@ private function juxt_cols($table, $filters, $col_names) {
         $cartesian_strings[] = $this->format_cartesian_tuple($cartesian_tuple);
     }
     // join and return the array of quoted strings
-    return join(',', $cartesian_strings);
+    return join(', ', $cartesian_strings);
 }
 
 private function make_columns($table, $query_model) {

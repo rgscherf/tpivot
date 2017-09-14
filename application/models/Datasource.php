@@ -125,6 +125,10 @@ class Datasource extends CI_Model {
         // this is the front-end query model.
         $query_model = $client_query['model'];
 
+        // $name_map is the mapping of mangled alias names to human-friendly 
+        // names of column and aggregator values. E.g. ['KHSBX' => '2017 Sales']
+        $name_map = $this->Queryparser->get_name_map();
+
         // $meta_output['rows'] and $meta_output['columns'] are arrays of arrays. 
         // The top level arrays describe the order of row/column fields requested in the query model.
         // The bottom level arrays describe the VALUES of selected row/column fields found in the pivot query.
@@ -146,6 +150,8 @@ class Datasource extends CI_Model {
 
         // $metaRows will become the 'rows' key for $meta_output.
         $meta_rows = array_map(function($elem) { return []; }, $query_model['Rows']);
+        $meta_cols = array_map(function($elem) { return []; }, $query_model['Columns']);
+        $meta_aggs = [];
 
         // $expr_results, 'expressive results', is a nested hashmap where each 'cell' in the pivot table is indexed by its row/column/aggregate coordinates.
         // A coordinate might be indexed by $expr_results["['2017', '12']"]["['Open', 'True']"]["count"].
@@ -155,7 +161,6 @@ class Datasource extends CI_Model {
 
         foreach($db_results as $result_row) {
             $row_coord = [];
-            //$this->log($result_row);
             foreach ($selected_row_names as $idx=>$rowName) {
                 $row_label = $result_row[$rowName];
                 $row_coord[] = $row_label;
@@ -170,27 +175,62 @@ class Datasource extends CI_Model {
             // Now we want to iterate through the [colcoord/aggregatecoord=>cell value] properties of the row,
             // So we'll chop off the [row name=>row label] properties.
             $row_without_labels = array_slice($result_row, count($selected_row_names));
-            foreach ($row_without_labels as $combinedCoord=>$cellValue) {
-                // First split $combinedCoord into row coords and aggregate coords.
-                // TODO!
 
-                // Update $metaCols if we can.
-                // TODO!
+            foreach ($row_without_labels as $combined_coords=>$cellValue) {
+                // $combined_coords is a string of concatenated aliases in mangled form.
+                // Oracle separates the row values from the aggregator values with '_'.
+                $split_coords = explode('_', $combined_coords);
+
+                // In Queryparser, we use the '#$#' sequence to delimit column value aliases.
+                $col_coord = explode('#$#', $split_coords[0]);
+
+                // Now, look up all individual aliases in $name_map.
+                $col_coord = array_map(function($elem) use ($name_map) {
+                    if ( $name_map[$elem] === null  ) {
+                        return 'null';
+                    } else {
+                        return $name_map[$elem];
+                    }
+                }, $col_coord);
+
+                // Now take the elements of the column coords and add those values 
+                // to $meta_cols if they don't already exist in their respective columns.
+                for($idx = 0; $idx<count($col_coord); $idx++) {
+                    $col_val = $col_coord[$idx];
+                    $meta_col_arr = $meta_cols[$idx];
+                    if (!in_array($col_val, $meta_col_arr)) {
+                        $meta_cols[$idx][] = $col_val;
+                    }
+                }
+
+                // ...finally, unmangle the aggregator name at this location.
+                $agg_coord = $name_map[$split_coords[1]];
+
+                // And update the meta information for aggregators. Remember that
+                // meta for aggregators is a 1D array.
+                if (!in_array($agg_coord, $meta_aggs)) {
+                    $meta_aggs[] = $agg_coord;
+                }
 
                 // Now we have row, col, and aggregate coords. Insert this cell into $expr_results.
-                $colCoordForThisCell = $this->jsonize_coord(explode('_', $combinedCoord));
-                $expr_results[$jsonized_row_coord][$colCoordForThisCell]['count']['value'] = $cellValue;
+                // Note that the final key is 'value'. Table cells are themselves objects (with one key for now)
+                // To facilitiate future expansion.
+                $jsonized_col_coord = $this->jsonize_coord($col_coord);
+                $expr_results[$jsonized_row_coord][$jsonized_col_coord][$agg_coord]['value'] = $cellValue;
             }
         }
 
+        // package all the $meta vars into one array.
         $meta_output['rows'] = $meta_rows;
-        $this->log('META IS');
-        $this->log($meta_output);
+        $meta_output['columns'] = $meta_cols;
+        $meta_output['aggregators'] = $meta_aggs;
 
-        $this->log('EXPR-RESULT IS');
-        $this->log($expr_results);
+        // ...and combine $meta_output with $expr_results.
+        $ret = ['meta' => $meta_output,
+                'results' => $expr_results];
 
         log_message('debug', '---- META OBJECT DEBUG END ----');
+        return $ret;
     }
     
     public function process_query($incoming) {
@@ -222,12 +262,11 @@ class Datasource extends CI_Model {
             return $ret;
         } else {
             $query_result = $query->result_array();
-            $header = $this->make_header_row($incoming, $query_result);
-            $flat_results = $this->flatten_result_array($header, $query_result);
+            $expr_results = $this->express_data($incoming, $query_result);
+            // $header = $this->make_header_row($incoming, $query_result);
+            // $flat_results = $this->flatten_result_array($header, $query_result);
 
-            $this->express_data($incoming, $query_result);
-
-            return ['error' => false, 'rows' => $flat_results];
+            return ['error' => false, 'rows' => $expr_results];
         }
     }
 }
