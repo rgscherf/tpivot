@@ -272,36 +272,64 @@ var tpivot = (function () {
     }
 
 
-    function makeExpressiveTable(containerElement, data) {
+    function makeExpressiveTable(containerElement, data, renderFieldNames, model) {
         var meta = data.meta;
         var results = data.results;
 
         tutils.sortMetaCols(meta);
-        var headerRowContent = tutils.cartesianProduct(meta.columns);
         var allCoords = tutils.allMetaCoordinates(data);
         var rowCoords = allCoords.rowCoords;
-        var colCoords = headerRowContent;
+        var colCoords = allCoords.colCoords;
         var aggCoords = allCoords.aggCoords;
 
-        console.log(results);
-
-        // create the table header.
+        ////////////////////////
+        // DRAW THE TABLE HEADER
+        ////////////////////////
         var thead = $('<thead>');
         meta.columns.map(function (colArray, colArrayPosition) {
             var tr = $('<tr>');
-            if (colArrayPosition === 0) {
-                var initialTrBlock =
+            // render column labels.
+            if (renderFieldNames) {
+                // start with N <th> spacers where N is the number of row fields.
+                // if N==0, add a <th> spacer for the dummy 'all rows' label.
+                if (meta.rows.length === 0) {
+                    $('<th>').appendTo(tr);
+                } else {
+                    meta.rows.map(function () {
+                        $('<th>').appendTo(tr);
+                    });
+                }
+                // then add a label for the field sharing the same column index in the client model.
+                if (meta.columns.length === 0) {
                     $('<th>')
-                        .attr({
-                            colspan: (meta.rows.length),
-                            rowspan: (meta.columns.length)
-                        })
+                        .text("ALL COLS")
+                        .addClass('table__fieldLabel')
                         .appendTo(tr);
+                } else {
+                    $('<th>')
+                        .text(model["Columns"][colArrayPosition].name)
+                        .addClass('table__fieldLabel')
+                        .appendTo(tr);
+                }
+            } else {
+                // if column labels are disabled, just create a <th> block sized to accommodate column and row labels.
+                if (colArrayPosition === 0) {
+                    var initialTrBlock =
+                        $('<th>')
+                            .attr({
+                                colspan: (meta.rows.length),
+                                rowspan: (meta.columns.length)
+                            })
+                            .appendTo(tr);
+                }
             }
-            headerRowContent
+            // now, take the cartesian product of all column labels and...
+            colCoords
+                // get the label at the same column field index we are currently looking at...
                 .map(function (coord) {
                     return coord[colArrayPosition];
                 })
+                // remove identical adjacent elements...
                 .reduce(function (acc, next) {
                     if (acc.length === 0) {
                         return [next];
@@ -312,12 +340,13 @@ var tpivot = (function () {
                         return acc.concat([next]);
                     }
                 }, [])
+                // and then draw <th> with those labels, sizing those elements so that the length of this row matches all other header rows.
                 .map(function (elem, _, arr) {
                     var th =
                         $('<th>')
                             .addClass('table__colHeader')
                             .attr({
-                                colspan: (headerRowContent.length / arr.length),
+                                colspan: (colCoords.length / arr.length),
                             })
                             .text(elem)
                             .appendTo(tr);
@@ -326,16 +355,67 @@ var tpivot = (function () {
         });
 
 
+        //////////////////////
+        // DRAW THE TABLE BODY
+        //////////////////////
+
         var tbody = $('<tbody>');
+        // Rendering row labels
+        if (renderFieldNames) {
+            var t = $('<tr>');
+            var rowLabels = [];
+            if (meta.rows.length === 0) {
+                rowLabels = [
+                    $('<th>')
+                        .text('ALL ROWS')
+                        .addClass('table__fieldLabel')
+                ];
+
+            } else {
+                rowLabels = meta.rows.map(function (_, rowArrayPosition) {
+                    return $('<th>')
+                        .text(model['Rows'][rowArrayPosition].name)
+                        .addClass('table__fieldLabel');
+                });
+            }
+            var emptyLabels = colCoords.map(function () {
+                return $('<th>');
+            });
+            rowLabels.forEach(function (elem) {
+                elem.appendTo(t);
+            });
+            emptyLabels.forEach(function (elem) {
+                elem.appendTo(t);
+            });
+            $('<th>').appendTo(t);
+            t.appendTo(tbody);
+        }
+
+        // Each row in the cartesian product of row values is drawn here.
         rowCoords.map(function (rowCoord) {
             var tr = $('<tr>');
-            rowCoord.map(function (elem) {
-                var td =
+
+            // If there are no rows (e.g. just pivoting on '*'), insert a label cell.
+            if (meta.rows.length === 0) {
+                $('<td>')
+                    .text('*')
+                    .addClass('table__rowHeader')
+                    .appendTo(tr);
+            } else {
+                rowCoord.map(function (elem) {
                     $('<td>')
                         .text(elem)
                         .addClass('table__rowHeader')
                         .appendTo(tr);
-            });
+                });
+            }
+
+            // If we're printing field names, insert a spacer cell where column labels will be drawn.
+            if (renderFieldNames) {
+                $('<td>').appendTo(tr);
+            }
+
+            // Now draw cell values, iterating through column and agg coords.
             colCoords.map(function (colCoord) {
                 aggCoords.map(function (aggCoord) {
                     var cellValue = '';
@@ -351,11 +431,13 @@ var tpivot = (function () {
                             .appendTo(tr);
                 });
             });
+
+            // And finally append to the tbody.
             tr.appendTo(tbody);
         });
 
 
-        var table = $('<table>').addClass('table table-bordered table-hover');
+        var table = $('<table>').addClass('table table-bordered table-hover table-condensed');
         thead.appendTo(table);
         tbody.appendTo(table);
         table.appendTo(containerElement);
@@ -373,7 +455,7 @@ var tpivot = (function () {
             return;
         }
         //makeTable(container, pivotData.results.rows, pivotData.model);
-        makeExpressiveTable(container, pivotData.results.rows);
+        makeExpressiveTable(container, pivotData.results.rows, true, pivotData.model);
         window.currentPivotResult = pivotData;
     };
 

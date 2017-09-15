@@ -382,3 +382,9 @@ select {
 .table__rowHeader {
     font-weight: bold;
 }
+
+.table__fieldLabel {
+    font-size: 0.6em;
+    text-align: right;
+    font-weight: light;
+}
