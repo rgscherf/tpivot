@@ -457,7 +457,7 @@ private function make_pivot_view($table, $query_model) {
     $columns = $this->make_columns($table, $query_model);
 
     if (count($query_model['Values']) === 0) {
-        $aggregator = "COUNT(*) as COUNTOF";
+        $aggregator = "COUNT(*)";
     }
     
     $sql_query = "

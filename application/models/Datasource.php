@@ -174,15 +174,24 @@ class Datasource extends CI_Model {
             $row_without_labels = array_slice($result_row, count($selected_row_names));
 
             foreach ($row_without_labels as $combined_coords=>$cellValue) {
-                $no_column_labels = false;
+
                 // $combined_coords is a string of concatenated aliases in mangled form.
                 // Oracle separates the row values from the aggregator values with '_'.
                 $split_coords = explode('_', $combined_coords);
+
+                // We need to guard against the case where there are no columns or no values, 
+                // and explode() does not have the intended effect.
+                // If no columns were requested, then the contents of $split_coords is the aggregator.
+                // If no values were requested, the contents of $split_coords is the column string. Add the default aggregator.
                 if (count($split_coords) === 1) {
-                    $split_coords = [null, $split_coords[0]];
+                    if (count($query_model['Columns']) === 0) {
+                        $split_coords = [null, $split_coords[0]];
+                    } else {
+                        $split_coords[] = 'COUNT(*)';
+                    }
                 }
 
-                // this will happen if no colums were selected for the pivot.
+                // this will happen if no columns were selected for the pivot.
                 // null will become the col key for each cell.
                 if ($split_coords[0] === null) {
                     $col_coord = null;
@@ -211,11 +220,12 @@ class Datasource extends CI_Model {
                 }
 
                 // ...finally, unmangle the aggregator name at this location.
-                $agg_coord = $name_map[$split_coords[1]];
+                $agg_name = $split_coords[1];
+                $agg_coord = $agg_name === 'COUNT(*)' ? 'COUNT(*)' : $name_map[$split_coords[1]];
 
                 // And update the meta information for aggregators. Remember that
                 // meta for aggregators is a 1D array.
-                if (!in_array($agg_coord, $meta_aggs)) {
+                if ( !in_array($agg_coord, $meta_aggs) ) {
                     $meta_aggs[] = $agg_coord;
                 }
 
@@ -231,7 +241,6 @@ class Datasource extends CI_Model {
         $meta_output['rows'] = $meta_rows;
         $meta_output['columns'] = $meta_cols;
         $meta_output['aggregators'] = $meta_aggs;
-        $this->log($meta_cols);
 
         // ...and combine $meta_output with $expr_results.
         $ret = ['meta' => $meta_output,

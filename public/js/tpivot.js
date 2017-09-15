@@ -282,10 +282,14 @@ var tpivot = (function () {
         var colCoords = allCoords.colCoords;
         var aggCoords = allCoords.aggCoords;
 
+
         ////////////////////////
         // DRAW THE TABLE HEADER
         ////////////////////////
         var thead = $('<thead>');
+
+
+        // Drawing column headers
         if (meta.columns.length === 0) {
             var tr = $('<tr>');
             if (renderFieldNames) {
@@ -312,13 +316,15 @@ var tpivot = (function () {
                     .appendTo(tr);
             }
 
-            $('<th>')
-                .text('*')
-                .addClass('table__colHeader')
-                .attr({
-                    colspan: (allCoords)
-                })
-                .appendTo(tr);
+            meta.aggregators.map(function (_) {
+                $('<th>')
+                    .text('*')
+                    .addClass('table__colHeader')
+                    .attr({
+                        colspan: (allCoords)
+                    })
+                    .appendTo(tr);
+            });
             tr.appendTo(thead);
         } else {
             meta.columns.map(function (colArray, colArrayPosition) {
@@ -346,7 +352,7 @@ var tpivot = (function () {
                             $('<th>')
                                 .attr({
                                     colspan: (meta.rows.length),
-                                    rowspan: (meta.columns.length)
+                                    rowspan: (meta.columns.length + 1) // the +1 is for the agg label row, which know is always length 1.
                                 })
                                 .appendTo(tr);
                     }
@@ -370,11 +376,14 @@ var tpivot = (function () {
                     }, [])
                     // and then draw <th> with those labels, sizing those elements so that the length of this row matches all other header rows.
                     .map(function (elem, _, arr) {
+                        // The guard here ensures that arr of length 1 (that is, all elements in the previous map step were identical)
+                        // displays as width-1 cells rather than a single cell spanning the whole row.
+                        var colSpan = (meta.aggregators.length * (colCoords.length / (arr.length === 1 ? colCoords.length : arr.length)))
                         var th =
                             $('<th>')
                                 .addClass('table__colHeader')
                                 .attr({
-                                    colspan: (colCoords.length / arr.length),
+                                    colspan: colSpan
                                 })
                                 .text(elem)
                                 .appendTo(tr);
@@ -382,6 +391,41 @@ var tpivot = (function () {
                 tr.appendTo(thead);
             });
         }
+
+
+        // drawing agg headers
+        var aggTr = $('<tr>');
+        var aggregatorsIsEmpty = meta.aggregators.length === 0;
+        if (renderFieldNames) {
+            // start with N <th> spacers where N is the number of row fields.
+            // if N==0, add a <th> spacer for the dummy 'all rows' label.
+            if (meta.rows.length === 0) {
+                $('<th>').appendTo(aggTr);
+            } else {
+                meta.rows.map(function () {
+                    $('<th>').appendTo(aggTr);
+                });
+            }
+            $('<th>')
+                .text('AGGREGATORS')
+                .addClass('table__columnLabel')
+                .appendTo(aggTr)
+        } else if (meta.columns.length === 0) {
+            $('<th>')
+                .attr({
+                    colspan: (meta.rows.length),
+                })
+                .appendTo(aggTr);
+        }
+        colCoords.map(function (colCoord) {
+            aggCoords.map(function (aggName) {
+                $('<th>')
+                    .addClass('table__colHeader')
+                    .text(aggregatorsIsEmpty ? 'COUNT(*)' : aggName)
+                    .appendTo(aggTr);
+            });
+        });
+        aggTr.appendTo(thead);
 
 
         //////////////////////
@@ -407,9 +451,12 @@ var tpivot = (function () {
                         .addClass('table__rowLabel');
                 });
             }
-            var emptyLabels = colCoords.map(function () {
-                return $('<th>');
-            });
+            var emptyLength = meta.aggregators.length * colCoords.length;
+            var emptyLabels = [];
+            for (var i = 0; i < emptyLength; i++) {
+                emptyLabels.push($('<th>'));
+
+            }
             rowLabels.forEach(function (elem) {
                 elem.appendTo(t);
             });
