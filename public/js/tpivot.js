@@ -286,9 +286,8 @@ var tpivot = (function () {
         // DRAW THE TABLE HEADER
         ////////////////////////
         var thead = $('<thead>');
-        meta.columns.map(function (colArray, colArrayPosition) {
+        if (meta.columns.length === 0) {
             var tr = $('<tr>');
-            // render column labels.
             if (renderFieldNames) {
                 // start with N <th> spacers where N is the number of row fields.
                 // if N==0, add a <th> spacer for the dummy 'all rows' label.
@@ -300,59 +299,89 @@ var tpivot = (function () {
                     });
                 }
                 // then add a label for the field sharing the same column index in the client model.
-                if (meta.columns.length === 0) {
-                    $('<th>')
-                        .text("ALL COLS")
-                        .addClass('table__fieldLabel')
-                        .appendTo(tr);
-                } else {
-                    $('<th>')
-                        .text(model["Columns"][colArrayPosition].name)
-                        .addClass('table__fieldLabel')
-                        .appendTo(tr);
-                }
+                $('<th>')
+                    .text("ALL COLS")
+                    .addClass('table__columnLabel')
+                    .appendTo(tr);
             } else {
                 // if column labels are disabled, just create a <th> block sized to accommodate column and row labels.
-                if (colArrayPosition === 0) {
-                    var initialTrBlock =
-                        $('<th>')
-                            .attr({
-                                colspan: (meta.rows.length),
-                                rowspan: (meta.columns.length)
-                            })
-                            .appendTo(tr);
-                }
+                $('<th>')
+                    .attr({
+                        colspan: (meta.rows.length),
+                    })
+                    .appendTo(tr);
             }
-            // now, take the cartesian product of all column labels and...
-            colCoords
-                // get the label at the same column field index we are currently looking at...
-                .map(function (coord) {
-                    return coord[colArrayPosition];
+
+            $('<th>')
+                .text('*')
+                .addClass('table__colHeader')
+                .attr({
+                    colspan: (allCoords)
                 })
-                // remove identical adjacent elements...
-                .reduce(function (acc, next) {
-                    if (acc.length === 0) {
-                        return [next];
-                    }
-                    if (acc[acc.length - 1] === next) {
-                        return acc;
-                    } else {
-                        return acc.concat([next]);
-                    }
-                }, [])
-                // and then draw <th> with those labels, sizing those elements so that the length of this row matches all other header rows.
-                .map(function (elem, _, arr) {
-                    var th =
-                        $('<th>')
-                            .addClass('table__colHeader')
-                            .attr({
-                                colspan: (colCoords.length / arr.length),
-                            })
-                            .text(elem)
-                            .appendTo(tr);
-                });
+                .appendTo(tr);
             tr.appendTo(thead);
-        });
+        } else {
+            meta.columns.map(function (colArray, colArrayPosition) {
+                var tr = $('<tr>');
+                // render column labels.
+                if (renderFieldNames) {
+                    // start with N <th> spacers where N is the number of row fields.
+                    // if N==0, add a <th> spacer for the dummy 'all rows' label.
+                    if (meta.rows.length === 0) {
+                        $('<th>').appendTo(tr);
+                    } else {
+                        meta.rows.map(function () {
+                            $('<th>').appendTo(tr);
+                        });
+                    }
+                    // then add a label for the field sharing the same column index in the client model.
+                    $('<th>')
+                        .text(model["Columns"][colArrayPosition].name)
+                        .addClass('table__columnLabel')
+                        .appendTo(tr);
+                } else {
+                    // if column labels are disabled, just create a <th> block sized to accommodate column and row labels.
+                    if (colArrayPosition === 0) {
+                        var initialTrBlock =
+                            $('<th>')
+                                .attr({
+                                    colspan: (meta.rows.length),
+                                    rowspan: (meta.columns.length)
+                                })
+                                .appendTo(tr);
+                    }
+                }
+                // now, take the cartesian product of all column labels and...
+                colCoords
+                    // get the label at the same column field index we are currently looking at...
+                    .map(function (coord) {
+                        return coord[colArrayPosition];
+                    })
+                    // remove identical adjacent elements...
+                    .reduce(function (acc, next) {
+                        if (acc.length === 0) {
+                            return [next];
+                        }
+                        if (acc[acc.length - 1] === next) {
+                            return acc;
+                        } else {
+                            return acc.concat([next]);
+                        }
+                    }, [])
+                    // and then draw <th> with those labels, sizing those elements so that the length of this row matches all other header rows.
+                    .map(function (elem, _, arr) {
+                        var th =
+                            $('<th>')
+                                .addClass('table__colHeader')
+                                .attr({
+                                    colspan: (colCoords.length / arr.length),
+                                })
+                                .text(elem)
+                                .appendTo(tr);
+                    });
+                tr.appendTo(thead);
+            });
+        }
 
 
         //////////////////////
@@ -368,14 +397,14 @@ var tpivot = (function () {
                 rowLabels = [
                     $('<th>')
                         .text('ALL ROWS')
-                        .addClass('table__fieldLabel')
+                        .addClass('table__rowLabel')
                 ];
 
             } else {
                 rowLabels = meta.rows.map(function (_, rowArrayPosition) {
                     return $('<th>')
                         .text(model['Rows'][rowArrayPosition].name)
-                        .addClass('table__fieldLabel');
+                        .addClass('table__rowLabel');
                 });
             }
             var emptyLabels = colCoords.map(function () {

@@ -144,11 +144,6 @@ class Datasource extends CI_Model {
             return $elem['name'];
         }, $query_model['Rows']);
 
-        // Get the names of column fields from the query model.
-        $selected_col_names = array_map(function($elem) {
-            return $elem['name'];
-        }, $query_model['Columns']);
-
         // $metaRows will become the 'rows' key for $meta_output.
         $meta_rows = array_map(function($elem) { return []; }, $query_model['Rows']);
         $meta_cols = array_map(function($elem) { return []; }, $query_model['Columns']);
@@ -179,29 +174,39 @@ class Datasource extends CI_Model {
             $row_without_labels = array_slice($result_row, count($selected_row_names));
 
             foreach ($row_without_labels as $combined_coords=>$cellValue) {
+                $no_column_labels = false;
                 // $combined_coords is a string of concatenated aliases in mangled form.
                 // Oracle separates the row values from the aggregator values with '_'.
                 $split_coords = explode('_', $combined_coords);
+                if (count($split_coords) === 1) {
+                    $split_coords = [null, $split_coords[0]];
+                }
 
-                // In Queryparser, we use the '#$#' sequence to delimit column value aliases.
-                $col_coord = explode('#$#', $split_coords[0]);
+                // this will happen if no colums were selected for the pivot.
+                // null will become the col key for each cell.
+                if ($split_coords[0] === null) {
+                    $col_coord = null;
+                } else {
+                    // In Queryparser, we use the '#$#' sequence to delimit column value aliases.
+                    $col_coord = explode('#$#', $split_coords[0]);
 
-                // Now, look up all individual aliases in $name_map.
-                $col_coord = array_map(function($elem) use ($name_map) {
-                    if ( $name_map[$elem] === null  ) {
-                        return 'null';
-                    } else {
-                        return $name_map[$elem];
-                    }
-                }, $col_coord);
+                    // Now, look up all individual aliases in $name_map.
+                    $col_coord = array_map(function($elem) use ($name_map) {
+                        if ( $name_map[$elem] === null  ) {
+                            return 'null';
+                        } else {
+                            return $name_map[$elem];
+                        }
+                    }, $col_coord);
 
-                // Now take the elements of the column coords and add those values 
-                // to $meta_cols if they don't already exist in their respective columns.
-                for($idx = 0; $idx<count($col_coord); $idx++) {
-                    $col_val = $col_coord[$idx];
-                    $meta_col_arr = $meta_cols[$idx];
-                    if (!in_array($col_val, $meta_col_arr)) {
-                        $meta_cols[$idx][] = $col_val;
+                    // Now take the elements of the column coords and add those values 
+                    // to $meta_cols if they don't already exist in their respective columns.
+                    for($idx = 0; $idx<count($col_coord); $idx++) {
+                        $col_val = $col_coord[$idx];
+                        $meta_col_arr = $meta_cols[$idx];
+                        if (!in_array($col_val, $meta_col_arr)) {
+                            $meta_cols[$idx][] = $col_val;
+                        }
                     }
                 }
 
@@ -226,6 +231,7 @@ class Datasource extends CI_Model {
         $meta_output['rows'] = $meta_rows;
         $meta_output['columns'] = $meta_cols;
         $meta_output['aggregators'] = $meta_aggs;
+        $this->log($meta_cols);
 
         // ...and combine $meta_output with $expr_results.
         $ret = ['meta' => $meta_output,

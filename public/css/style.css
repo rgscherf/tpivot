@@ -383,8 +383,12 @@ select {
     font-weight: bold;
 }
 
-.table__fieldLabel {
+.table__rowLabel {
+    font-size: 0.6em;
+    text-align: left;
+}
+
+.table__columnLabel {
     font-size: 0.6em;
     text-align: right;
-    font-weight: light;
 }
