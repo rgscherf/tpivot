@@ -341,8 +341,9 @@ var tpivot = (function () {
                         });
                     }
                     // then add a label for the field sharing the same column index in the client model.
+                    var labelText = model["Columns"][colArrayPosition].name;
                     $('<th>')
-                        .text(model["Columns"][colArrayPosition].name)
+                        .text(labelText)
                         .addClass('table__columnLabel')
                         .appendTo(tr);
                 } else {
@@ -378,12 +379,17 @@ var tpivot = (function () {
                     .map(function (elem, _, arr) {
                         // The guard here ensures that arr of length 1 (that is, all elements in the previous map step were identical)
                         // displays as width-1 cells rather than a single cell spanning the whole row.
-                        var colSpan = (meta.aggregators.length * (colCoords.length / (arr.length === 1 ? colCoords.length : arr.length)))
+                        var colSpan = (meta.aggregators.length * (colCoords.length / arr.length))
                         var th =
                             $('<th>')
                                 .addClass('table__colHeader')
                                 .attr({
                                     colspan: colSpan
+                                })
+                                .click(function () {
+                                    console.log('header clicked...');
+                                    pivotState.onHeaderClick('column', colArrayPosition, elem);
+                                    rerenderTable();
                                 })
                                 .text(elem)
                                 .appendTo(tr);
@@ -419,9 +425,17 @@ var tpivot = (function () {
         }
         colCoords.map(function (colCoord) {
             aggCoords.map(function (aggName) {
+                var aggLabel = aggregatorsIsEmpty ? 'COUNT(*)' : aggName;
                 $('<th>')
                     .addClass('table__colHeader')
-                    .text(aggregatorsIsEmpty ? 'COUNT(*)' : aggName)
+                    .click(function () {
+                        if (!aggregatorsIsEmpty) {
+                            console.log('header clicked...');
+                            pivotState.onHeaderClick('aggregator', aggCoords.indexOf(aggName), aggLabel);
+                            rerenderTable();
+                        }
+                    })
+                    .text(aggLabel)
                     .appendTo(aggTr);
             });
         });
@@ -480,6 +494,10 @@ var tpivot = (function () {
             } else {
                 rowCoord.map(function (elem) {
                     $('<td>')
+                        .click(function () {
+                            pivotState.onHeaderClick('row', rowCoord.indexOf(elem), elem);
+                            rerenderTable();
+                        })
                         .text(elem)
                         .addClass('table__rowHeader')
                         .appendTo(tr);
@@ -517,6 +535,76 @@ var tpivot = (function () {
         thead.appendTo(table);
         tbody.appendTo(table);
         table.appendTo(containerElement);
+
+        makeRemovedElementBox(containerElement);
+    }
+
+    function makeRemovedElementBox(containerElement) {
+        function createFlexDiv(transform, transformField, container) {
+            var modelField;
+            var shortFieldName;
+            switch (transformField) {
+                case 'excludedRows':
+                    modelField = 'Rows';
+                    shortFieldName = 'row';
+                    break;
+                case 'excludedColumns':
+                    modelField = 'Columns';
+                    shortFieldName = 'column';
+                    break;
+                case 'excludedAggregators':
+                    modelField = 'Values';
+                    shortFieldName = 'aggregator';
+                    break;
+
+            }
+            transform[transformField].forEach(function (excludedArr, excludedIdx) {
+                var arrDiv = $('<div>').css('display', 'flex');
+                $('<div>')
+                    .text(model[modelField][excludedIdx].name)
+                    .appendTo(arrDiv);
+                arrDiv.append();
+                excludedArr.forEach(function (elem) {
+                    $('<button>')
+                        .text(elem)
+                        .css({ 'margin-left': '10px', 'margin-right': '10px' })
+                        .click(function () {
+                            pivotState.restoreElement(shortFieldName, excludedIdx, elem);
+                            rerenderTable();
+                        })
+                        .appendTo(arrDiv);
+                });
+                arrDiv.appendTo(container);
+            });
+        }
+        var model = pivotState.getModel();
+        var transform = pivotState.getCurrentTransform();
+        var innerContainer = $('<div>');
+
+        var rows = $('<div>');
+        $('<div>').text('EXCLUDED ROWS').appendTo(rows);
+        createFlexDiv(transform, 'excludedRows', rows);
+        rows.appendTo(innerContainer);
+
+        var cols = $('<div>');
+        $('<div>').text('EXCLUDED COLUMNS').appendTo(cols);
+        createFlexDiv(transform, 'excludedColumns', cols);
+        cols.appendTo(innerContainer);
+
+        var aggs = $('<div>');
+        $('<div>').text('EXCLUDED Aggregators').appendTo(aggs);
+        createFlexDiv(transform, 'excludedAggregators', aggs);
+        aggs.appendTo(innerContainer);
+
+        innerContainer.appendTo(containerElement);
+    }
+
+    function rerenderTable() {
+        removePivot();
+        var currentModel = pivotState.getModel();
+        var container = makePivotContainer(currentModel);
+        var calculatedResults = pivotState.applyTransform();
+        makeExpressiveTable(container, calculatedResults, true, currentModel)
     }
 
 
@@ -526,13 +614,16 @@ var tpivot = (function () {
         removePivot();
         var container = makePivotContainer(pivotData.model);
 
-        if (pivotData.results.error) {
-            makeErrorPanel(container, pivotData.results);
+        if (pivotData.error) {
+            makeErrorPanel(container, pivotData);
             return;
         }
-        //makeTable(container, pivotData.results.rows, pivotData.model);
-        makeExpressiveTable(container, pivotData.results.rows, true, pivotData.model);
-        window.currentPivotResult = pivotData;
+        pivotState.registerResults(pivotData);
+        if (pivotState.transformIsPending()) {
+            pivotState.promotePendingTransform();
+        }
+        var calculatedTable = pivotState.applyTransform();
+        makeExpressiveTable(container, calculatedTable, true, pivotData.model);
     };
 
     function renderTimeout() {

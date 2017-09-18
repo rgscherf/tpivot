@@ -262,20 +262,20 @@ class Datasource extends CI_Model {
         if (!$this->validate_query_model($incoming)) {
             log_message('debug', "Got invalid model:");
             log_message('debug', json_encode($incoming));
-            return false;
+            return ['data' => false];
         }
 
         $sql_string = $this->Queryparser->make_pivot_query($incoming);
         log_message('debug', $sql_string);
         
         if ($sql_string == false) {
-            return false;
+            return ['data' => false];
         }
         
         $query = $this->db->query($sql_string);
         if (!$query) {
             $err = $this->db->error();
-            $ret = ['error' => true, 'errmsg' => $err['message'], 'errsql' => $err['sqltext']];
+            $ret = ['data' => false, 'error' => true, 'errmsg' => $err['message'], 'errsql' => $err['sqltext']];
             return $ret;
         } else {
             $query_result = $query->result_array();
@@ -283,7 +283,7 @@ class Datasource extends CI_Model {
             // $header = $this->make_header_row($incoming, $query_result);
             // $flat_results = $this->flatten_result_array($header, $query_result);
 
-            return ['error' => false, 'rows' => $expr_results];
+            return ['error' => false, 'data' => $expr_results];
         }
     }
 }

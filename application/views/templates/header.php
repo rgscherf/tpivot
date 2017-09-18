@@ -13,6 +13,7 @@
   <script src="<?php echo base_url('public/js/selectionPaneModel.js') ?>"></script>
   <script src="<?php echo base_url('public/js/selectionPaneView.js') ?>"></script>
   <script src="<?php echo base_url('public/js/selectionPaneController.js') ?>"></script>
+  <script src="<?php echo base_url('public/js/transforms.js') ?>"></script>
   <script src="<?php echo base_url('public/js/queryStorage.js') ?>"></script>
   <script src="<?php echo base_url('public/js/tchart.js') ?>"></script>
   <script src="<?php echo base_url('public/js/tpivot.js') ?>"></script>
