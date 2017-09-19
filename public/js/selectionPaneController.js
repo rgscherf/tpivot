@@ -159,12 +159,12 @@ $(function () {
 
     $('#charting__showLine').click(function (event) {
         $(this).blur();
-        tchart.renderChartDialog(window.currentPivotResult, 'line');
+        tchart.renderChartDialog(pivotState.applyTransform(), 'line');
     });
 
     $('#charting__showBar').click(function (event) {
         $(this).blur();
-        tchart.renderChartDialog(window.currentPivotResult, 'bar');
+        tchart.renderChartDialog(pivotState.applyTransform(), 'bar');
     });
 
     $('#loading__stopLoad').click(function (event) {

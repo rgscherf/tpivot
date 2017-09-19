@@ -559,43 +559,57 @@ var tpivot = (function () {
 
             }
             transform[transformField].forEach(function (excludedArr, excludedIdx) {
-                var arrDiv = $('<div>').css('display', 'flex');
-                $('<div>')
+                var arrDiv = $('<tr>');
+                $('<th>').appendTo(arrDiv);
+                $('<th>')
                     .text(model[modelField][excludedIdx].name)
                     .appendTo(arrDiv);
-                arrDiv.append();
                 excludedArr.forEach(function (elem) {
-                    $('<button>')
-                        .text(elem)
-                        .css({ 'margin-left': '10px', 'margin-right': '10px' })
-                        .click(function () {
-                            pivotState.restoreElement(shortFieldName, excludedIdx, elem);
-                            rerenderTable();
-                        })
+                    $('<td>').append(
+                        $('<button>')
+                            .text(elem)
+                            .css({ 'margin-left': '10px', 'margin-right': '10px' })
+                            .click(function () {
+                                pivotState.restoreElement(shortFieldName, excludedIdx, elem);
+                                rerenderTable();
+                            }))
                         .appendTo(arrDiv);
                 });
                 arrDiv.appendTo(container);
             });
         }
+
+
         var model = pivotState.getModel();
         var transform = pivotState.getCurrentTransform();
         var innerContainer = $('<div>');
+        var title = $('<div>')
+            .addClass('pivotContainer__titleText')
+            .text('Excluded Fields')
+            .appendTo(innerContainer);
 
-        var rows = $('<div>');
-        $('<div>').text('EXCLUDED ROWS').appendTo(rows);
-        createFlexDiv(transform, 'excludedRows', rows);
-        rows.appendTo(innerContainer);
+        var table = $('<table>')
+            .addClass('table-condensed');
 
-        var cols = $('<div>');
-        $('<div>').text('EXCLUDED COLUMNS').appendTo(cols);
-        createFlexDiv(transform, 'excludedColumns', cols);
-        cols.appendTo(innerContainer);
+        $('<tr>')
+            .append($('<th>')
+                .text('Excluded Rows'))
+            .appendTo(table);
+        createFlexDiv(transform, 'excludedRows', table);
 
-        var aggs = $('<div>');
-        $('<div>').text('EXCLUDED Aggregators').appendTo(aggs);
-        createFlexDiv(transform, 'excludedAggregators', aggs);
-        aggs.appendTo(innerContainer);
+        $('<tr>')
+            .append($('<th>')
+                .text('Excluded Columns'))
+            .appendTo(table);
+        createFlexDiv(transform, 'excludedColumns', table);
 
+        $('<tr>')
+            .append($('<th>')
+                .text('Excluded Aggregators'))
+            .appendTo(table);
+        createFlexDiv(transform, 'excludedAggregators', table);
+
+        table.appendTo(innerContainer);
         innerContainer.appendTo(containerElement);
     }
 
