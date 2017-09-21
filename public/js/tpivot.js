@@ -604,7 +604,7 @@ var tpivot = (function () {
         var transform = pivotState.getCurrentTransform();
         var innerContainer = $('<div>');
         var title = $('<div>')
-            .addClass('pivotContainer__titleText')
+            .addClass('pivotContainer__titleContainer pivotContainer__titleText')
             .text('Excluded Fields')
             .appendTo(innerContainer);
 

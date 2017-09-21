@@ -81,13 +81,29 @@
 <?php function buildStoredQueryContainer() { ob_start(); ?>
   <div class="toolbar__section">
     <div class="toolbar__sectionButtons">
-      <button type="button" id="storeQuery__save" class="btn btn-default">
+      <button type="button" id="storeQuery__saveUpdate" class="btn btn-default">
         <div class="toolbar__button">
           <div>
             <i class="fa fa-2x fa-floppy-o" aria-hidden="true"></i>
           </div>
           <div class="toolbar__buttonLabel">
-            Save query
+            Update query
+          </div>
+        </div>
+      </button>
+      <button type="button" id="storeQuery__save" class="btn btn-default">
+        <div class="toolbar__button">
+          <div>
+            <span class="fa-stack">
+              <i class="fa fa-floppy-o fa-stack-2x"></i>
+              <i 
+                class="fa fa-pencil fa-rotate-90 fa-stack-1x"   
+                style="top:-10px;left:12px;">
+              </i>
+          </span>
+          </div>
+          <div class="toolbar__buttonLabel">
+            Save new
           </div>
         </div>
       </button>
