@@ -45,7 +45,7 @@ var pivotState = (function () {
 
     function onHeaderClick(headerDirection, fieldIndex, clickedElement) {
         var thisTransform = currentTransform;
-        console.log(`HEADER CLICK @ direction ${headerDirection}, container index ${fieldIndex}, element ${clickedElement}`)
+        //console.log(`HEADER CLICK @ direction ${headerDirection}, container index ${fieldIndex}, element ${clickedElement}`)
 
         var field;
         var addTransform = false;

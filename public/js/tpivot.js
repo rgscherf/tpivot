@@ -387,9 +387,10 @@ var tpivot = (function () {
                                     colspan: colSpan
                                 })
                                 .click(function () {
-                                    console.log('header clicked...');
-                                    pivotState.onHeaderClick('column', colArrayPosition, elem);
-                                    rerenderTable();
+                                    if (arr.length > 1) {
+                                        pivotState.onHeaderClick('column', colArrayPosition, elem);
+                                        rerenderTable();
+                                    }
                                 })
                                 .text(elem)
                                 .appendTo(tr);
@@ -429,8 +430,7 @@ var tpivot = (function () {
                 $('<th>')
                     .addClass('table__colHeader')
                     .click(function () {
-                        if (!aggregatorsIsEmpty) {
-                            console.log('header clicked...');
+                        if (!aggregatorsIsEmpty && aggCoords.length > 1) {
                             pivotState.onHeaderClick('aggregator', aggCoords.indexOf(aggName), aggLabel);
                             rerenderTable();
                         }
@@ -495,8 +495,12 @@ var tpivot = (function () {
                 rowCoord.map(function (elem) {
                     $('<td>')
                         .click(function () {
-                            pivotState.onHeaderClick('row', rowCoord.indexOf(elem), elem);
-                            rerenderTable();
+                            var rowIdx = rowCoord.indexOf(elem);
+                            if (meta.rows[rowIdx].length > 1) {
+                                console.log(meta.rows[rowIdx].length);
+                                pivotState.onHeaderClick('row', rowIdx, elem);
+                                rerenderTable();
+                            }
                         })
                         .text(elem)
                         .addClass('table__rowHeader')
@@ -558,25 +562,42 @@ var tpivot = (function () {
                     break;
 
             }
-            transform[transformField].forEach(function (excludedArr, excludedIdx) {
+
+            if (transformField === 'excludedAggregators') {
                 var arrDiv = $('<tr>');
-                $('<th>').appendTo(arrDiv);
                 $('<th>')
-                    .text(model[modelField][excludedIdx].name)
                     .appendTo(arrDiv);
-                excludedArr.forEach(function (elem) {
-                    $('<td>').append(
-                        $('<button>')
-                            .text(elem)
-                            .css({ 'margin-left': '10px', 'margin-right': '10px' })
-                            .click(function () {
-                                pivotState.restoreElement(shortFieldName, excludedIdx, elem);
-                                rerenderTable();
-                            }))
+                transform[transformField].forEach(function (elem) {
+                    $('<td>')
+                        .text(elem)
+                        .css({ 'padding-left': '10px', 'padding-right': '10px' })
+                        .click(function () {
+                            pivotState.restoreElement(shortFieldName, model[modelField].map(function (e) { return e.reducer + "(" + e.name + ")" }).indexOf(elem), elem);
+                            rerenderTable();
+                        })
                         .appendTo(arrDiv);
                 });
                 arrDiv.appendTo(container);
-            });
+            } else {
+                transform[transformField].forEach(function (excludedArr, excludedIdx) {
+                    var arrDiv = $('<tr>');
+                    $('<th>')
+                        .text(model[modelField][excludedIdx].name)
+                        .css('padding-left', '10px')
+                        .appendTo(arrDiv);
+                    excludedArr.forEach(function (elem) {
+                        $('<td>')
+                            .text(elem)
+                            .css({ 'padding-left': '10px', 'padding-right': '10px' })
+                            .click(function () {
+                                pivotState.restoreElement(shortFieldName, excludedIdx, elem);
+                                rerenderTable();
+                            })
+                            .appendTo(arrDiv);
+                    });
+                    arrDiv.appendTo(container);
+                });
+            }
         }
 
 
@@ -589,22 +610,25 @@ var tpivot = (function () {
             .appendTo(innerContainer);
 
         var table = $('<table>')
-            .addClass('table-condensed');
+            .addClass('table-condensed table-bordered');
 
         $('<tr>')
             .append($('<th>')
+                .addClass('info')
                 .text('Excluded Rows'))
             .appendTo(table);
         createFlexDiv(transform, 'excludedRows', table);
 
         $('<tr>')
             .append($('<th>')
+                .addClass('info')
                 .text('Excluded Columns'))
             .appendTo(table);
         createFlexDiv(transform, 'excludedColumns', table);
 
         $('<tr>')
             .append($('<th>')
+                .addClass('info')
                 .text('Excluded Aggregators'))
             .appendTo(table);
         createFlexDiv(transform, 'excludedAggregators', table);
