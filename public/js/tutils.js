@@ -54,6 +54,31 @@ var tutils = (function () {
         return description;
     }
 
+    function describeTransform(transform) {
+        if (transform === null || pivotState.transformIsEmpty(transform)) { return "None"; }
+
+        var retArray = [];
+        var rowExclusions = 0;
+        transform.excludedRows.forEach(function (elem) {
+            rowExclusions += elem.length === 0 ? 0 : 1;
+        });
+        var colExclusions = 0;
+        transform.excludedColumns.forEach(function (elem) {
+            colExclusions += elem.length === 0 ? 0 : 1;
+        });
+        var aggExclusions = transform.excludedAggregators.length;
+        if (rowExclusions > 0) {
+            retArray.push('Excluding labels on ' + rowExclusions + ' row' + (rowExclusions > 1 ? 's' : ''));
+        }
+        if (colExclusions > 0) {
+            retArray.push('Excluding labels on ' + colExclusions + ' column' + (colExclusions > 1 ? 's' : ''));
+        }
+        if (aggExclusions > 0) {
+            retArray.push('Excluding labels on ' + aggExclusions + ' aggregator' + (aggExclusions > 1 ? 's' : ''));
+        }
+        return retArray.join(', ');
+    }
+
     function cartesianProduct(arr) {
         return arr.reduce(function (a, b) {
             return a.map(function (x) {
@@ -92,6 +117,7 @@ var tutils = (function () {
     return {
         closeButton: closeButton,
         describeModel: describeModel,
+        describeTransform: describeTransform,
         deinterleaveFrom: deinterleaveFrom,
         cartesianProduct: cartesianProduct,
         allMetaCoordinates: allMetaCoordinates,

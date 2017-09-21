@@ -13,12 +13,45 @@ var pivotState = (function () {
 
     function registerResults(results) {
         currentResult = results;
-        currentTransform = calculateInitialTransform(results.data);
+        if (transformIsPending()) {
+            promotePendingTransform();
+        } else {
+            currentTransform = calculateInitialTransform(results.data);
+        }
     }
 
     function transformIsPending() {
         return pendingTransform !== null
             && pendingTransform !== undefined;
+    }
+
+    function transformIsEmpty(transformToExamine) {
+        // Determine whether the current transform contains semantic information.
+
+        // Guard against nil values.
+        if (transformToExamine === null || transformToExamine === undefined) { return true; }
+
+        // get all the arrays of excluded elements.
+        var allExclusionArrays = [];
+        allExclusionArrays.push(transformToExamine.excludedAggregators);
+        transformToExamine.excludedRows.forEach(function (arr) {
+            allExclusionArrays.push(arr);
+        });
+        transformToExamine.excludedColumns.forEach(function (arr) {
+            allExclusionArrays.push(arr);
+        });
+
+        // then, retain only the arrays which have elements.
+        var populatedArrays = allExclusionArrays.filter(function (elem) {
+            return elem.length > 0;
+        })
+
+        // if there are no arrays with elements, the transform is empty.
+        return populatedArrays.length === 0;
+    }
+
+    function setPendingTransform(newTransform) {
+        pendingTransform = newTransform;
     }
 
     function promotePendingTransform() {
@@ -139,10 +172,12 @@ var pivotState = (function () {
         transformIsPending: transformIsPending,
         applyTransform: applyTransform,
         promotePendingTransform: promotePendingTransform,
+        setPendingTransform: setPendingTransform,
         registerResults: registerResults,
         onHeaderClick: onHeaderClick,
         restoreElement: restoreElement,
         getModel: getModel,
-        getCurrentTransform: getCurrentTransform
+        getCurrentTransform: getCurrentTransform,
+        transformIsEmpty: transformIsEmpty
     }
 })();

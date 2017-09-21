@@ -497,7 +497,6 @@ var tpivot = (function () {
                         .click(function () {
                             var rowIdx = rowCoord.indexOf(elem);
                             if (meta.rows[rowIdx].length > 1) {
-                                console.log(meta.rows[rowIdx].length);
                                 pivotState.onHeaderClick('row', rowIdx, elem);
                                 rerenderTable();
                             }
@@ -610,7 +609,7 @@ var tpivot = (function () {
             .appendTo(innerContainer);
 
         var table = $('<table>')
-            .addClass('table-condensed table-bordered');
+            .addClass('table-condensed');
 
         $('<tr>')
             .append($('<th>')
@@ -657,9 +656,6 @@ var tpivot = (function () {
             return;
         }
         pivotState.registerResults(pivotData);
-        if (pivotState.transformIsPending()) {
-            pivotState.promotePendingTransform();
-        }
         var calculatedTable = pivotState.applyTransform();
         makeExpressiveTable(container, calculatedTable, true, pivotData.model);
     };

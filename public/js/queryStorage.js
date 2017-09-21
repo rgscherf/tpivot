@@ -1,42 +1,54 @@
 var queryStore = (function () {
+    var QUERY_STORAGE_KEY = 'pivotStore';
+
     function storage() {
         return window.localStorage;
     }
 
     function getStoredQueries() {
-        var queries = JSON.parse(storage().getItem('savedQueries'));
+        var queries = JSON.parse(storage().getItem(QUERY_STORAGE_KEY));
         return (queries || []);
     }
 
     function appendToStorage(query) {
         var store = getStoredQueries();
         store.push(query);
-        storage().setItem('savedQueries', JSON.stringify(store));
+        storage().setItem(QUERY_STORAGE_KEY, JSON.stringify(store));
     }
 
-    function makeNewStorageKey() {
-        var localLength = storage().length;
-        var storageKey = 'model' + localLength.toString();
-        return storageKey;
-    }
+    function saveQuery(tableName, model) {
+        // determine ID for the new stored query
+        var storedQueries = getStoredQueries();
+        var newQueryId;
+        if (storedQueries.length === 0) {
+            newQueryId = 0;
+        } else {
+            var allIds = storedQueries.map(function (elem) { return elem.id });
+            var maxId = Math.max.apply(null, allIds);
+            newQueryId = maxId + 1;
+        }
 
-    function saveQuery(table, model) {
-        var queryTitle = makeNewStorageKey();
+        // determine whether to save the transform.
+        var transform = pivotState.transformIsEmpty(pivotState.getCurrentTransform()) ? null : pivotState.getCurrentTransform();
+
+        // construct the storage object.
         var newQuery = {
+            id: newQueryId,
             date: (new Date()).toDateString(),
-            table: table,
-            model: model
+            table: tableName,
+            model: model,
+            transform: transform
         };
         appendToStorage(newQuery);
     }
 
-    function loadQueryFromModel(availableTables, newModel) {
+    function loadQueryFromModel(availableTables, loadData) {
         $('#getTable').removeClass('btn-warning').addClass('btn-default');
-        $('#tableSelector').val(newModel.table);
+        $('#tableSelector').val(loadData.table);
         tpivot.removePivot();
         tchart.removeChart();
-        view.resetState(availableTables[newModel.table]);
-        data.model = newModel.model;
+        view.resetState(availableTables[loadData.table]);
+        data.model = loadData.model;
         var buckets = ["Values", "Filters", "Rows", "Columns"];
         buckets.forEach(function (buck) {
             var bucketarr = data.model[buck];
@@ -44,6 +56,7 @@ var queryStore = (function () {
                 addFieldToBucket(buck, elem.name);
             });
         });
+        pivotState.setPendingTransform(loadData.transform);
         sendConfig();
     }
 
@@ -51,9 +64,10 @@ var queryStore = (function () {
         var container = $('<div class="loadMenu">');
         var d = $('<table>');
         var t = $('<tr class="queryBuilder--headerText">')
-            .append($('<th>').text('table'))
-            .append($('<th>').text('query'))
-            .append($('<th>').text('saved on'))
+            .append($('<th>').text('Table Name'))
+            .append($('<th>').text('Query Description'))
+            .append($('<th>').text('Transformations'))
+            .append($('<th>').text('Date Saved'))
             .appendTo(d);
         queries.forEach(function (elem) {
             var q = $('<tr>')
@@ -63,6 +77,7 @@ var queryStore = (function () {
                 })
                 .append($('<td>').text(elem.table))
                 .append($('<td>').text(tutils.describeModel(elem.model)))
+                .append($('<td>').text(tutils.describeTransform(elem.transform)))
                 .append($('<td>').text(elem.date))
                 .disableSelection();
             q.appendTo(d);
@@ -90,7 +105,7 @@ var queryStore = (function () {
                 resizable: false,
                 closeText: "",
                 height: 'auto',
-                width: 600,
+                width: 700,
                 modal: true,
                 title: 'Click to load a saved query',
                 closeOnEscape: true
