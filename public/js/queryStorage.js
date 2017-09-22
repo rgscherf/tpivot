@@ -1,5 +1,22 @@
 var queryStore = (function () {
+    var currentLoaded = null;
     var QUERY_STORAGE_KEY = 'pivotStore';
+
+    function unloadQuery() {
+        currentLoaded = null;
+        $('#loadedDocument').children().remove();
+    }
+
+    function attachLoadedData(loadData) {
+        currentLoaded = loadData;
+        $('#loadedDocument').children().remove();
+        var loadString = "Currently modifying query with ID " + loadData.id;
+        var loadDiv = $('<div>')
+            .addClass('bg-info queryBuilder--marginLeft')
+            .css({ 'border-radius': '2px', 'padding': '5px', 'display': 'inline-block' })
+            .text(loadString)
+            .appendTo($('#loadedDocument'));
+    }
 
     function storage() {
         return window.localStorage;
@@ -16,6 +33,41 @@ var queryStore = (function () {
         storage().setItem(QUERY_STORAGE_KEY, JSON.stringify(store));
     }
 
+    function replaceStorage(queries) {
+        storage().setItem(QUERY_STORAGE_KEY, JSON.stringify(queries));
+    }
+
+    function getTransformForSerialization() {
+        // determine whether to save the transform.
+        return pivotState.transformIsEmpty(pivotState.getCurrentTransform()) ? null : pivotState.getCurrentTransform();
+    }
+
+    function createQueryStorageObject(id, tableName, model) {
+        return {
+            id: id,
+            date: (new Date()).toDateString(),
+            table: tableName,
+            model: model,
+            transform: getTransformForSerialization()
+        }
+    }
+
+    function updateQuery(tableName, model) {
+        if (!currentLoaded) {
+            console.log('Was asked to update a saved query with no query loaded!');
+            return;
+        }
+        var transform = getTransformForSerialization();
+        var id = currentLoaded.id;
+        var storedQueriesWithoutThisId = getStoredQueries().filter(function (elem) {
+            return elem.id !== id;
+        });
+        var newQuery = createQueryStorageObject(id, tableName, model);
+        var allQueries = storedQueriesWithoutThisId.concat(newQuery);
+        replaceStorage(allQueries);
+        attachLoadedData(newQuery);
+    }
+
     function saveQuery(tableName, model) {
         // determine ID for the new stored query
         var storedQueries = getStoredQueries();
@@ -28,23 +80,16 @@ var queryStore = (function () {
             newQueryId = maxId + 1;
         }
 
-        // determine whether to save the transform.
-        var transform = pivotState.transformIsEmpty(pivotState.getCurrentTransform()) ? null : pivotState.getCurrentTransform();
-
         // construct the storage object.
-        var newQuery = {
-            id: newQueryId,
-            date: (new Date()).toDateString(),
-            table: tableName,
-            model: model,
-            transform: transform
-        };
+        var newQuery = createQueryStorageObject(newQueryId, tableName, model);
         appendToStorage(newQuery);
+        attachLoadedData(newQuery);
     }
 
     function loadQueryFromModel(availableTables, loadData) {
         $('#getTable').removeClass('btn-warning').addClass('btn-default');
         $('#tableSelector').val(loadData.table);
+        attachLoadedData(loadData);
         tpivot.removePivot();
         tchart.removeChart();
         view.resetState(availableTables[loadData.table]);
@@ -64,6 +109,7 @@ var queryStore = (function () {
         var container = $('<div class="loadMenu">');
         var d = $('<table>');
         var t = $('<tr class="queryBuilder--headerText">')
+            .append($('<th>').text('ID'))
             .append($('<th>').text('Table Name'))
             .append($('<th>').text('Query Description'))
             .append($('<th>').text('Transformations'))
@@ -75,6 +121,7 @@ var queryStore = (function () {
                     loadQueryFromModel(availableTables, elem);
                     $('.loadQueryMenu').dialog("close");
                 })
+                .append($('<td>').text(elem.id))
                 .append($('<td>').text(elem.table))
                 .append($('<td>').text(tutils.describeModel(elem.model)))
                 .append($('<td>').text(tutils.describeTransform(elem.transform)))
@@ -115,6 +162,8 @@ var queryStore = (function () {
 
     return {
         saveQuery: saveQuery,
-        loadQueryMenu: loadQueryMenu
+        loadQueryMenu: loadQueryMenu,
+        unloadQuery: unloadQuery,
+        updateQuery: updateQuery
     }
 })();

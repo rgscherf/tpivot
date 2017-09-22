@@ -17,6 +17,8 @@
           <?php echo buildSortingBucket(); ?>
         </div>
         <div id="pivotContainer">
+          <div id="loadedDocument">
+          </div>
           <div id="pivotTarget">
           </div>
         </div>
@@ -81,17 +83,37 @@
 <?php function buildStoredQueryContainer() { ob_start(); ?>
   <div class="toolbar__section">
     <div class="toolbar__sectionButtons">
+      <button type="button" id="storeQuery__load" class="btn btn-default">
+      <div class="toolbar__button">
+        <div>
+          <i class="fa fa-2x fa-folder-open-o" aria-hidden="true"></i>
+        </div>
+        <div class="toolbar__buttonLabel">
+          Load query
+        </div>
+      </div>
+    </button>
+      <button type="button" id="storeQuery__unload" class="btn btn-default">
+        <div class="toolbar__button">
+          <div>
+            <i class="fa fa-2x fa-trash-o" aria-hidden="true"></i>
+          </div>
+          <div class="toolbar__buttonLabel">
+            Discard loaded
+          </div>
+        </div>
+      </button>
       <button type="button" id="storeQuery__saveUpdate" class="btn btn-default">
         <div class="toolbar__button">
           <div>
             <i class="fa fa-2x fa-floppy-o" aria-hidden="true"></i>
           </div>
           <div class="toolbar__buttonLabel">
-            Update query
+            Update loaded
           </div>
         </div>
       </button>
-      <button type="button" id="storeQuery__save" class="btn btn-default">
+      <button type="button" id="storeQuery__saveNew" class="btn btn-default">
         <div class="toolbar__button">
           <div>
             <span class="fa-stack">
@@ -103,17 +125,7 @@
           </span>
           </div>
           <div class="toolbar__buttonLabel">
-            Save new
-          </div>
-        </div>
-      </button>
-      <button type="button" id="storeQuery__load" class="btn btn-default">
-        <div class="toolbar__button">
-          <div>
-            <i class="fa fa-2x fa-folder-open-o" aria-hidden="true"></i>
-          </div>
-          <div class="toolbar__buttonLabel">
-            Load query
+            Save as new
           </div>
         </div>
       </button>

@@ -147,7 +147,18 @@ $(function () {
 
     var currentDataset = $('#tableSelector').val();
 
-    $('#storeQuery__save').click(function (event) {
+
+    $('#storeQuery__unload').click(function (event) {
+        $(this).blur();
+        queryStore.unloadQuery();
+    });
+
+    $('#storeQuery__saveUpdate').click(function (event) {
+        $(this).blur();
+        queryStore.updateQuery(currentDataset, data.model);
+    });
+
+    $('#storeQuery__saveNew').click(function (event) {
         $(this).blur();
         queryStore.saveQuery(currentDataset, data.model);
     });
