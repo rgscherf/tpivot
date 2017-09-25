@@ -24,107 +24,6 @@ var tchart = (function () {
         $('#pivotChart').remove();
     }
 
-    function renderChart(model, resultRows, chartType) {
-        removeChart();
-        var xAxisLabels = resultRows[0].slice(1).map(function (elem) {
-            var label = elem.split("_")[0];
-            return label === '' ? 'NULL' : label;
-        });
-        xAxisLabels = xAxisLabels.filter(function (elem, idx, self) {
-            return self.indexOf(elem) === idx;
-        });
-        var modelRowsNum = model['Rows'].length;
-        var tableData = resultRows.slice(1);
-
-        var tableValues = tableData.map(function (row) {
-            var rowValues = row.slice(modelRowsNum);
-            return tutils.deinterleaveFrom(model['Values'], rowValues);
-        });
-
-        var datums = [];
-        model['Values'].forEach(function (valueMap, valuesIdx) {
-            tableData.forEach(function (tableDataRow, tableDataIndex) {
-                var label = valueMap.reducer + "(" + valueMap.name + ") - " + tableDataRow.slice(0, modelRowsNum).map(function (el) { return el === null ? 'NULL' : el; }).join(", ");
-                var color = colors[tableDataIndex % colorPalette.length][valuesIdx];
-                var line = {
-                    label: label,
-                    data: tableValues[tableDataIndex][valuesIdx],
-                    borderColor: color,
-                    backgroundColor: color,
-                    fill: false,
-                    yAxisID: valuesIdx.toString(),
-                    xAxisID: 'x'
-                };
-                datums.push(line);
-            });
-        });
-
-        var yAxes = model['Values'].map(function (elem, idx) {
-            return {
-                id: idx.toString(),
-                type: 'linear',
-                position: 'left',
-                scaleLabel: {
-                    display: true,
-                    labelString: elem.reducer + '(' + elem.name + ')'
-                }
-            };
-        });
-
-        var canvas = $('<canvas id="pivotChart" width="600" height="400">')
-
-        $(canvas).dialog({
-            classes: {
-                "ui-dialog": "loadMenu__ui-dialog",
-                "ui-dialog-titlebar": "loadMenu__ui-dialog-titlebar",
-                "ui-dialog-title": "loadMenu__ui-dialog-title",
-                "ui-dialog-titlebar-close": "loadMenu__ui-dialog-close",
-                // "ui-dialog-content": "",
-            },
-            close: function (event, ui) {
-                $(this).dialog("destroy");
-            },
-            resizable: false,
-            closeText: "",
-            height: 'auto',
-            width: 620,
-            modal: true,
-            title: tutils.describeModel(model),
-            closeOnEscape: true
-        })
-            .css('padding', '10px');
-
-        var chart = new Chart(canvas, {
-            type: chartType,
-            data: {
-                labels: xAxisLabels,
-                datasets: datums
-            },
-            options: {
-                responsive: false,
-                tooltips: {
-                    mode: 'point'
-                },
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        boxWidth: 20
-                    }
-                },
-                scales: {
-                    yAxes: yAxes,
-                    xAxes: [{
-                        id: 'x',
-                        ticks: {
-                            autoSkip: false
-                        }
-                    }]
-                }
-            }
-        });
-        return chart;
-    }
-
     function renderExpChart(model, result, chartType) {
         removeChart();
         var metaCoords = tutils.allMetaCoordinates(result);
@@ -233,12 +132,10 @@ var tchart = (function () {
         }
 
         var model = pivotState.getModel();
-        //renderChart(model, results, chartType);
         renderExpChart(model, currentResult, chartType);
     }
 
     return {
-        renderChart: renderChart,
         removeChart: removeChart,
         renderChartDialog: renderChartDialog
     };
