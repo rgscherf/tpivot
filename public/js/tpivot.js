@@ -56,13 +56,54 @@ var tpivot = (function () {
         $('#pivotTable').remove();
     }
 
+    /////////////////////////////
+    // SORTING ROW/COL/AGG LABELS
+    /////////////////////////////
+
+    // Options for defining sortable behavior of column headers.
+    // This has two main behaviors:
+    // 1. Where a field's labels repeat in the same row (because there is a field above in the hierarchy),
+    // ... sorting is restricted to only the items underneath the same hierarchical header.
+    // 2. When the user 'drops' an item, a transform is triggered and the table redraws
+    // ... with all repetitions of the sorted field sorted as the user directed.
+
+    // Identifying sort elements
+    // In-group sorting is done by setting a data attribute on each header with the form:
+    // data('group') = '(row | col | agg |)' + '__sortInfo__' + fieldIdx + '__sortInfo__' + sortingGroupNum
+    // We can split this string on '__sortInfo__' to get individual pieces of data.
+    // Call the split array SRT, and:
+    // SRT[0] describes which meta field is being changed.
+    // SRT[1] describes which index of the meta field is being changed. For rows and cols, this is a label array index.
+    // ... for aggregators, this is just the name of the aggregator being sorted.
+    // SRT[2] describes which iteration we're on for the meta field being changed. By finding all elements which 
+    // ... match this part of the signature after sorting completes, we can build a list of field labels in the user's desired order.
+    var sortableOptions = {
+        placeholder: "placeholder",
+        items: "> .sortableValue",
+        helper: "clone",
+        forcePlaceholderSize: true,
+        revert: 150,
+        axis: "x",
+        update: function (event, ui) {
+            var dat = ui.item.data('group');
+            var labels = [];
+            $('.' + dat).each(function (idx, elem) {
+                labels.push($(elem).text());
+            });
+            var direction = dat.split('__sortInfo__')[0];
+            var index = dat.split('__sortInfo__')[1];
+            pivotState.sortField(direction, index, labels);
+            $('.sortableColumn').sortable('option', 'items', '> .sortableValue');
+            rerenderTable();
+        }
+    };
+
     function makeExpressiveTableHead(allCoords, thead, data, renderFieldNames, model) {
         var meta = data.meta;
 
         var rowCoords = allCoords.rowCoords;
         var colCoords = allCoords.colCoords;
         var aggCoords = allCoords.aggCoords;
-
 
 
         // Drawing column headers
@@ -103,8 +144,10 @@ var tpivot = (function () {
             });
             tr.appendTo(thead);
         } else {
-            meta.columns.map(function (colArray, colArrayPosition) {
-                var tr = $('<tr>');
+            meta.columns.map(function (colArray, columnArrayIndex) {
+                var tr = $('<tr>')
+                    .addClass('sortableColumn')
+                    .sortable(sortableOptions);
                 // render column labels.
                 if (renderFieldNames) {
                     // start with N <th> spacers where N is the number of row fields.
@@ -117,14 +160,14 @@ var tpivot = (function () {
                         });
                     }
                     // then add a label for the field sharing the same column index in the client model.
-                    var labelText = model["Columns"][colArrayPosition].name;
+                    var labelText = model["Columns"][columnArrayIndex].name;
                     $('<th>')
                         .text(labelText)
                         .addClass('table__columnLabel')
                         .appendTo(tr);
                 } else {
                     // if column labels are disabled, just create a <th> block sized to accommodate column and row labels.
-                    if (colArrayPosition === 0) {
+                    if (columnArrayIndex === 0) {
                         var initialTrBlock =
                             $('<th>')
                                 .attr({
@@ -138,7 +181,7 @@ var tpivot = (function () {
                 colCoords
                     // get the label at the same column field index we are currently looking at...
                     .map(function (coord) {
-                        return coord[colArrayPosition];
+                        return coord[columnArrayIndex];
                     })
                     // remove identical adjacent elements...
                     .reduce(function (acc, next) {
@@ -152,19 +195,27 @@ var tpivot = (function () {
                         }
                     }, [])
                     // and then draw <th> with those labels, sizing those elements so that the length of this row matches all other header rows.
-                    .map(function (elem, _, arr) {
-                        // The guard here ensures that arr of length 1 (that is, all elements in the previous map step were identical)
-                        // displays as width-1 cells rather than a single cell spanning the whole row.
+                    .map(function (elem, elemIdx, arr) {
                         var colSpan = (meta.aggregators.length * (colCoords.length / arr.length))
+                        var sortingGroupNum = Math.floor(elemIdx / meta.columns[columnArrayIndex].length);
+                        var sortingGroupId = 'columns' + '__sortInfo__' + columnArrayIndex + '__sortInfo__' + sortingGroupNum;
                         var th =
                             $('<th>')
-                                .addClass('table__colHeader')
+                                .addClass('table__colHeader sortableValue')
+                                .addClass(sortingGroupId)
+                                .data('group', sortingGroupId)
                                 .attr({
                                     colspan: colSpan
                                 })
+                                .mouseenter(function (element) {
+                                    var group = $(element.target).data('group');
+                                    if (group !== undefined) {
+                                        $('.sortableColumn').sortable('option', 'items', '> .' + group);
+                                    }
+                                })
                                 .click(function () {
                                     if (arr.length > 1) {
-                                        pivotState.onHeaderClick('column', colArrayPosition, elem);
+                                        pivotState.removeHeader('column', columnArrayIndex, elem);
                                         rerenderTable();
                                     }
                                 })
@@ -175,9 +226,10 @@ var tpivot = (function () {
             });
         }
 
-
         // drawing agg headers
-        var aggTr = $('<tr>');
+        var aggTr = $('<tr>')
+            .addClass('sortableColumn')
+            .sortable(sortableOptions);
         var aggregatorsIsEmpty = meta.aggregators.length === 0;
         if (renderFieldNames) {
             // start with N <th> spacers where N is the number of row fields.
@@ -200,14 +252,24 @@ var tpivot = (function () {
                 })
                 .appendTo(aggTr);
         }
-        colCoords.map(function (colCoord) {
+        colCoords.map(function (colCoord, colCoordIdx) {
             aggCoords.map(function (aggName) {
                 var aggLabel = aggregatorsIsEmpty ? 'COUNT(*)' : aggName;
+                var sortingGroupNum = colCoordIdx;
+                var sortingGroupId = 'aggregators' + '__sortInfo__' + 0 + '__sortInfo__' + sortingGroupNum;
                 $('<th>')
-                    .addClass('table__colHeader')
+                    .addClass('table__colHeader sortableValue')
+                    .addClass(sortingGroupId)
+                    .data('group', sortingGroupId)
+                    .mouseenter(function (element) {
+                        var group = $(element.target).data('group');
+                        if (group !== undefined) {
+                            $('.sortableColumn').sortable('option', 'items', '> .' + group);
+                        }
+                    })
                     .click(function () {
                         if (!aggregatorsIsEmpty && aggCoords.length > 1) {
-                            pivotState.onHeaderClick('aggregator', aggCoords.indexOf(aggName), aggLabel);
+                            pivotState.removeHeader('aggregator', aggCoords.indexOf(aggName), aggLabel);
                             rerenderTable();
                         }
                     })
@@ -261,8 +323,10 @@ var tpivot = (function () {
         }
 
         // Each row in the cartesian product of row values is drawn here.
-        rowCoords.map(function (rowCoord) {
-            var tr = $('<tr>');
+        rowCoords.map(function (rowCoord, rowCoordIdx) {
+            var tr = $('<tr>')
+                .addClass('sortableColumn')
+                .sortable(sortableOptions);
 
             // If there are no rows (e.g. just pivoting on '*'), insert a label cell.
             if (meta.rows.length === 0) {
@@ -271,17 +335,29 @@ var tpivot = (function () {
                     .addClass('table__rowHeader')
                     .appendTo(tr);
             } else {
-                rowCoord.map(function (elem) {
+                rowCoord.map(function (rowCoordElem, elemIdx) {
+                    var sortingGroupNum = Math.floor(meta.rows[elemIdx].length / rowCoords.length);
+                    var sortingGroupId = 'rows' + '__sortInfo__' + elemIdx + '__sortInfo__' + sortingGroupNum;
                     $('<td>')
+                        .text(rowCoordElem)
+                        .addClass('table__colHeader sortableValue')
+                        .addClass(sortingGroupId)
+                        .data('group', sortingGroupId)
+                        .mouseenter(function (element) {
+                            var group = $(element.target).data('group');
+                            console.log(sortingGroupNum);
+                            console.log(group);
+                            if (group !== undefined) {
+                                $('.sortableColumn').sortable('option', 'items', '> .' + group);
+                            }
+                        })
                         .click(function () {
-                            var rowIdx = rowCoord.indexOf(elem);
+                            var rowIdx = rowCoord.indexOf(rowCoordElem);
                             if (meta.rows[rowIdx].length > 1) {
-                                pivotState.onHeaderClick('row', rowIdx, elem);
+                                pivotState.removeHeader('row', rowIdx, rowCoordElem);
                                 rerenderTable();
                             }
                         })
-                        .text(elem)
-                        .addClass('table__rowHeader')
                         .appendTo(tr);
                 });
             }
@@ -363,7 +439,7 @@ var tpivot = (function () {
                         .text(elem)
                         .css({ 'padding-left': '10px', 'padding-right': '10px' })
                         .click(function () {
-                            pivotState.restoreElement(shortFieldName, model[modelField].map(function (e) { return e.reducer + "(" + e.name + ")" }).indexOf(elem), elem);
+                            pivotState.restoreHeader(shortFieldName, model[modelField].map(function (e) { return e.reducer + "(" + e.name + ")" }).indexOf(elem), elem);
                             rerenderTable();
                         })
                         .appendTo(arrDiv);
@@ -381,7 +457,7 @@ var tpivot = (function () {
                             .text(elem)
                             .css({ 'padding-left': '10px', 'padding-right': '10px' })
                             .click(function () {
-                                pivotState.restoreElement(shortFieldName, excludedIdx, elem);
+                                pivotState.restoreHeader(shortFieldName, excludedIdx, elem);
                                 rerenderTable();
                             })
                             .appendTo(arrDiv);

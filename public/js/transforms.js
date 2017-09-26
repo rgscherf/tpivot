@@ -65,18 +65,25 @@ var pivotState = (function () {
         var initTransforms = {
             excludedColumns: [],
             excludedRows: [],
-            excludedAggregators: []
+            excludedAggregators: [],
+            ordering: {
+                rows: [],
+                columns: [],
+                aggregators: [],
+            }
         }
-        metadata.columns.forEach(function (val) {
-            initTransforms.excludedColumns.push(empty);
-        });
         metadata.rows.forEach(function (val) {
             initTransforms.excludedRows.push(empty);
+            initTransforms.ordering.rows.push(empty);
+        });
+        metadata.columns.forEach(function (val) {
+            initTransforms.excludedColumns.push(empty);
+            initTransforms.ordering.columns.push(empty);
         });
         return initTransforms;
     }
 
-    function onHeaderClick(headerDirection, fieldIndex, clickedElement) {
+    function removeHeader(headerDirection, fieldIndex, clickedElement) {
         var thisTransform = currentTransform;
         //console.log(`HEADER CLICK @ direction ${headerDirection}, container index ${fieldIndex}, element ${clickedElement}`)
 
@@ -112,7 +119,7 @@ var pivotState = (function () {
         }
     }
 
-    function restoreElement(fieldShortName, fieldIndex, clickedElement) {
+    function restoreHeader(fieldShortName, fieldIndex, clickedElement) {
         var thisTransform = currentTransform;
 
         var field;
@@ -150,21 +157,64 @@ var pivotState = (function () {
         }
     }
 
+    function sortField(metaDirection, fieldIndex, newLabels) {
+        if (metaDirection === 'aggregators') {
+            currentTransform.ordering.aggregators = newLabels;
+        } else {
+            currentTransform.ordering[metaDirection][fieldIndex] = newLabels;
+        }
+    }
+
+    function applyTransformToSingleField(orderingField, excludingField, fieldArr, fieldIdx) {
+        // apply transformations to a single transform array.
+        // this can be a single row or column field, or the aggregator field.
+        var retArray = [];
+        var orderingArray;
+        var excludingArray;
+        if (orderingField === 'aggregators' && excludingField === 'excludedAggregators') {
+            orderingArray = currentTransform.ordering['aggregators'];
+            excludingArray = currentTransform['excludedAggregators'];
+
+        } else {
+            orderingArray = currentTransform.ordering[orderingField][fieldIdx];
+            excludingArray = currentTransform[excludingField][fieldIdx];
+        }
+
+        // items enter orderingArray as strings, so we do this quick conversion so indexOf will compare correctly.
+        // this may cause issues with charting?
+        var fieldArrAsStrings = fieldArr.map(function (elem) { return elem.toString(); });
+        // add column elements that have been user-specified sorted.
+        orderingArray.forEach(function (sortedElement) {
+            // ensure the sorted element actually appears in the target array.
+            if (fieldArrAsStrings.indexOf(sortedElement) !== -1) {
+                retArray.push(sortedElement);
+            }
+        });
+
+        // then add any elements that are not in the user-specified sort.
+        let orphanElements = fieldArrAsStrings.filter(function (colArrElem) {
+            return orderingArray.indexOf(colArrElem) === -1;
+        })
+        retArray = retArray.concat(orphanElements);
+
+        // remove any retColArr elements that the user has specified as excluded.
+        retArray = retArray.filter(function (retElement) {
+            return excludingArray.indexOf(retElement) === -1;
+        });
+        return retArray;
+    }
+
     function applyTransform() {
         let retResults = JSON.parse(JSON.stringify(currentResult.data));
-        retResults.meta.columns = currentResult.data.meta.columns.map(function (columnArr, colIdx) {
-            return columnArr.filter(function (columnElement) {
-                return currentTransform.excludedColumns[colIdx].indexOf(columnElement) === -1;
-            })
-        })
+
         retResults.meta.rows = currentResult.data.meta.rows.map(function (rowArr, rowIdx) {
-            return rowArr.filter(function (rowElement) {
-                return currentTransform.excludedRows[rowIdx].indexOf(rowElement) === -1;
-            })
-        })
-        retResults.meta.aggregators = currentResult.data.meta.aggregators.filter(function (aggName) {
-            return currentTransform.excludedAggregators.indexOf(aggName) === -1;
-        })
+            return applyTransformToSingleField('rows', 'excludedRows', rowArr, rowIdx);
+        });
+        retResults.meta.columns = currentResult.data.meta.columns.map(function (columnArr, colIdx) {
+            return applyTransformToSingleField('columns', 'excludedColumns', columnArr, colIdx);
+        });
+        var dataAggs = currentResult.data.meta.aggregators;
+        retResults.meta.aggregators = applyTransformToSingleField('aggregators', 'excludedAggregators', dataAggs);
         return retResults;
     }
 
@@ -174,8 +224,9 @@ var pivotState = (function () {
         promotePendingTransform: promotePendingTransform,
         setPendingTransform: setPendingTransform,
         registerResults: registerResults,
-        onHeaderClick: onHeaderClick,
-        restoreElement: restoreElement,
+        removeHeader: removeHeader,
+        restoreHeader: restoreHeader,
+        sortField: sortField,
         getModel: getModel,
         getCurrentTransform: getCurrentTransform,
         transformIsEmpty: transformIsEmpty
