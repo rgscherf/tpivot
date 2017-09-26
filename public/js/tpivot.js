@@ -56,22 +56,13 @@ var tpivot = (function () {
         $('#pivotTable').remove();
     }
 
-
-    function makeExpressiveTable(containerElement, data, renderFieldNames, model) {
+    function makeExpressiveTableHead(allCoords, thead, data, renderFieldNames, model) {
         var meta = data.meta;
-        var results = data.results;
 
-        tutils.sortMetaCols(meta);
-        var allCoords = tutils.allMetaCoordinates(data);
         var rowCoords = allCoords.rowCoords;
         var colCoords = allCoords.colCoords;
         var aggCoords = allCoords.aggCoords;
 
-
-        ////////////////////////
-        // DRAW THE TABLE HEADER
-        ////////////////////////
-        var thead = $('<thead>');
 
 
         // Drawing column headers
@@ -225,13 +216,16 @@ var tpivot = (function () {
             });
         });
         aggTr.appendTo(thead);
+    }
 
+    function makeExpressiveTableBody(allCoords, tbody, data, renderFieldNames, model) {
+        var meta = data.meta;
+        var results = data.results;
 
-        //////////////////////
-        // DRAW THE TABLE BODY
-        //////////////////////
+        var rowCoords = allCoords.rowCoords;
+        var colCoords = allCoords.colCoords;
+        var aggCoords = allCoords.aggCoords;
 
-        var tbody = $('<tbody>');
         // Rendering row labels
         if (renderFieldNames) {
             var t = $('<tr>');
@@ -317,7 +311,20 @@ var tpivot = (function () {
             // And finally append to the tbody.
             tr.appendTo(tbody);
         });
+    }
 
+    function makeExpressiveTable(containerElement, data, renderFieldNames, model) {
+        var meta = data.meta;
+        var results = data.results;
+        var allCoords = tutils.allMetaCoordinates(data);
+
+        // DRAW THE TABLE HEADER
+        var thead = $('<thead>');
+        makeExpressiveTableHead(allCoords, thead, data, renderFieldNames, model);
+
+        // DRAW THE TABLE BODY
+        var tbody = $('<tbody>');
+        makeExpressiveTableBody(allCoords, tbody, data, renderFieldNames, model);
 
         var table = $('<table>').addClass('table table-bordered table-hover table-condensed');
         thead.appendTo(table);
