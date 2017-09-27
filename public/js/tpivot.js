@@ -56,48 +56,6 @@ var tpivot = (function () {
         $('#pivotTable').remove();
     }
 
-    /////////////////////////////
-    // SORTING ROW/COL/AGG LABELS
-    /////////////////////////////
-
-    // Options for defining sortable behavior of column headers.
-    // This has two main behaviors:
-    // 1. Where a field's labels repeat in the same row (because there is a field above in the hierarchy),
-    // ... sorting is restricted to only the items underneath the same hierarchical header.
-    // 2. When the user 'drops' an item, a transform is triggered and the table redraws
-    // ... with all repetitions of the sorted field sorted as the user directed.
-
-    // Identifying sort elements
-    // In-group sorting is done by setting a data attribute on each header with the form:
-    // data('group') = '(row | col | agg |)' + '__sortInfo__' + fieldIdx + '__sortInfo__' + sortingGroupNum
-    // We can split this string on '__sortInfo__' to get individual pieces of data.
-    // Call the split array SRT, and:
-    // SRT[0] describes which meta field is being changed.
-    // SRT[1] describes which index of the meta field is being changed. For rows and cols, this is a label array index.
-    // ... for aggregators, this is just the name of the aggregator being sorted.
-    // SRT[2] describes which iteration we're on for the meta field being changed. By finding all elements which 
-    // ... match this part of the signature after sorting completes, we can build a list of field labels in the user's desired order.
-    var sortableOptions = {
-        placeholder: "placeholder",
-        items: "> .sortableValue",
-        helper: "clone",
-        forcePlaceholderSize: true,
-        revert: 150,
-        axis: "x",
-        update: function (event, ui) {
-            var dat = ui.item.data('group');
-            var labels = [];
-            $('.' + dat).each(function (idx, elem) {
-                labels.push($(elem).text());
-            });
-            var direction = dat.split('__sortInfo__')[0];
-            var index = dat.split('__sortInfo__')[1];
-            pivotState.sortField(direction, index, labels);
-            $('.sortableColumn').sortable('option', 'items', '> .sortableValue');
-            rerenderTable();
-        }
-    };
-
     function makeExpressiveTableHead(allCoords, thead, data, renderFieldNames, model) {
         var meta = data.meta;
 
@@ -112,13 +70,11 @@ var tpivot = (function () {
             if (renderFieldNames) {
                 // start with N <th> spacers where N is the number of row fields.
                 // if N==0, add a <th> spacer for the dummy 'all rows' label.
-                if (meta.rows.length === 0) {
-                    $('<th>').appendTo(tr);
-                } else {
-                    meta.rows.map(function () {
+                meta.rows.forEach(function (_, rowIdx, rowArr) {
+                    if (rowIdx < rowArr.length - 1) {
                         $('<th>').appendTo(tr);
-                    });
-                }
+                    }
+                });
                 // then add a label for the field sharing the same column index in the client model.
                 $('<th>')
                     .text("ALL COLS")
@@ -145,20 +101,16 @@ var tpivot = (function () {
             tr.appendTo(thead);
         } else {
             meta.columns.map(function (colArray, columnArrayIndex) {
-                var tr = $('<tr>')
-                    .addClass('sortableColumn')
-                    .sortable(sortableOptions);
+                var tr = $('<tr>');
                 // render column labels.
                 if (renderFieldNames) {
                     // start with N <th> spacers where N is the number of row fields.
                     // if N==0, add a <th> spacer for the dummy 'all rows' label.
-                    if (meta.rows.length === 0) {
-                        $('<th>').appendTo(tr);
-                    } else {
-                        meta.rows.map(function () {
+                    meta.rows.forEach(function (_, rowIdx, rowArr) {
+                        if (rowIdx < rowArr.length - 1) {
                             $('<th>').appendTo(tr);
-                        });
-                    }
+                        }
+                    });
                     // then add a label for the field sharing the same column index in the client model.
                     var labelText = model["Columns"][columnArrayIndex].name;
                     $('<th>')
@@ -198,26 +150,18 @@ var tpivot = (function () {
                     .map(function (elem, elemIdx, arr) {
                         var colSpan = (meta.aggregators.length * (colCoords.length / arr.length))
                         var sortingGroupNum = Math.floor(elemIdx / meta.columns[columnArrayIndex].length);
-                        var sortingGroupId = 'columns' + '__sortInfo__' + columnArrayIndex + '__sortInfo__' + sortingGroupNum;
+                        var sortingGroupId = 'columns' + '__sortInfo__' + columnArrayIndex + '__sortInfo__' + sortingGroupNum + '__sortInfo__' + elem;
                         var th =
                             $('<th>')
-                                .addClass('table__colHeader sortableValue')
-                                .addClass(sortingGroupId)
-                                .data('group', sortingGroupId)
+                                .addClass('table__colHeader')
                                 .attr({
                                     colspan: colSpan
                                 })
-                                .mouseenter(function (element) {
-                                    var group = $(element.target).data('group');
-                                    if (group !== undefined) {
-                                        $('.sortableColumn').sortable('option', 'items', '> .' + group);
-                                    }
+                                .mouseenter(function (event) {
+                                    twidgets.createTranformWidgetOverlay($(this), meta.columns[columnArrayIndex], sortingGroupId, 'row', rerenderTable);
                                 })
-                                .click(function () {
-                                    if (arr.length > 1) {
-                                        pivotState.removeHeader('column', columnArrayIndex, elem);
-                                        rerenderTable();
-                                    }
+                                .mouseleave(function (event) {
+                                    twidgets.destroyTransformWidgetOverlay();
                                 })
                                 .text(elem)
                                 .appendTo(tr);
@@ -227,20 +171,16 @@ var tpivot = (function () {
         }
 
         // drawing agg headers
-        var aggTr = $('<tr>')
-            .addClass('sortableColumn')
-            .sortable(sortableOptions);
+        var aggTr = $('<tr>');
         var aggregatorsIsEmpty = meta.aggregators.length === 0;
         if (renderFieldNames) {
             // start with N <th> spacers where N is the number of row fields.
             // if N==0, add a <th> spacer for the dummy 'all rows' label.
-            if (meta.rows.length === 0) {
-                $('<th>').appendTo(aggTr);
-            } else {
-                meta.rows.map(function () {
+            meta.rows.forEach(function (_, rowIdx, rowArr) {
+                if (rowIdx < rowArr.length - 1) {
                     $('<th>').appendTo(aggTr);
-                });
-            }
+                }
+            });
             $('<th>')
                 .text('AGGREGATORS')
                 .addClass('table__columnLabel')
@@ -256,22 +196,14 @@ var tpivot = (function () {
             aggCoords.map(function (aggName) {
                 var aggLabel = aggregatorsIsEmpty ? 'COUNT(*)' : aggName;
                 var sortingGroupNum = colCoordIdx;
-                var sortingGroupId = 'aggregators' + '__sortInfo__' + 0 + '__sortInfo__' + sortingGroupNum;
+                var sortingGroupId = 'aggregators' + '__sortInfo__' + 0 + '__sortInfo__' + sortingGroupNum + '__sortInfo__' + aggName;
                 $('<th>')
-                    .addClass('table__colHeader sortableValue')
-                    .addClass(sortingGroupId)
-                    .data('group', sortingGroupId)
-                    .mouseenter(function (element) {
-                        var group = $(element.target).data('group');
-                        if (group !== undefined) {
-                            $('.sortableColumn').sortable('option', 'items', '> .' + group);
-                        }
+                    .addClass('table__colHeader')
+                    .mouseenter(function (event) {
+                        twidgets.createTranformWidgetOverlay($(this), meta.aggregators, sortingGroupId, 'row', rerenderTable);
                     })
-                    .click(function () {
-                        if (!aggregatorsIsEmpty && aggCoords.length > 1) {
-                            pivotState.removeHeader('aggregator', aggCoords.indexOf(aggName), aggLabel);
-                            rerenderTable();
-                        }
+                    .mouseleave(function (event) {
+                        twidgets.destroyTransformWidgetOverlay();
                     })
                     .text(aggLabel)
                     .appendTo(aggTr);
@@ -310,7 +242,6 @@ var tpivot = (function () {
             var emptyLabels = [];
             for (var i = 0; i < emptyLength; i++) {
                 emptyLabels.push($('<th>'));
-
             }
             rowLabels.forEach(function (elem) {
                 elem.appendTo(t);
@@ -318,53 +249,60 @@ var tpivot = (function () {
             emptyLabels.forEach(function (elem) {
                 elem.appendTo(t);
             });
-            $('<th>').appendTo(t);
             t.appendTo(tbody);
         }
 
+        // last seen element for rows. Used to calculate rowspan for header elems.
+        var lastSeenElement = meta.rows.map(function (rowArr) {
+            return '';
+        });
+
         // Each row in the cartesian product of row values is drawn here.
         rowCoords.map(function (rowCoord, rowCoordIdx) {
-            var tr = $('<tr>')
-                .addClass('sortableColumn')
-                .sortable(sortableOptions);
+            var tr = $('<tr>');
 
             // If there are no rows (e.g. just pivoting on '*'), insert a label cell.
             if (meta.rows.length === 0) {
-                $('<td>')
+                $('<th>')
                     .text('*')
                     .addClass('table__rowHeader')
                     .appendTo(tr);
             } else {
                 rowCoord.map(function (rowCoordElem, elemIdx) {
-                    var sortingGroupNum = Math.floor(meta.rows[elemIdx].length / rowCoords.length);
-                    var sortingGroupId = 'rows' + '__sortInfo__' + elemIdx + '__sortInfo__' + sortingGroupNum;
-                    $('<td>')
-                        .text(rowCoordElem)
-                        .addClass('table__colHeader sortableValue')
-                        .addClass(sortingGroupId)
-                        .data('group', sortingGroupId)
-                        .mouseenter(function (element) {
-                            var group = $(element.target).data('group');
-                            console.log(sortingGroupNum);
-                            console.log(group);
-                            if (group !== undefined) {
-                                $('.sortableColumn').sortable('option', 'items', '> .' + group);
-                            }
-                        })
-                        .click(function () {
-                            var rowIdx = rowCoord.indexOf(rowCoordElem);
-                            if (meta.rows[rowIdx].length > 1) {
-                                pivotState.removeHeader('row', rowIdx, rowCoordElem);
-                                rerenderTable();
-                            }
-                        })
-                        .appendTo(tr);
-                });
-            }
+                    var sortingGroupNum = Math.floor(rowCoordIdx / meta.rows[elemIdx].length);
+                    var sortingGroupId = 'rows' + '__sortInfo__' + elemIdx + '__sortInfo__' + sortingGroupNum + '__sortInfo__' + rowCoordElem;
 
-            // If we're printing field names, insert a spacer cell where column labels will be drawn.
-            if (renderFieldNames) {
-                $('<td>').appendTo(tr);
+                    // calculate size and incidence of rowspan attribute
+                    var numAdjacentsAtThisDepth = 1;
+                    var adjacentElement = '';
+                    var allCoordValuesAtThisDepth = rowCoords.map(function (rowCoord) {
+                        return rowCoord[elemIdx];
+                    });
+                    for (var i = 0; i < allCoordValuesAtThisDepth.length; i++) {
+                        var elem = allCoordValuesAtThisDepth[i];
+                        if (adjacentElement === '') {
+                            adjacentElement = elem;
+                        } else if (adjacentElement !== elem) {
+                            break;
+                        } else {
+                            numAdjacentsAtThisDepth += 1;
+                        }
+                    }
+                    if (lastSeenElement[elemIdx] !== rowCoordElem) {
+                        lastSeenElement[elemIdx] = rowCoordElem;
+                        $('<th>')
+                            .text(rowCoordElem)
+                            .addClass('table__rowHeader')
+                            .attr({ 'rowspan': numAdjacentsAtThisDepth })
+                            .mouseenter(function (event) {
+                                twidgets.createTranformWidgetOverlay($(this), meta.rows[elemIdx], sortingGroupId, 'column', rerenderTable);
+                            })
+                            .mouseleave(function (event) {
+                                twidgets.destroyTransformWidgetOverlay();
+                            })
+                            .appendTo(tr);
+                    }
+                });
             }
 
             // Now draw cell values, iterating through column and agg coords.
@@ -402,7 +340,7 @@ var tpivot = (function () {
         var tbody = $('<tbody>');
         makeExpressiveTableBody(allCoords, tbody, data, renderFieldNames, model);
 
-        var table = $('<table>').addClass('table table-bordered table-hover table-condensed');
+        var table = $('<table>').addClass('table table-bordered table-condensed');
         thead.appendTo(table);
         tbody.appendTo(table);
         table.appendTo(containerElement);
@@ -514,7 +452,7 @@ var tpivot = (function () {
 
 
     function renderPivot(pivotData) {
-        if (pivotData.results === false) { return; }
+        if (pivotData.results === false || !pivotData.data) { return; }
 
         removePivot();
         var container = makePivotContainer(pivotData.model);
@@ -523,6 +461,8 @@ var tpivot = (function () {
             makeErrorPanel(container, pivotData);
             return;
         }
+
+        //if (!pivotData.results.meta) { return; }
         pivotState.registerResults(pivotData);
         var calculatedTable = pivotState.applyTransform();
         makeExpressiveTable(container, calculatedTable, true, pivotData.model);

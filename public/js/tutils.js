@@ -114,6 +114,17 @@ var tutils = (function () {
         });
     }
 
+    function isLooseMemberOf(element, arrayToTest) {
+        if (element === null || element === 'null') {
+            return (arrayToTest.indexOf('null') !== -1) || (arrayToTest.indexOf(null) !== -1);
+        } else {
+            var arrWithOnlyMatchingElements = arrayToTest.filter(function (el) {
+                return el == element;
+            });
+            return arrWithOnlyMatchingElements.length > 0;
+        }
+    }
+
     return {
         closeButton: closeButton,
         describeModel: describeModel,
@@ -121,6 +132,7 @@ var tutils = (function () {
         deinterleaveFrom: deinterleaveFrom,
         cartesianProduct: cartesianProduct,
         allMetaCoordinates: allMetaCoordinates,
-        sortMetaCols: sortMetaCols
+        sortMetaCols: sortMetaCols,
+        isLooseMemberOf: isLooseMemberOf
     };
 })();

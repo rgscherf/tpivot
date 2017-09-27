@@ -110,12 +110,6 @@ table.pvtTable tbody tr td {
 
 .pvtRendererArea { padding: 5px;}
 
-.placeholder {
-  height: 1em;
-  background-color: yellow;
-  width: 150px;
-}
-
 .sortableTable__container {
   margin: 20px;
 }

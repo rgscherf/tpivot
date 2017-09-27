@@ -91,24 +91,24 @@ var pivotState = (function () {
         var addTransform = false;
 
         switch (headerDirection) {
-            case 'row':
+            case 'rows':
                 field = 'excludedRows';
                 break;
-            case 'column':
+            case 'columns':
                 field = 'excludedColumns';
                 break;
-            case 'aggregator':
+            case 'aggregators':
                 field = 'excludedAggregators';
                 break;
         }
 
         if (field === 'excludedAggregators') {
-            if (thisTransform[field].indexOf(clickedElement) === -1) {
+            if (!tutils.isLooseMemberOf(clickedElement, thisTransform[field])) {
                 var current = thisTransform[field];
                 thisTransform[field] = current.concat([clickedElement]);
             }
         } else {
-            if (thisTransform[field][fieldIndex].indexOf(clickedElement) === -1) {
+            if (!tutils.isLooseMemberOf(clickedElement, thisTransform[field][fieldIndex])) {
                 addTransform = true;
             }
 

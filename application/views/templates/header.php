@@ -10,6 +10,7 @@
 
   <script src="<?php echo base_url('public/js/tutils.js') ?>"></script>
   <script src="<?php echo base_url('public/js/contextMenus.js') ?>"></script>
+  <script src="<?php echo base_url('public/js/transformationWidgets.js') ?>"></script>
   <script src="<?php echo base_url('public/js/selectionPaneUtils.js') ?>"></script>
   <script src="<?php echo base_url('public/js/selectionPaneModel.js') ?>"></script>
   <script src="<?php echo base_url('public/js/selectionPaneView.js') ?>"></script>

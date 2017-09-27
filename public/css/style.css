@@ -376,19 +376,55 @@ select {
 }
 
 .table__colHeader {
+    vertical-align: middle !important;
     text-align: center;
+    position: relative;
 }
 
 .table__rowHeader {
-    font-weight: bold;
+    vertical-align: middle !important;
+    position: relative;
 }
 
 .table__rowLabel {
+    vertical-align: middle !important;
     font-size: 0.6em;
     text-align: left;
 }
 
 .table__columnLabel {
+    vertical-align: middle !important;
     font-size: 0.6em;
+    text-align: right;
+}
+
+.table__transformWidgetContainer {
+    position:absolute;
+    border:1px solid #CDCDCD;
+    background-color: white;
+    padding:5px;
+    box-shadow: 3px 3px 2px lightgray;
+    width: 70px;
+    display: flex;
+    justify-content: space-around;
+}
+
+.table__sortWidget {
+    z-index: 999;
+    position:absolute;
+    border:1px solid #CDCDCD;
+    background-color: white;
+    padding:5px;
+    box-shadow: 3px 3px 2px lightgray;
+    display: flex;
+}
+
+.table__sortablePlaceholder {
+  height: 1em;
+  background-color: yellow;
+  width: 50px;
+}
+
+td {
     text-align: right;
 }
