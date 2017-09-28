@@ -278,7 +278,7 @@ var pivotState = (function () {
         // then add any elements that are not in the user-specified sort.
         let orphanElements = fieldArrAsStrings.filter(function (colArrElem) {
             return !tutils.isLooseMemberOf(colArrElem, orderingArray);
-        })
+        });
         retArray = retArray.concat(orphanElements);
 
         // remove any retColArr elements that the user has specified as excluded.
