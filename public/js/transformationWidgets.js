@@ -35,6 +35,9 @@ var twidgets = (function () {
             .appendTo(iconHolder);
 
         var rename = $('<i class="fa fa-pencil-square-o" aria-hidden="true"></i>')
+            .click(function (event) {
+                createRenamingWidget(containingElement, sortingGroupId, rerenderTableFn);
+            })
             .appendTo(iconHolder);
 
         var close = $('<i class="fa fa-window-close-o" aria-hidden="true"></i>')
@@ -48,6 +51,41 @@ var twidgets = (function () {
         iconHolder
             .appendTo(containingElement)
             .css({ 'top': '3px', 'right': '5px' });
+    }
+
+    function createRenamingWidget(containingElement, sortingGroupId, rerenderTableFn) {
+        function doRename() {
+            var field = sortingGroup[0];
+            var fieldArray = sortingGroup[1];
+            var fieldLabel = sortingGroup[3];
+            var newLabel = $('#labelRename').val();
+            pivotState.renameLabel(field, fieldArray, fieldLabel, newLabel);
+            $('.labelRename').remove();
+            rerenderTableFn();
+        }
+        var sortingGroup = sortingGroupId.split('__sortInfo__');
+        var d = $('<div>')
+            .addClass('table__sortWidget labelRename')
+            .css({ 'align-items': 'center', 'padding': '10px' });
+        var inp = $('<input>')
+            .val(sortingGroup[3])
+            .keypress(function (event) {
+                var key = event.which;
+                if (key === 13) {
+                    event.preventDefault();
+                    doRename();
+                }
+            })
+            .css({ 'width': '150px', 'margin-right': '10px', 'height': '34px', 'padding': '5px' })
+            .attr({ 'id': 'labelRename', 'type': 'text' });
+        var ok = $('<button>')
+            .addClass('btn btn-warning')
+            .text('OK')
+            .click(function (event) {
+                doRename();
+            });
+        d.append(inp, ok).appendTo(containingElement);
+        $('#labelRename').focus().select();
     }
 
     function removeElement(sortingGroupId, rerenderTableFn) {
@@ -83,21 +121,15 @@ var twidgets = (function () {
     }
 
     function createSortWidget(containingElement, rowLabels, sortingGroupId, flexDirection, rerenderTableFn) {
-        window.sortingClickCount = 1;
         var d = $('<div>')
             .addClass('table__sortWidget sortableRow sortingWidget')
             .sortable(makeSortableOptions(containingElement, (flexDirection === 'column' ? 'y' : 'x'), 'sortableRow', rerenderTableFn))
-            .css({
-                'top': '5px',
-                'right': '5px',
-                'flex-direction': flexDirection
-            });
+            .css({ 'flex-direction': flexDirection });
         rowLabels.forEach(function (label, idx) {
             var l = $('<div>')
                 .css('margin', '5px')
                 .text(label)
                 .addClass('sortableValue')
-                .addClass(sortingGroupId)
                 .data('group', sortingGroupId)
                 .mouseenter(function (element) {
                 })
@@ -108,6 +140,23 @@ var twidgets = (function () {
 
 
     $(document).on('mousedown', function (event) {
+        // Detecing 'closing' clicks for the label rename box and the label sorting box.
+        // TODO: move the window.*ClickCount vars out of Window and into this module.
+
+        // click detection for the rename box.
+        if (!window.renamingClickCount) {
+            window.renamingClickCount = 0;
+        } else {
+            window.renamingClickCount -= 1;
+        }
+
+        if ($('.labelRename').length > 0
+            && $(event.target).closest('.labelRename').length === 0
+            && window.renamingClickCount <= 0) {
+            $('.labelRename').remove();
+        }
+
+        // click detection for the sorting box.
         if (!window.sortingClickCount) {
             window.sortingClickCount = 0;
         } else {
@@ -118,7 +167,6 @@ var twidgets = (function () {
             && $(event.target).closest('.sortingWidget').length === 0
             && window.sortingClickCount <= 0) {
             $('.sortingWidget').remove();
-            console.log('found click outside sort widget with widget open!');
         }
     });
 

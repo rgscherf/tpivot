@@ -355,29 +355,31 @@ var tpivot = (function () {
             switch (transformField) {
                 case 'excludedRows':
                     modelField = 'Rows';
-                    shortFieldName = 'row';
+                    shortFieldName = 'rows';
                     break;
                 case 'excludedColumns':
                     modelField = 'Columns';
-                    shortFieldName = 'column';
+                    shortFieldName = 'columns';
                     break;
                 case 'excludedAggregators':
                     modelField = 'Values';
-                    shortFieldName = 'aggregator';
+                    shortFieldName = 'aggregators';
                     break;
 
             }
 
             if (transformField === 'excludedAggregators') {
+                var cannonicalToCurrent = transform.naming.aggregators.cannonicalToCurrent;
                 var arrDiv = $('<tr>');
                 $('<th>')
                     .appendTo(arrDiv);
                 transform[transformField].forEach(function (elem) {
+                    var currentName = cannonicalToCurrent[elem]
                     $('<td>')
-                        .text(elem)
+                        .text(currentName)
                         .css({ 'padding-left': '10px', 'padding-right': '10px' })
                         .click(function () {
-                            pivotState.restoreHeader(shortFieldName, model[modelField].map(function (e) { return e.reducer + "(" + e.name + ")" }).indexOf(elem), elem);
+                            pivotState.restoreHeader(shortFieldName, model[modelField].map(function (e) { return e.reducer + "(" + e.name + ")" }).indexOf(elem), currentName);
                             rerenderTable();
                         })
                         .appendTo(arrDiv);
@@ -391,11 +393,13 @@ var tpivot = (function () {
                         .css('padding-left', '10px')
                         .appendTo(arrDiv);
                     excludedArr.forEach(function (elem) {
+                        var cannonicalToCurrent = transform.naming[shortFieldName][excludedIdx].cannonicalToCurrent;
+                        var currentName = cannonicalToCurrent[elem];
                         $('<td>')
-                            .text(elem)
+                            .text(currentName)
                             .css({ 'padding-left': '10px', 'padding-right': '10px' })
                             .click(function () {
-                                pivotState.restoreHeader(shortFieldName, excludedIdx, elem);
+                                pivotState.restoreHeader(shortFieldName, excludedIdx, currentName);
                                 rerenderTable();
                             })
                             .appendTo(arrDiv);

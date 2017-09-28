@@ -417,6 +417,8 @@ select {
     padding:5px;
     box-shadow: 3px 3px 2px lightgray;
     display: flex;
+    top: 5px;
+    right: 5px;
 }
 
 .table__sortablePlaceholder {
