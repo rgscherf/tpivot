@@ -99,7 +99,7 @@
             <i class="fa fa-2x fa-trash-o" aria-hidden="true"></i>
           </div>
           <div class="toolbar__buttonLabel">
-            Discard loaded
+            Discard query
           </div>
         </div>
       </button>
@@ -109,7 +109,7 @@
             <i class="fa fa-2x fa-floppy-o" aria-hidden="true"></i>
           </div>
           <div class="toolbar__buttonLabel">
-            Update loaded
+            Save query
           </div>
         </div>
       </button>
@@ -125,7 +125,7 @@
           </span>
           </div>
           <div class="toolbar__buttonLabel">
-            Save as new
+            Save copy
           </div>
         </div>
       </button>
