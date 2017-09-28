@@ -270,20 +270,20 @@ var pivotState = (function () {
         // add column elements that have been user-specified sorted.
         orderingArray.forEach(function (sortedElement) {
             // ensure the sorted element actually appears in the target array.
-            if (fieldArrAsStrings.indexOf(sortedElement) !== -1) {
+            if (tutils.isLooseMemberOf(sortedElement, fieldArrAsStrings)) {
                 retArray.push(sortedElement);
             }
         });
 
         // then add any elements that are not in the user-specified sort.
         let orphanElements = fieldArrAsStrings.filter(function (colArrElem) {
-            return orderingArray.indexOf(colArrElem) === -1;
+            return !tutils.isLooseMemberOf(colArrElem, orderingArray);
         })
         retArray = retArray.concat(orphanElements);
 
         // remove any retColArr elements that the user has specified as excluded.
         retArray = retArray.filter(function (retElement) {
-            return excludingArray.indexOf(retElement) === -1;
+            return !tutils.isLooseMemberOf(retElement, excludingArray);
         });
 
         // replace each element with its current name.
