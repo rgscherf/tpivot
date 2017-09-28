@@ -71,13 +71,25 @@ class Queryparser extends CI_Model {
         // Stringify the JSON representation of filters.
         $existence = $filter_obj['filterExistence'] ? '' : 'NOT ';
         $field = $filter_obj['name'];
-        $available_operations = ['less than' => '<', 'greater than' => '>', 'equal to' => '=', 'like' => 'LIKE'];
+        $available_operations = ['less than' => '<', 'greater than' => '>', 'equal to' => '=', 'like' => 'LIKE', 'IN' => 'IN'];
         $operation = $available_operations[$filter_obj['filterOp']];
-        $value = $filter_obj['filterVal'];
+        if ($operation === 'IN') {
+            //$value = '(' . implode(', ', $filter_obj['filterVal']) . ')';
+            $value = '( ';
+            foreach($filter_obj['filterVal'] as $selected) {
+                $additional_char = $value === '( ' ? '' : ', ';
+                $quoted = $selected === 'null' ? "q'['']'" : "q'[$selected]'";
+                $value .= $additional_char . $quoted;
+            }
+            $value .= ')';
+
+        } else {
+            $value = $filter_obj['filterVal'];
+        }
         if ($operation == 'LIKE') {
             return "$existence (regexp_like($field, '$value', 'i'))";
         } else {
-            return "$existence ($field $operation $value)";
+            return "$existence($field $operation $value)";
         }
     }
     

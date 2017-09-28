@@ -1,5 +1,8 @@
 var contextMenus = (function () {
     // Functions for handling context menus.
+    var distinctFieldValues = {};
+    var currentfilterfield = '';
+    var cachedFilters = {};
 
     ///////////////////////////
     // TEMPLATE HTML COMPONENTS
@@ -54,9 +57,32 @@ var contextMenus = (function () {
         '<div class="context__filterInput" style="justify-content:flex-end;">',
         '<button id="filterContextCancel">Cancel</button>',
         '<button id="filterContextApply">Apply</button>',
+        '<button id="selectDistinct">Unique Values</button>',
         '</div>',
         '</div>'].join("\n");
 
+    function getDistinctFieldEntries(fieldName) {
+        currentfilterfield = fieldName;
+        var currentTable = $("#tableSelector").val()
+        var payload = {
+            table: currentTable,
+            field: fieldName
+        };
+        $.ajax({
+            type: "post",
+            url: window.queryDistinctURL,
+            data: JSON.stringify(payload),
+            success: function (returnData) {
+                distinctFieldValues[fieldName] = returnData.entries;
+                populateDistinct(fieldName);
+            },
+            error: function (x, stat, err) {
+                console.log("AJAX REQUEST FAILED");
+                console.log(x, stat, err);
+            }
+        });
+
+    }
 
     ///////////////////////////////////////////////////
     // 'POP' CONTEXT MENUS TO INITIALIZE AND ADD TO DOM
@@ -92,16 +118,120 @@ var contextMenus = (function () {
             .addClass('context__aggregatorItem--selected');
     }
 
-    var popFilterMenu = function (model, event, clickedSortItem) {
+    /*
+    var oldPopFilterMenu = function (model, event, clickedSortItem) {
+        // THIS IS THE OLD VERSION OF POPFILTERMENU.
+        // DO NOT EDIT THIS.
         makeContextHtml(filterSelection, event, clickedSortItem);
-        var fieldName = utils.textOf(clickedSortItem);
         var filter = data.getFilter(fieldName);
         $('#filterFieldNameEntry').text("Show rows where " + fieldName);
+        var fieldName = utils.textOf(clickedSortItem);
 
         var isOrIsNot = filter.filterExistence ? 'is' : 'is not';
         $('#filterContextExistence').val(isOrIsNot);
         $('#filterContextValue').val(filter.filterVal);
         $('#filterContextOp').val(filter.filterOp);
+    }
+    */
+
+    function populateDistinct(fieldName) {
+        $('#filterContentContainer').children().remove();
+        var entries = distinctFieldValues[fieldName];
+        var storedFilter = data.getFilter(fieldName).filterVal;
+        var storedEntries = Array.isArray(storedFilter) ? storedFilter : [];
+        var container = $('#filterContentContainer');
+        entries.forEach(function (element) {
+            var innerContainer = $('<div>')
+                .css({ 'display': 'flex' })
+                .addClass('filterContentChild');
+            var check = $('<input>')
+                .css('margin-right', '5px')
+                .attr({ 'type': 'checkbox' });
+            if (tutils.isLooseMemberOf(element, storedEntries)) {
+                check.prop('checked', true);
+            }
+            var label = $('<div>').text((element === null ? 'null' : element));
+            innerContainer.append(check, label).appendTo(container);
+        });
+    }
+
+    function buildFilterFor(fieldName) {
+        var ret = {
+            name: fieldName,
+            filterOp: 'IN',
+            filterExistence: 'is',
+            filterVal: []
+        }
+        $('.filterContentChild').each(function (elemIdx, htmlElement) {
+            var elem = $(htmlElement);
+            var isChecked = elem.find('input').first().prop('checked');
+            if (isChecked) {
+                var label = elem.find('div').first().text();
+                ret.filterVal.push(label);
+            }
+        })
+        cachedFilters[fieldName] = ret;
+        return ret;
+    }
+
+    var popFilterMenu = function (model, event, clickedSortItem) {
+        var fieldName = utils.textOf(clickedSortItem);
+
+        var outerContainer = $('<div>')
+            .addClass('context_filter context context__background')
+            .css('min-width', '200px')
+            .data('contexttype', 'filter');
+
+        var innerContainer = $('<div>')
+            .css({ 'max-height': '300px', 'overflow-y': 'scroll', 'font-weight': 'unset', 'padding': '10px' })
+            .attr('id', 'filterContentContainer')
+            .appendTo(outerContainer);
+
+        var buttonDiv = $('<div>')
+            .css({ 'display': 'flex', 'justify-content': 'flex-end', 'padding': '5px' })
+
+        $('<button>')
+            .click(function (event) {
+                $('.context_filter').remove();
+            })
+            .css('margin-right', '5px')
+            .text('Cancel')
+            .addClass('btn btn-warning btn-sm')
+            .appendTo(buttonDiv)
+
+        $('<button>')
+            //.attr('id', 'filterContextApply')
+            .click(function (event) {
+                var filter = buildFilterFor(fieldName);
+                var clickInformation = {
+                    fieldName: filter.name,
+                    contextType: 'filter',
+                    clicked: clickedSortItem
+                }
+                data.setFilter(filter);
+                view.makeAdditionalUI(clickInformation);
+                sendConfig();
+                $('.context_filter').remove();
+            })
+            .text('Apply')
+            .addClass('btn btn-warning btn-sm')
+            .appendTo(buttonDiv)
+        buttonDiv.appendTo(outerContainer);
+
+        outerContainer
+            .appendTo(clickedSortItem)
+            .css({ bottom: '5px', left: event.pageX - 15 + 'px' })
+            .show(200);
+
+        if (distinctFieldValues[fieldName] !== undefined) {
+            populateDistinct(fieldName);
+        } else {
+            $('<div>')
+                .css({ 'display': 'flex', 'justify-content': 'center', 'padding': '20px' })
+                .append($('<i class="fa fa-refresh fa-spin fa-3x fa-fw"></i>'))
+                .appendTo(innerContainer);
+            getDistinctFieldEntries(fieldName);
+        }
     }
 
     var popMenu = function (model, event) {
@@ -247,6 +377,7 @@ var contextMenus = (function () {
     return {
         popMenu: popMenu,
         hideMenu: hideMenu,
-        getClickInformation: getClickInformation
+        getClickInformation: getClickInformation,
+        getDistinctFieldEntries: getDistinctFieldEntries
     };
 })();

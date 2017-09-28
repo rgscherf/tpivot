@@ -132,7 +132,7 @@ input[type=text] {
 
 .context {
     position:absolute;
-      align-items: flex-start;
+    align-items: flex-start;
 }
 
 .context__background {

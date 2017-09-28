@@ -51,4 +51,5 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 */
 
 $route['renderpivot/processquery']['post'] = 'Pivot/process_client_query';
+$route['renderpivot/getdistinct']['post'] = 'Pivot/get_distinct_entries';
 $route['default_controller'] = 'Pivot/index';

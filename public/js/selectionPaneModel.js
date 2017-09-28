@@ -83,10 +83,10 @@ var data = (function () {
 
     function getFilter(fieldName) {
         // Retrieve an existing filter object.
-        return findFieldInBucket(this.model.Filters, fieldName);
+        return findFieldInBucket(data.model['Filters'], fieldName);
     }
 
-    function setFilter(_model, incomingFilter) {
+    function setFilter(incomingFilter) {
         // Modify an existing filter value. Returns a new model.
         // Check contextmenu.tryToApplyFilter to see the shape of the incoming filter object.
         var oldFilter = getFilter(incomingFilter.name);

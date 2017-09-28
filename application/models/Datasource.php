@@ -74,7 +74,6 @@ class Datasource extends CI_Model {
             case 'Filters':
                 return is_string($field_object['name']) && 
                        is_string($field_object['filterOp']) &&
-                       is_string($field_object['filterVal']) &&
                        is_bool($field_object['filterExistence']);
                 break;
         }
@@ -285,5 +284,22 @@ class Datasource extends CI_Model {
 
             return ['error' => false, 'data' => $expr_results];
         }
+    }
+
+    public function distinct($request_payload) {
+        set_time_limit(300);
+        $table = $request_payload['table'];
+        $field = $request_payload['field'];
+        $query_string = "SELECT DISTINCT CE_CASE_MGMT.$table.$field FROM CE_CASE_MGMT.$table";
+        $query = $this->db->query($query_string)->result_array();
+        $entries = [];
+        foreach($query as $key=>$value) {
+            $entries[] = $value[$field];
+        }
+        sort($entries, SORT_NATURAL);
+        return [
+            'field' => $field, 
+            'entries' => $entries
+        ];
     }
 }

@@ -104,8 +104,10 @@ var view = (function () {
     function makeFilterText(model, fieldName) {
         // Stringify a filter object.
         var filterObj = data.getFilter(fieldName);
-        var is = filterObj.filterExistence ? "is" : "is not";
-        return "(" + is + " " + filterObj.filterOp + " " + filterObj.filterVal + ")";
+        if (filterObj.filterVal === '') { return '[right-click to build]'; }
+
+        var is = filterObj.filterExistence ? "IS" : "IS NOT";
+        return is + " " + filterObj.filterOp + " " + filterObj.filterVal;
     }
 
 

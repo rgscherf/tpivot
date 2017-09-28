@@ -26,6 +26,7 @@
 </div>
 
 <script>
+  var queryDistinctURL = "<?php echo base_url('index.php/renderpivot/getdistinct'); ?>";
   var queryProcessURL = "<?php echo base_url('index.php/renderpivot/processquery'); ?>";
   var availableTables = <?php echo json_encode($availableData); ?>;
 </script>

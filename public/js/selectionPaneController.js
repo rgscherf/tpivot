@@ -115,6 +115,9 @@ var RequestLoadManager = function () {
 
 function addFieldToBucket(bucket, fieldName) {
     view.addFieldToBucket(fieldName);
+    if (bucket === 'Filters') {
+        contextMenus.getDistinctFieldEntries(fieldName);
+    }
     var d = $('<div>')
         .addClass('fieldList__item')
         .addClass('fieldList__item--inBucket')
