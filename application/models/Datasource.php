@@ -8,7 +8,8 @@ class Datasource extends CI_Model {
         $this->load->database();
         $this->load->model('Queryparser');
         $table_source_path = './application/models/sources.json';
-        $this->sources = json_decode(file_get_contents($table_source_path), true);
+        $table_path = './application/models/tables.json';
+        $this->sources = json_decode(file_get_contents($table_path), true);
     }
     
     public function get_sources() {
@@ -83,7 +84,7 @@ class Datasource extends CI_Model {
         // Validate the query model, returning true if valid.
         $is_valid = true;
 
-        $is_valid = $is_valid && is_string($incoming['table']);
+        $is_valid = $is_valid && is_array($incoming['table']);
 
         $model = $incoming['model'];
         if ($model === null) { return false; }
@@ -279,8 +280,6 @@ class Datasource extends CI_Model {
         } else {
             $query_result = $query->result_array();
             $expr_results = $this->express_data($incoming, $query_result);
-            // $header = $this->make_header_row($incoming, $query_result);
-            // $flat_results = $this->flatten_result_array($header, $query_result);
 
             return ['error' => false, 'data' => $expr_results];
         }
@@ -288,9 +287,11 @@ class Datasource extends CI_Model {
 
     public function distinct($request_payload) {
         set_time_limit(300);
-        $table = $request_payload['table'];
+        $table_info = $request_payload['table'];
+        $owner = $table_info['owner'];
+        $table = $table_info['table'];
         $field = $request_payload['field'];
-        $query_string = "SELECT DISTINCT CE_CASE_MGMT.$table.$field FROM CE_CASE_MGMT.$table";
+        $query_string = "SELECT DISTINCT $owner.$table.$field FROM $owner.$table";
         $query = $this->db->query($query_string)->result_array();
         $entries = [];
         foreach($query as $key=>$value) {
@@ -301,5 +302,23 @@ class Datasource extends CI_Model {
             'field' => $field, 
             'entries' => $entries
         ];
+    }
+
+    public function columns($request_payload) {
+        set_time_limit(300);
+        log_message('debug', json_encode($request_payload));
+        $table = $request_payload['table'];
+        $owner = $request_payload['owner'];
+        $db = $request_payload['db'];
+        // TODO: switch db somehow?
+        $query_string = "SELECT COLUMN_NAME FROM ALL_TAB_COLUMNS WHERE TABLE_NAME='$table' AND OWNER='$owner' ORDER BY COLUMN_ID";
+        log_message('debug', $query_string);
+        $query = $this->db->query($query_string)->result_array();
+        $entries = [];
+        foreach($query as $key=>$value) {
+            $entries[] = $value['COLUMN_NAME'];
+        }
+        log_message('debug', json_encode($entries));
+        return $entries;
     }
 }

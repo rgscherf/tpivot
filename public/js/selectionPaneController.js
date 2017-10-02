@@ -38,7 +38,7 @@ function sendConfig() {
     view.addLoadingSpinner();
     var currentTable = $("#tableSelector").val()
     var payload = {
-        table: currentTable,
+        table: availableTables[currentTable],
         model: model
     };
     $('#loading__stopLoad').prop('disabled', false);

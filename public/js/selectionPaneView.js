@@ -1,9 +1,11 @@
 var view = (function () {
+    var cachedColumnNames = {};
 
     function removeSortableFieldsFromDOM() {
         // Remove all sortable field elements.
         $('.fieldList__item').remove();
         $('.queryBuilder__fieldListItemContainer').remove();
+        $('#sortCol-noField').children().remove();
     }
 
 
@@ -93,11 +95,44 @@ var view = (function () {
         });
     }
 
+    function addFieldLoadingSpinner() {
+        var d = $('<div>')
+            .css({
+                'width': '100%',
+                'height': '150px',
+                'display': 'flex',
+                'align-items': 'center',
+                'justify-content': 'center'
+            })
+            .appendTo('#sortCol-noField');
+        var s = $('<i class="fa fa-refresh fa-spin fa-3x fa-fw"></i>').appendTo(d);
+    }
+
 
     function resetState(selectedTableObject) {
         // Reset DOM state.
+        var tableIdentifier = selectedTableObject.owner + selectedTableObject.table;
         removeSortableFieldsFromDOM();
-        addSortableFieldsToDOM(selectedTableObject.headers);
+        if (cachedColumnNames[tableIdentifier] !== undefined) {
+            addSortableFieldsToDOM(cachedColumnNames[tableIdentifier]);
+        } else {
+            addFieldLoadingSpinner();
+            $.ajax({
+                type: "post",
+                url: queryColumnURL,
+                data: JSON.stringify(selectedTableObject),
+                success: function (returnData) {
+                    cachedColumnNames[tableIdentifier] = returnData;
+                    removeSortableFieldsFromDOM();
+                    addSortableFieldsToDOM(returnData);
+                },
+                error: function (x, stat, err) {
+                    console.log("AJAX REQUEST FAILED");
+                    console.log(x, stat, err);
+                    removeSortableFieldsFromDOM();
+                }
+            });
+        }
     }
 
 

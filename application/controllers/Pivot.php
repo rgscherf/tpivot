@@ -35,4 +35,14 @@ class Pivot extends CI_Controller {
         ->set_content_type('application/json')
         ->set_output(json_encode($distinct_entries, JSON_NUMERIC_CHECK));
     }
+
+    public function get_table_columns() {
+        $goods = $this->input->raw_input_stream;
+        $cleangoods = json_decode(trim($goods), true);
+        log_message('debug', json_encode($cleangoods));
+        $columns = $this->Datasource->columns($cleangoods);
+        $this->output->set_status_header(200)
+        ->set_content_type('application/json')
+        ->set_output(json_encode($columns, JSON_NUMERIC_CHECK));
+    }
 }

@@ -65,7 +65,7 @@ var contextMenus = (function () {
         currentfilterfield = fieldName;
         var currentTable = $("#tableSelector").val()
         var payload = {
-            table: currentTable,
+            table: window.availableTables[currentTable],
             field: fieldName
         };
         $.ajax({
