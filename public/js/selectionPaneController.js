@@ -36,9 +36,8 @@ function sendConfig() {
     console.log('Sending model: ' + JSON.stringify(model));
     var loadId = loadManager.registerId();
     view.addLoadingSpinner();
-    var currentTable = $("#tableSelector").val()
     var payload = {
-        table: availableTables[currentTable],
+        table: view.getCurrentDbInfo(),
         model: model
     };
     $('#loading__stopLoad').prop('disabled', false);
@@ -216,15 +215,27 @@ $(function () {
         });
 
 
+    $('#getDB').click(function () {
+        // Select a database. Poplates table selector. Resets the view and model.
+        $(this)
+            .blur()
+            .removeClass('btn-warning')
+            .addClass('btn-default');
+        var selectedDb = $('#dbSelector').val();
+        $('#pivotTable').remove();
+        view.switchToNewDb(selectedDb);
+        data.init();
+    });
+
     $('#getTable').click(function () {
         // Select a new table to configure. Resets the view and model.
         $(this)
             .blur()
             .removeClass('btn-warning')
             .addClass('btn-default');
-        currentDataset = $('#tableSelector').val();
+        var currentTable = $('#tableSelector').val();
         $('#pivotTable').remove();
-        view.resetState(availableTables[currentDataset]);
+        view.resetState(currentTable);
         data.init();
     });
 

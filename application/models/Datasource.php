@@ -3,18 +3,37 @@
 class Datasource extends CI_Model {
     private $sources;
 
+    public function log($msg) {
+        log_message('debug', json_encode($msg));
+    }
+
     public function __construct() {
         parent::__construct();
         $this->load->database();
         $this->load->model('Queryparser');
-        $table_source_path = './application/models/sources.json';
-        $table_path = './application/models/tables.json';
-        $this->sources = json_decode(file_get_contents($table_path), true);
+    }
+
+    private function loadDb($db_name) {
+        $this->db = $this->load->database($db_name, true);
     }
     
-    public function get_sources() {
-        // Returns metadata about pivot table sources.
-        return $this->sources;
+    public function get_dbs() {
+        return ['CETODS', 'CEIM'];
+    }
+
+    public function get_sources($db_name) {
+        // Returns metadata about pivot table sources for current DB.
+        $this->loadDb($db_name);
+        $query_string = 'SELECT owner, table_name FROM all_tables ORDER BY owner, table_name';
+        $query = $this->db->query($query_string)->result_array();
+        $tables = [];
+        foreach($query as $res) {
+            $tables[] = [
+                'owner' => $res['OWNER'], 
+                'table' => $res['TABLE_NAME']
+            ];
+        }
+        return $tables;
     }
     
     private function make_header_row($incoming, $result_array) {
@@ -107,10 +126,6 @@ class Datasource extends CI_Model {
         }
         $is_valid = $is_valid && ($total_entries_in_query > 0);
         return $is_valid;
-    }
-
-    public function log($msg) {
-        log_message('debug', json_encode($msg));
     }
 
     public function jsonize_coord($coordArray) {
@@ -272,6 +287,7 @@ class Datasource extends CI_Model {
             return ['data' => false];
         }
         
+        $this->loadDb($incoming['table']['db']);
         $query = $this->db->query($sql_string);
         if (!$query) {
             $err = $this->db->error();
@@ -290,6 +306,7 @@ class Datasource extends CI_Model {
         $table_info = $request_payload['table'];
         $owner = $table_info['owner'];
         $table = $table_info['table'];
+        $this->loadDb($table_info['db']);
         $field = $request_payload['field'];
         $query_string = "SELECT DISTINCT $owner.$table.$field FROM $owner.$table";
         $query = $this->db->query($query_string)->result_array();
@@ -306,19 +323,16 @@ class Datasource extends CI_Model {
 
     public function columns($request_payload) {
         set_time_limit(300);
-        log_message('debug', json_encode($request_payload));
         $table = $request_payload['table'];
         $owner = $request_payload['owner'];
-        $db = $request_payload['db'];
-        // TODO: switch db somehow?
+        $db_name = $request_payload['db'];
+        $this->loadDb($db_name);
         $query_string = "SELECT COLUMN_NAME FROM ALL_TAB_COLUMNS WHERE TABLE_NAME='$table' AND OWNER='$owner' ORDER BY COLUMN_ID";
-        log_message('debug', $query_string);
         $query = $this->db->query($query_string)->result_array();
         $entries = [];
         foreach($query as $key=>$value) {
             $entries[] = $value['COLUMN_NAME'];
         }
-        log_message('debug', json_encode($entries));
         return $entries;
     }
 }

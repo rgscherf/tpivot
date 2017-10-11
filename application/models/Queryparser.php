@@ -543,6 +543,9 @@ private function make_values_view($table_info, $query_model) {
 public function make_pivot_query($incoming) {
     $table_info = $incoming['table'];
     $query_model = $incoming['model'];
+
+    $this->db = $this->load->database($table_info['db'], true);
+
     $query_shape = $this->query_shape_selector($query_model);
     
     log_message('debug', 'ROWS: ' . json_encode($query_model['Rows']));

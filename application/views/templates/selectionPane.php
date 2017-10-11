@@ -12,7 +12,8 @@
         <div class="selectionContainer queryBuilder__child--fields queryBuilder__child--notSelectable hideable">
           <!--field selector-->
           <?php echo buildSelectionTitle(); ?>
-          <?php echo buildTableSelector($availableData); ?>
+          <?php echo buildDatabaseSelector($availableDatabases); ?>
+          <?php echo buildTableSelector(); ?>
           <?php echo buildListOfAllFields(); ?>
           <?php echo buildSortingBucket(); ?>
         </div>
@@ -29,7 +30,13 @@
   var queryDistinctURL = "<?php echo base_url('index.php/renderpivot/getdistinct'); ?>";
   var queryProcessURL = "<?php echo base_url('index.php/renderpivot/processquery'); ?>";
   var queryColumnURL = "<?php echo base_url('index.php/renderpivot/getcolumns'); ?>";
-  var availableTables = <?php echo json_encode($availableData); ?>;
+  var getDbTables = "<?php echo base_url('index.php/renderpivot/gettables'); ?>";
+  var dbData = { 
+    dbTablesCache: {},
+    dbColumnsCache: {},
+    currentDb: '',
+ };
+  //var availableTables = <?php echo json_encode($availableData); ?>;
 </script>
 
 <?php function buildSelectionVisibilityContainer() { ob_start(); ?>
@@ -175,21 +182,45 @@
   </div>
 <?php return ob_get_clean(); } ?>
 
-<?php function buildtableselector($availableData) { ob_start(); ?>
+<?php function buildDatabaseSelector($availableDatabases) { ob_start(); ?>
   <div class="selectionContainer__section">
     <div class="selectionContainer__sectionLabel">
-      Choose data source for report:
+      Choose database:
     </div>
     <div class="queryBuilder--marginLeft queryBuilder--marginTop" style="display:flex; align-items:center;">
-        <select id="tableSelector" >
-          <?php foreach ($availableData as $tablename => $tablefields): ?>
-            <option value="<?php echo $tablename; ?>">
-              <?php echo $tablename; ?>
+        <select id="dbSelector" style="flex-grow:1;">
+          <?php foreach ($availableDatabases as $dbName): ?>
+            <option value="<?php echo $dbName; ?>">
+              <?php echo $dbName; ?>
             </option>
             <?php endforeach; ?>
         </select>
       <div style="margin-left: 10px">
-        <button type="button" id="getTable" class="btn btn-warning btn-sm">
+        <button type="button" id="getDB" class="btn btn-default btn-sm">
+          <div>
+            <span style="margin-left:2px;">Load</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+<?php return ob_get_clean(); } ?>
+
+<?php function buildtableselector() { ob_start(); ?>
+  <div class="selectionContainer__section">
+    <div class="selectionContainer__sectionLabel">
+      Choose data source:
+    </div>
+    <div class="queryBuilder--marginLeft queryBuilder--marginTop" style="display:flex; align-items:center;">
+        <select id="tableSelector" style="flex-grow:1;">
+          <!-- <?php foreach ($availableData as $tablename => $tablefields): ?>
+            <option value="<?php echo $tablename; ?>">
+              <?php echo $tablename; ?>
+            </option>
+            <?php endforeach; ?> -->
+        </select>
+      <div style="margin-left: 10px">
+        <button type="button" id="getTable" class="btn btn-default btn-sm">
           <div>
             <span style="margin-left:2px;">Load</span>
           </div>

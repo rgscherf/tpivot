@@ -1,5 +1,13 @@
 var view = (function () {
     var cachedColumnNames = {};
+    var dbCache = {
+        dbTables: {},
+        tableColumnNames: {},
+        cachedColumnNames: {},
+        currentDb: '',
+        currentTable: {}
+    };
+
 
     function removeSortableFieldsFromDOM() {
         // Remove all sortable field elements.
@@ -109,20 +117,82 @@ var view = (function () {
     }
 
 
-    function resetState(selectedTableObject) {
-        // Reset DOM state.
-        var tableIdentifier = selectedTableObject.owner + selectedTableObject.table;
-        removeSortableFieldsFromDOM();
-        if (cachedColumnNames[tableIdentifier] !== undefined) {
-            addSortableFieldsToDOM(cachedColumnNames[tableIdentifier]);
+    function initNewDb(dbName) {
+        // with a db name guaranteed to be in the tables cache, populate the table selector.
+        var dbTables = dbCache.dbTables[dbName];
+        if (dbTables === undefined) {
+            debugger;
+        }
+        var tableSelect = $('#tableSelector');
+        dbTables.forEach(function (tableObj) {
+            var tableIdentifier = tableObj.owner + "." + tableObj.table;
+            // ensure the table object is cached.
+            if (dbCache.tableColumnNames[dbName] === undefined) {
+                dbCache.tableColumnNames[dbName] = {};
+            }
+            dbCache.tableColumnNames[dbName][tableIdentifier] = tableObj;
+            var selectElement =
+                $('<option>')
+                    .val(tableIdentifier)
+                    .text(tableIdentifier)
+                    .appendTo(tableSelect);
+        });
+    }
+
+    function retrieveTablesFor(dbName) {
+        // if the tables for a given database were not found in cache
+        // retrieve them from the server.
+        $.ajax({
+            type: "post",
+            url: getDbTables,
+            data: JSON.stringify(dbName),
+            success: function (returnData) {
+                dbCache.currentDb = dbName;
+                dbCache.dbTables[dbName] = returnData;
+                initNewDb(dbName);
+            },
+            error: function (x, stat, err) {
+                console.log("AJAX REQUEST FAILED");
+                console.log(x, stat, err);
+                removeLoadingSpinner();
+                tpivot.renderTimeout();
+            }
+        });
+    }
+
+    function switchToNewDb(dbName, tables) {
+        // When the user selects a new database to pull information from,
+        // populate the data source selector with tables from that database.
+        $('#tableSelector').children().remove();
+        if (dbCache.dbTables[dbName] === undefined) {
+            retrieveTablesFor(dbName);
         } else {
+            dbCache.currentDb = dbName;
+            initNewDb(dbName);
+        }
+        removeSortableFieldsFromDOM();
+    }
+
+    function resetState(tableIdentifier) {
+        // Reset DOM state.
+        var idElements = tableIdentifier.split('.');
+        var tableObj = {
+            db: dbCache.currentDb,
+            owner: idElements[0],
+            table: idElements[1]
+        }
+        removeSortableFieldsFromDOM();
+        if (dbCache.cachedColumnNames[dbCache.currentDb] === undefined) {
+            dbCache.cachedColumnNames[dbCache.currentDb] = {};
+        } if (dbCache.cachedColumnNames[dbCache.currentDb][tableIdentifier] === undefined) {
             addFieldLoadingSpinner();
             $.ajax({
                 type: "post",
                 url: queryColumnURL,
-                data: JSON.stringify(selectedTableObject),
+                data: JSON.stringify(tableObj),
                 success: function (returnData) {
-                    cachedColumnNames[tableIdentifier] = returnData;
+                    dbCache.currentTable = tableObj;
+                    dbCache.cachedColumnNames[dbCache.currentDb][tableIdentifier] = returnData;
                     removeSortableFieldsFromDOM();
                     addSortableFieldsToDOM(returnData);
                 },
@@ -132,6 +202,19 @@ var view = (function () {
                     removeSortableFieldsFromDOM();
                 }
             });
+
+        }
+        else {
+            dbCache.currentTable = tableObj;
+            addSortableFieldsToDOM(dbCache.cachedColumnNames[dbCache.currentDb][tableIdentifier]);
+        }
+    }
+
+    function getCurrentDbInfo() {
+        return {
+            db: dbCache.currentDb,
+            owner: dbCache.currentTable.owner,
+            table: dbCache.currentTable.table,
         }
     }
 
@@ -218,6 +301,8 @@ var view = (function () {
 
 
     return {
+        getCurrentDbInfo: getCurrentDbInfo,
+        switchToNewDb: switchToNewDb,
         resetState: resetState,
         makeAdditionalUI: makeAdditionalUI,
         makeClickInformation: makeClickInformation,
