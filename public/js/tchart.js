@@ -1,25 +1,4 @@
 var tchart = (function () {
-    // deprecated. these are the original bar colors for chart.js
-    var colorPalette = [
-        'rgba(255,99,132,1)',
-        'rgba(54, 162, 235, 1)',
-        'rgba(255, 206, 86, 1)',
-        'rgba(75, 192, 192, 1)',
-        'rgba(153, 102, 255, 1)',
-        'rgba(255, 159, 64, 1)'
-    ];
-
-    // first element of each array is the 'base' color for a bar/line. further color are analagous, 
-    // used for additional values on same cell.
-    var colors = [
-        ['rgba(255,99,132,1)', 'rgba(255, 125, 86, 1)', 'rgba(232, 91, 78, 1)', 'rgba(232, 78, 188, 1)', 'rgba(236, 86, 255, 1)'],
-        ['rgba(54, 162, 235, 1)', 'rgba(44, 58, 246, 1)', 'rgba(38, 96, 212, 1)', 'rgba(38, 188, 212, 1)', 'rgba(44, 246, 219, 1)'],
-        ['rgba(255, 206, 86, 1)', 'rgba(255, 239, 73, 1)', 'rgba(232, 201, 67, 1)', 'rgba(232, 167, 67, 1)', 'rgba(255, 160, 73, 1)'],
-        ['rgba(75, 192, 192, 1)', 'rgba(70, 134, 205, 1)', 'rgba(73, 178, 215, 1)', 'rgba(73, 215, 175, 1)', 'rgba(70, 205, 128, 1)'],
-        ['rgba(153, 102, 255, 1)', 'rgba(235, 89, 255, 1)', 'rgba(173, 81, 232, 1)', 'rgba(90, 81, 232, 1)', 'rgba(89, 123, 255, 1)'],
-        ['rgba(255, 159, 64, 1)', 'rgba(255, 199, 51, 1)', 'rgba(232, 162, 47, 1)', 'rgba(232, 112, 47, 1)', 'rgba(255, 93, 51, 1)'],
-    ]
-
     function removeChart() {
         $('#pivotChart').remove();
     }
@@ -49,7 +28,7 @@ var tchart = (function () {
                 var thisDatum = {
                     label: rowLabel,
                     data: rowData,
-                    backgroundColor: 'rgba(100,100,100)',
+                    backgroundColor: randomColor(),
                     fill: false,
                     yAxisID: aggIdx.toString(),
                     xAxisID: 'x'
@@ -69,7 +48,7 @@ var tchart = (function () {
             };
         });
 
-        var canvas = $('<canvas id="pivotChart" width="600" height="400">')
+        var canvas = $('<canvas id="pivotChart" width="800" height="550">')
 
         $(canvas).dialog({
             classes: {
@@ -85,7 +64,7 @@ var tchart = (function () {
             resizable: false,
             closeText: "",
             height: 'auto',
-            width: 620,
+            width: 820,
             modal: true,
             title: tutils.describeModel(model),
             closeOnEscape: true
@@ -104,9 +83,9 @@ var tchart = (function () {
                     mode: 'point'
                 },
                 legend: {
-                    position: 'bottom',
+                    display: false,
                     labels: {
-                        boxWidth: 20
+                        display: false
                     }
                 },
                 scales: {
