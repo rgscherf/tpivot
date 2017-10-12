@@ -112,13 +112,21 @@ var view = (function () {
                 'align-items': 'center',
                 'justify-content': 'center'
             })
+            .attr('id', 'fieldLoadingSpinner')
             .appendTo('#sortCol-noField');
         var s = $('<i class="fa fa-refresh fa-spin fa-3x fa-fw"></i>').appendTo(d);
     }
 
+    function removeFieldLoadingSpinner() {
+        $('#fieldLoadingSpinner').remove();
+    }
 
-    function initNewDb(dbName) {
+
+    function initNewDb(dbName, optionalTableIdentifier) {
         // with a db name guaranteed to be in the tables cache, populate the table selector.
+        // optionally take a table identifier that will be the value of the selector element.
+        // use the optional value when you know which element the user wants to select, e.g. when
+        // loading a previously-saved model.
         var dbTables = dbCache.dbTables[dbName];
         if (dbTables === undefined) {
             debugger;
@@ -137,9 +145,12 @@ var view = (function () {
                     .text(tableIdentifier)
                     .appendTo(tableSelect);
         });
+        if (optionalTableIdentifier !== undefined) {
+            $('#tableSelector').val(optionalTableIdentifier);
+        }
     }
 
-    function retrieveTablesFor(dbName) {
+    function retrieveTablesFor(dbName, optionalTableIdentifier) {
         // if the tables for a given database were not found in cache
         // retrieve them from the server.
         $.ajax({
@@ -147,9 +158,8 @@ var view = (function () {
             url: getDbTables,
             data: JSON.stringify(dbName),
             success: function (returnData) {
-                dbCache.currentDb = dbName;
                 dbCache.dbTables[dbName] = returnData;
-                initNewDb(dbName);
+                initNewDb(dbName, optionalTableIdentifier);
             },
             error: function (x, stat, err) {
                 console.log("AJAX REQUEST FAILED");
@@ -160,20 +170,20 @@ var view = (function () {
         });
     }
 
-    function switchToNewDb(dbName, tables) {
+    function switchToNewDb(dbName, optionalTableIdentifier) {
         // When the user selects a new database to pull information from,
         // populate the data source selector with tables from that database.
         $('#tableSelector').children().remove();
+        dbCache.currentDb = dbName;
         if (dbCache.dbTables[dbName] === undefined) {
-            retrieveTablesFor(dbName);
+            retrieveTablesFor(dbName, optionalTableIdentifier);
         } else {
-            dbCache.currentDb = dbName;
-            initNewDb(dbName);
+            initNewDb(dbName, optionalTableIdentifier);
         }
         removeSortableFieldsFromDOM();
     }
 
-    function resetState(tableIdentifier) {
+    function switchToNewTable(tableIdentifier) {
         // Reset DOM state.
         var idElements = tableIdentifier.split('.');
         var tableObj = {
@@ -181,6 +191,7 @@ var view = (function () {
             owner: idElements[0],
             table: idElements[1]
         }
+        dbCache.currentTable = tableObj;
         removeSortableFieldsFromDOM();
         if (dbCache.cachedColumnNames[dbCache.currentDb] === undefined) {
             dbCache.cachedColumnNames[dbCache.currentDb] = {};
@@ -191,15 +202,14 @@ var view = (function () {
                 url: queryColumnURL,
                 data: JSON.stringify(tableObj),
                 success: function (returnData) {
-                    dbCache.currentTable = tableObj;
                     dbCache.cachedColumnNames[dbCache.currentDb][tableIdentifier] = returnData;
-                    removeSortableFieldsFromDOM();
+                    removeFieldLoadingSpinner();
                     addSortableFieldsToDOM(returnData);
                 },
                 error: function (x, stat, err) {
                     console.log("AJAX REQUEST FAILED");
                     console.log(x, stat, err);
-                    removeSortableFieldsFromDOM();
+                    removeFieldLoadingSpinner();
                 }
             });
 
@@ -303,7 +313,7 @@ var view = (function () {
     return {
         getCurrentDbInfo: getCurrentDbInfo,
         switchToNewDb: switchToNewDb,
-        resetState: resetState,
+        switchToNewTable: switchToNewTable,
         makeAdditionalUI: makeAdditionalUI,
         makeClickInformation: makeClickInformation,
         removeDoubleClickedItem: removeDoubleClickedItem,

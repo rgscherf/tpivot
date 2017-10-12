@@ -31,12 +31,6 @@
   var queryProcessURL = "<?php echo base_url('index.php/renderpivot/processquery'); ?>";
   var queryColumnURL = "<?php echo base_url('index.php/renderpivot/getcolumns'); ?>";
   var getDbTables = "<?php echo base_url('index.php/renderpivot/gettables'); ?>";
-  var dbData = { 
-    dbTablesCache: {},
-    dbColumnsCache: {},
-    currentDb: '',
- };
-  //var availableTables = <?php echo json_encode($availableData); ?>;
 </script>
 
 <?php function buildSelectionVisibilityContainer() { ob_start(); ?>
@@ -134,7 +128,7 @@
           </span>
           </div>
           <div class="toolbar__buttonLabel">
-            Save copy
+            Save new
           </div>
         </div>
       </button>

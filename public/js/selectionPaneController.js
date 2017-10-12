@@ -147,9 +147,6 @@ function addFieldToBucket(bucket, fieldName) {
 $(function () {
     window.loadManager = new RequestLoadManager();
 
-    var currentDataset = $('#tableSelector').val();
-
-
     $('#storeQuery__unload').click(function (event) {
         $(this).blur();
         queryStore.unloadQuery();
@@ -157,17 +154,17 @@ $(function () {
 
     $('#storeQuery__saveUpdate').click(function (event) {
         $(this).blur();
-        queryStore.updateQuery(currentDataset, data.model);
+        queryStore.updateQuery(view.getCurrentDbInfo(), data.model);
     });
 
     $('#storeQuery__saveNew').click(function (event) {
         $(this).blur();
-        queryStore.saveQuery(currentDataset, data.model);
+        queryStore.saveQuery(view.getCurrentDbInfo(), data.model);
     });
 
     $('#storeQuery__load').click(function (event) {
         $(this).blur();
-        queryStore.loadQueryMenu(window.availableTables);
+        queryStore.loadQueryMenu();
     });
 
     $('#charting__showLine').click(function (event) {
@@ -235,7 +232,7 @@ $(function () {
             .addClass('btn-default');
         var currentTable = $('#tableSelector').val();
         $('#pivotTable').remove();
-        view.resetState(currentTable);
+        view.switchToNewTable(currentTable);
         data.init();
     });
 
