@@ -9,6 +9,7 @@
   <script src="<?php echo base_url('public/js/external/Chart.min.js') ?>"></script>
 
   <script src="<?php echo base_url('public/js/tutils.js') ?>"></script>
+  <script src="<?php echo base_url('public/js/randomColor.js') ?>"></script>
   <script src="<?php echo base_url('public/js/contextMenus.js') ?>"></script>
   <script src="<?php echo base_url('public/js/transformationWidgets.js') ?>"></script>
   <script src="<?php echo base_url('public/js/selectionPaneUtils.js') ?>"></script>
