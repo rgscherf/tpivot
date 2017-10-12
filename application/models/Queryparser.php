@@ -17,8 +17,13 @@ class Queryparser extends CI_Model {
     // UTILITY FUNCTIONS
     ////////////////////
     
-    private function qualified_field_name($table, $field) {
-        return 'CE_CASE_MGMT.' . strtoupper($table) . '.' . strtoupper($field['name']);
+    private function table_location($table_info) {
+        return $table_info['owner'] . '.' . $table_info['table'];
+    }
+
+    private function qualified_field_name($table_info, $field) {
+        $location = $this->table_location($table_info);
+        return  $location . '.' . strtoupper($field['name']);
     }
     
     private function field_name($field) {
@@ -141,25 +146,25 @@ class Queryparser extends CI_Model {
         return $selected_columns;
     }
     
-    private function make_simple_selections($table, $query_model, $select_distinct=false) {
+    private function make_simple_selections($table_info, $query_model, $select_distinct=false) {
         // Return selected columns plus selected table.
         // This is the 'basic' selection used in all cases except for LISTAGG.
         
         $qualified_col_names = [];
         $selected_columns = $this->get_selected_columns($query_model);
         foreach ($selected_columns as $col) {
-            $qualified_col_names[] = $this->qualified_field_name($table, $col);
+            $qualified_col_names[] = $this->qualified_field_name($table_info, $col);
         }
         
         // putting clause together
         $return_string = $select_distinct ? "SELECT DISTINCT \n" : "SELECT \n";
         $return_string .= join(",\n", $qualified_col_names);
-        $return_string .= "\n FROM CE_CASE_MGMT.$table";
+        $return_string .= "\n FROM " . $this->table_location($table_info);
         $return_string .= "\n" . $this->make_filters($query_model);
         return $return_string;
     }
     
-    private function make_nested_selections($table, $query_model, $agg_column) {
+    private function make_nested_selections($table_info, $query_model, $agg_column) {
         // if the user has asked for a list unique aggregation,
         // nest simple selections inside a LISTAGG for that field.
         
@@ -180,7 +185,7 @@ class Queryparser extends CI_Model {
         $return_string .= join(",\n", $col_strings);
         $return_string .= "\n";
         $return_string .= "FROM (\n";
-        $return_string .= $this->make_simple_selections($table, $query_model, true);
+        $return_string .= $this->make_simple_selections($table_info, $query_model, true);
         $return_string .= ")\n";
         
         // GROUP BY EVERY COL THAT IS NOT THE LISTAGG COL
@@ -354,10 +359,10 @@ private function get_filter_object_of_name($filters, $col_name) {
     }
 }
 
-private function distinct_col_entries($table, $filters, $col_name) {
+private function distinct_col_entries($table_info, $filters, $col_name) {
     // Get the distinct entries for a given column in the given table.
     // Searches filter array for a filter matching the given column name and inserts it into the query if found.
-    $upper_table = 'CE_CASE_MGMT.' . strtoupper($table);
+    $upper_table = $this->table_location($table_info);
     $filter = $this->get_filter_object_of_name($filters, $col_name);
 
     // A half-formed filter clause (e.g. filterVal == '') will bail on WHERE rather than cause an error. 
@@ -394,13 +399,13 @@ private function format_cartesian_tuple($cart_tuple) {
     return "($stringified_tuple) " . $mangled_elems_str;
 }
 
-private function juxt_cols($table, $filters, $col_names) {
+private function juxt_cols($table_info, $filters, $col_names) {
     // Return, as a string, all the combinations of unique column values for the given column names in the given table.
 
     // get an array of arrays containing all distinct column entries in request
     $col_entries = [];
     foreach($col_names as $col_name) {
-        $col_entries[] = $this->distinct_col_entries($table, $filters, $col_name);
+        $col_entries[] = $this->distinct_col_entries($table_info, $filters, $col_name);
     }
     // make a cartesian product of the entries
     $cartesian_product_of_entries = $this->cartesian_product($col_entries);
@@ -413,14 +418,14 @@ private function juxt_cols($table, $filters, $col_names) {
     return join(', ', $cartesian_strings);
 }
 
-private function make_columns($table, $query_model) {
+private function make_columns($table_info, $query_model) {
     // Make column entries for the pivot query. 
     $cols = [];
     foreach($query_model['Columns'] as $col) {
         $cols[] = $this->field_name($col);
     }
     $cols_string = join(', ', $cols);
-    $juxtaposed_cols = $this->juxt_cols($table, $query_model['Filters'], $cols);
+    $juxtaposed_cols = $this->juxt_cols($table_info, $query_model['Filters'], $cols);
     return "
     FOR
     ( $cols_string )
@@ -463,10 +468,10 @@ private function query_shape_selector($query_model) {
 // PUT IT ALL TOGETHER!
 ///////////////////////
 
-private function make_pivot_view($table, $query_model) {
-    $from_selections = $this->make_selections($table, $query_model);
+private function make_pivot_view($table_info, $query_model) {
+    $from_selections = $this->make_selections($table_info, $query_model);
     $aggregator = $this->make_aggregator($query_model);
-    $columns = $this->make_columns($table, $query_model);
+    $columns = $this->make_columns($table_info, $query_model);
 
     if (count($query_model['Values']) === 0) {
         $aggregator = "COUNT(*)";
@@ -491,7 +496,7 @@ private function make_pivot_view($table, $query_model) {
     return $sql_query;
 }
 
-private function make_spreadsheet_view($table, $query_model) {
+private function make_spreadsheet_view($table_info, $query_model) {
     $selected_rows = $this->get_row_names($query_model);
     if (count($query_model['Values']) === 0) {
         $aggregator = "COUNT(*)";
@@ -499,12 +504,13 @@ private function make_spreadsheet_view($table, $query_model) {
         $aggregator = $this->make_aggregator($query_model);
     }
     $filters = $this->make_filters($query_model);
+    $location = $this->table_location($table_info);
 
     $sql_query = "
     SELECT
     $selected_rows
     , $aggregator
-    FROM CE_CASE_MGMT.$table
+    FROM $location
     $filters
     GROUP BY
     $selected_rows
@@ -514,7 +520,7 @@ private function make_spreadsheet_view($table, $query_model) {
     return $sql_query;
 }
 
-private function make_values_view($table, $query_model) {
+private function make_values_view($table_info, $query_model) {
     if (count($query_model['Values']) === 0) {
         $aggregator = "COUNT(*)";
     } else {
@@ -523,8 +529,7 @@ private function make_values_view($table, $query_model) {
 
     $sql_query = "
     SELECT $aggregator 
-    FROM CE_CASE_MGMT.$table
-    ";
+    FROM " . $this->table_location($table_info);
 
     $filters_in_query = count($query_model['Filters']) > 0;
     if($filters_in_query) {
@@ -536,8 +541,11 @@ private function make_values_view($table, $query_model) {
 }
 
 public function make_pivot_query($incoming) {
-    $table = $incoming['table'];
+    $table_info = $incoming['table'];
     $query_model = $incoming['model'];
+
+    $this->db = $this->load->database($table_info['db'], true);
+
     $query_shape = $this->query_shape_selector($query_model);
     
     log_message('debug', 'ROWS: ' . json_encode($query_model['Rows']));
@@ -553,13 +561,13 @@ public function make_pivot_query($incoming) {
     $sql_query = "";
     switch ($query_shape) {
         case 'values_only':
-            $sql_query = $this->make_values_view($table, $query_model);
+            $sql_query = $this->make_values_view($table_info, $query_model);
             break;
         case 'spreadsheet':
-            $sql_query = $this->make_spreadsheet_view($table, $query_model);
+            $sql_query = $this->make_spreadsheet_view($table_info, $query_model);
             break;
         case 'pivot':
-            $sql_query = $this->make_pivot_view($table, $query_model);
+            $sql_query = $this->make_pivot_view($table_info, $query_model);
             break;
         default:
             break;

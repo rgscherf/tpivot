@@ -3,17 +3,37 @@
 class Datasource extends CI_Model {
     private $sources;
 
+    public function log($msg) {
+        log_message('debug', json_encode($msg));
+    }
+
     public function __construct() {
         parent::__construct();
         $this->load->database();
         $this->load->model('Queryparser');
-        $table_source_path = './application/models/sources.json';
-        $this->sources = json_decode(file_get_contents($table_source_path), true);
+    }
+
+    private function loadDb($db_name) {
+        $this->db = $this->load->database($db_name, true);
     }
     
-    public function get_sources() {
-        // Returns metadata about pivot table sources.
-        return $this->sources;
+    public function get_dbs() {
+        return ['CETODS', 'CEIM'];
+    }
+
+    public function get_sources($db_name) {
+        // Returns metadata about pivot table sources for current DB.
+        $this->loadDb($db_name);
+        $query_string = 'SELECT owner, table_name FROM all_tables ORDER BY owner, table_name';
+        $query = $this->db->query($query_string)->result_array();
+        $tables = [];
+        foreach($query as $res) {
+            $tables[] = [
+                'owner' => $res['OWNER'], 
+                'table' => $res['TABLE_NAME']
+            ];
+        }
+        return $tables;
     }
     
     private function make_header_row($incoming, $result_array) {
@@ -83,7 +103,7 @@ class Datasource extends CI_Model {
         // Validate the query model, returning true if valid.
         $is_valid = true;
 
-        $is_valid = $is_valid && is_string($incoming['table']);
+        $is_valid = $is_valid && is_array($incoming['table']);
 
         $model = $incoming['model'];
         if ($model === null) { return false; }
@@ -106,10 +126,6 @@ class Datasource extends CI_Model {
         }
         $is_valid = $is_valid && ($total_entries_in_query > 0);
         return $is_valid;
-    }
-
-    public function log($msg) {
-        log_message('debug', json_encode($msg));
     }
 
     public function jsonize_coord($coordArray) {
@@ -271,6 +287,7 @@ class Datasource extends CI_Model {
             return ['data' => false];
         }
         
+        $this->loadDb($incoming['table']['db']);
         $query = $this->db->query($sql_string);
         if (!$query) {
             $err = $this->db->error();
@@ -279,8 +296,6 @@ class Datasource extends CI_Model {
         } else {
             $query_result = $query->result_array();
             $expr_results = $this->express_data($incoming, $query_result);
-            // $header = $this->make_header_row($incoming, $query_result);
-            // $flat_results = $this->flatten_result_array($header, $query_result);
 
             return ['error' => false, 'data' => $expr_results];
         }
@@ -288,9 +303,12 @@ class Datasource extends CI_Model {
 
     public function distinct($request_payload) {
         set_time_limit(300);
-        $table = $request_payload['table'];
+        $table_info = $request_payload['table'];
+        $owner = $table_info['owner'];
+        $table = $table_info['table'];
+        $this->loadDb($table_info['db']);
         $field = $request_payload['field'];
-        $query_string = "SELECT DISTINCT CE_CASE_MGMT.$table.$field FROM CE_CASE_MGMT.$table";
+        $query_string = "SELECT DISTINCT $owner.$table.$field FROM $owner.$table";
         $query = $this->db->query($query_string)->result_array();
         $entries = [];
         foreach($query as $key=>$value) {
@@ -301,5 +319,20 @@ class Datasource extends CI_Model {
             'field' => $field, 
             'entries' => $entries
         ];
+    }
+
+    public function columns($request_payload) {
+        set_time_limit(300);
+        $table = $request_payload['table'];
+        $owner = $request_payload['owner'];
+        $db_name = $request_payload['db'];
+        $this->loadDb($db_name);
+        $query_string = "SELECT COLUMN_NAME FROM ALL_TAB_COLUMNS WHERE TABLE_NAME='$table' AND OWNER='$owner' ORDER BY COLUMN_ID";
+        $query = $this->db->query($query_string)->result_array();
+        $entries = [];
+        foreach($query as $key=>$value) {
+            $entries[] = $value['COLUMN_NAME'];
+        }
+        return $entries;
     }
 }

@@ -321,6 +321,7 @@ input[type=text] {
 }
 
 .selectionContainer {
+    flex-shrink: 0;
     background-color: #fbfbfb;
     padding-top: 10px;
     padding-right: 5px;
@@ -419,6 +420,10 @@ select {
     display: flex;
     top: 5px;
     right: 5px;
+}
+
+.sortWidget {
+    cursor: default;
 }
 
 .table__sortablePlaceholder {

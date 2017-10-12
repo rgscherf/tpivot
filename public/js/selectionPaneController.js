@@ -36,9 +36,8 @@ function sendConfig() {
     console.log('Sending model: ' + JSON.stringify(model));
     var loadId = loadManager.registerId();
     view.addLoadingSpinner();
-    var currentTable = $("#tableSelector").val()
     var payload = {
-        table: currentTable,
+        table: view.getCurrentDbInfo(),
         model: model
     };
     $('#loading__stopLoad').prop('disabled', false);
@@ -148,9 +147,6 @@ function addFieldToBucket(bucket, fieldName) {
 $(function () {
     window.loadManager = new RequestLoadManager();
 
-    var currentDataset = $('#tableSelector').val();
-
-
     $('#storeQuery__unload').click(function (event) {
         $(this).blur();
         queryStore.unloadQuery();
@@ -158,17 +154,17 @@ $(function () {
 
     $('#storeQuery__saveUpdate').click(function (event) {
         $(this).blur();
-        queryStore.updateQuery(currentDataset, data.model);
+        queryStore.updateQuery(view.getCurrentDbInfo(), data.model);
     });
 
     $('#storeQuery__saveNew').click(function (event) {
         $(this).blur();
-        queryStore.saveQuery(currentDataset, data.model);
+        queryStore.saveQuery(view.getCurrentDbInfo(), data.model);
     });
 
     $('#storeQuery__load').click(function (event) {
         $(this).blur();
-        queryStore.loadQueryMenu(window.availableTables);
+        queryStore.loadQueryMenu();
     });
 
     $('#charting__showLine').click(function (event) {
@@ -216,15 +212,27 @@ $(function () {
         });
 
 
+    $('#getDB').click(function () {
+        // Select a database. Poplates table selector. Resets the view and model.
+        $(this)
+            .blur()
+            .removeClass('btn-warning')
+            .addClass('btn-default');
+        var selectedDb = $('#dbSelector').val();
+        $('#pivotTable').remove();
+        view.switchToNewDb(selectedDb);
+        data.init();
+    });
+
     $('#getTable').click(function () {
         // Select a new table to configure. Resets the view and model.
         $(this)
             .blur()
             .removeClass('btn-warning')
             .addClass('btn-default');
-        currentDataset = $('#tableSelector').val();
+        var currentTable = $('#tableSelector').val();
         $('#pivotTable').remove();
-        view.resetState(availableTables[currentDataset]);
+        view.switchToNewTable(currentTable);
         data.init();
     });
 

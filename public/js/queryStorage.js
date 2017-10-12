@@ -42,17 +42,19 @@ var queryStore = (function () {
         return pivotState.transformIsEmpty(pivotState.getCurrentTransform()) ? null : pivotState.getCurrentTransform();
     }
 
-    function createQueryStorageObject(id, tableName, model) {
+    function createQueryStorageObject(id, tableInfo, model) {
         return {
             id: id,
             date: (new Date()).toDateString(),
-            table: tableName,
+            db: tableInfo.db,
+            owner: tableInfo.owner,
+            table: tableInfo.table,
             model: model,
             transform: getTransformForSerialization()
         }
     }
 
-    function updateQuery(tableName, model) {
+    function updateQuery(currentTableInfo, model) {
         if (!currentLoaded) {
             console.log('Was asked to update a saved query with no query loaded!');
             return;
@@ -62,13 +64,13 @@ var queryStore = (function () {
         var storedQueriesWithoutThisId = getStoredQueries().filter(function (elem) {
             return elem.id !== id;
         });
-        var newQuery = createQueryStorageObject(id, tableName, model);
+        var newQuery = createQueryStorageObject(id, currentTableInfo, model);
         var allQueries = storedQueriesWithoutThisId.concat(newQuery);
         replaceStorage(allQueries);
         attachLoadedData(newQuery);
     }
 
-    function saveQuery(tableName, model) {
+    function saveQuery(currentTableInfo, model) {
         // determine ID for the new stored query
         var storedQueries = getStoredQueries();
         var newQueryId;
@@ -81,18 +83,20 @@ var queryStore = (function () {
         }
 
         // construct the storage object.
-        var newQuery = createQueryStorageObject(newQueryId, tableName, model);
+        var newQuery = createQueryStorageObject(newQueryId, currentTableInfo, model);
         appendToStorage(newQuery);
         attachLoadedData(newQuery);
     }
 
-    function loadQueryFromModel(availableTables, loadData) {
+    function loadQueryFromModel(loadData) {
         $('#getTable').removeClass('btn-warning').addClass('btn-default');
-        $('#tableSelector').val(loadData.table);
+        $('#dbSelector').val(loadData.db);
+        var tableIdentifier = loadData.owner + "." + loadData.table;
         attachLoadedData(loadData);
         tpivot.removePivot();
         tchart.removeChart();
-        view.resetState(availableTables[loadData.table]);
+        view.switchToNewDb(loadData.db, tableIdentifier);
+        view.switchToNewTable(tableIdentifier);
         data.model = loadData.model;
         var buckets = ["Values", "Filters", "Rows", "Columns"];
         buckets.forEach(function (buck) {
@@ -105,12 +109,12 @@ var queryStore = (function () {
         sendConfig();
     }
 
-    function menuFromQueries(availableTables, queries) {
+    function menuFromQueries(queries) {
         var container = $('<div class="loadMenu">');
         var d = $('<table>');
         var t = $('<tr class="queryBuilder--headerText">')
             .append($('<th>').text('ID'))
-            .append($('<th>').text('Table Name'))
+            .append($('<th>').text('Table Location'))
             .append($('<th>').text('Query Description'))
             .append($('<th>').text('Transformations'))
             .append($('<th>').text('Date Saved'))
@@ -118,11 +122,11 @@ var queryStore = (function () {
         queries.forEach(function (elem) {
             var q = $('<tr>')
                 .click(function (event) {
-                    loadQueryFromModel(availableTables, elem);
+                    loadQueryFromModel(elem);
                     $('.loadQueryMenu').dialog("close");
                 })
                 .append($('<td>').text(elem.id))
-                .append($('<td>').text(elem.table))
+                .append($('<td>').text(elem.db + "." + elem.owner + "." + elem.table))
                 .append($('<td>').text(tutils.describeModel(elem.model)))
                 .append($('<td>').text(tutils.describeTransform(elem.transform)))
                 .append($('<td>').text(elem.date))
@@ -134,9 +138,9 @@ var queryStore = (function () {
         return container;
     }
 
-    function loadQueryMenu(availableTables) {
+    function loadQueryMenu() {
         var queries = getStoredQueries();
-        var menuElement = menuFromQueries(availableTables, queries);
+        var menuElement = menuFromQueries(queries);
         $(menuElement)
             .dialog({
                 classes: {
