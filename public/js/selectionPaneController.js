@@ -31,6 +31,7 @@ function sendConfig() {
     // - a field is added to a sorting bucket
     // - a field is removed from a sorting bucket
     // - a bucket is rearranged.
+    if (window.bypassSendConfig) { return; }
     var model = data.model;
     var loadManager = window.loadManager;
     console.log('Sending model: ' + JSON.stringify(model));
@@ -146,6 +147,7 @@ function addFieldToBucket(bucket, fieldName) {
 
 $(function () {
     window.loadManager = new RequestLoadManager();
+    window.bypassSendConfig = false;
 
     $('#storeQuery__unload').click(function (event) {
         $(this).blur();
@@ -175,6 +177,23 @@ $(function () {
     $('#charting__showBar').click(function (event) {
         $(this).blur();
         tchart.renderChartDialog(pivotState.applyTransform(), 'bar');
+    });
+
+    $('#loading__bypass').click(function (event) {
+        $(this).blur();
+        window.bypassSendConfig = !window.bypassSendConfig;
+        var icon = $('#bypassIcon');
+        icon.children().remove();
+        if (window.bypassSendConfig) {
+            var i = $(' <span class="fa-stack"> <i class="fa fa-cloud fa-stack-1x"></i> <i class="fa fa-ban fa-stack-2x text-danger"></i> </span>');
+            icon.append(i);
+            $('#bypassLabel').text("Not Sending");
+        } else {
+            var i = $('<i class="fa fa-2x fa-cloud-upload" aria-hidden="true"></i>');
+            icon.append(i);
+            $('#bypassLabel').text("Sending Queries");
+            sendConfig();
+        }
     });
 
     $('#loading__stopLoad').click(function (event) {

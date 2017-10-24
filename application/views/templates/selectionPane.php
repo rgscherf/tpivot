@@ -142,6 +142,16 @@
 <?php function buildLoadingContainer() { ob_start(); ?>
   <div class="toolbar__section">
     <div class="toolbar__sectionButtons">
+      <button type="button" id="loading__bypass" class="btn btn-default">
+        <div class="toolbar__button">
+          <div id="bypassIcon">
+            <i class="fa fa-2x fa-cloud-upload" aria-hidden="true"></i>
+          </div>
+          <div class="toolbar__buttonLabel" id="bypassLabel">
+            Sending Queries
+          </div>
+        </div>
+      </button>
       <button type="button" id="loading__indicator" class="btn btn-default" disabled="disabled">
         <div class="toolbar__button">
           <div id="loadingSpinner">
