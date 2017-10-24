@@ -61,7 +61,8 @@ var contextMenus = (function () {
         '</div>',
         '</div>'].join("\n");
 
-    function getDistinctFieldEntries(fieldName) {
+    function getDistinctFieldEntries(fieldName, filterIndexInModel) {
+        // For filtering values, ask the server for distinct values of this DB field.
         currentfilterfield = fieldName;
         var currentTable = $("#tableSelector").val()
         var payload = {
@@ -74,7 +75,7 @@ var contextMenus = (function () {
             data: JSON.stringify(payload),
             success: function (returnData) {
                 distinctFieldValues[fieldName] = returnData.entries;
-                populateDistinct(fieldName);
+                populateDistinct(fieldName, filterIndexInModel);
             },
             error: function (x, stat, err) {
                 console.log("AJAX REQUEST FAILED");
@@ -106,7 +107,7 @@ var contextMenus = (function () {
         makeContextHtml(aggregatorSelection, event, clickedSortItem);
         // highlight the current aggregator function
         var fieldName = utils.textOf(clickedSortItem);
-        var reducerObj = data.getAggregator(fieldName);
+        var reducerObj = data.getAggregator(clickedSortItem.index());
         var currentlySelectedAggregator = reducerObj.reducer;
         var currentlySelectedDisplayAs = reducerObj.displayAs;
         $('.context__aggregatorItem')
@@ -118,26 +119,10 @@ var contextMenus = (function () {
             .addClass('context__aggregatorItem--selected');
     }
 
-    /*
-    var oldPopFilterMenu = function (model, event, clickedSortItem) {
-        // THIS IS THE OLD VERSION OF POPFILTERMENU.
-        // DO NOT EDIT THIS.
-        makeContextHtml(filterSelection, event, clickedSortItem);
-        var filter = data.getFilter(fieldName);
-        $('#filterFieldNameEntry').text("Show rows where " + fieldName);
-        var fieldName = utils.textOf(clickedSortItem);
-
-        var isOrIsNot = filter.filterExistence ? 'is' : 'is not';
-        $('#filterContextExistence').val(isOrIsNot);
-        $('#filterContextValue').val(filter.filterVal);
-        $('#filterContextOp').val(filter.filterOp);
-    }
-    */
-
-    function populateDistinct(fieldName) {
+    function populateDistinct(fieldName, filterIndexInModel) {
         $('#filterContentContainer').children().remove();
         var entries = distinctFieldValues[fieldName];
-        var storedFilter = data.getFilter(fieldName).filterVal;
+        var storedFilter = data.getFilter(filterIndexInModel).filterVal;
         var storedEntries = Array.isArray(storedFilter) ? storedFilter : [];
         var container = $('#filterContentContainer');
         entries.forEach(function (element) {
@@ -156,12 +141,7 @@ var contextMenus = (function () {
     }
 
     function buildFilterFor(fieldName) {
-        var ret = {
-            name: fieldName,
-            filterOp: 'IN',
-            filterExistence: 'is',
-            filterVal: []
-        }
+        var ret = data.makeDefaultField('Filters', fieldName);
         $('.filterContentChild').each(function (elemIdx, htmlElement) {
             var elem = $(htmlElement);
             var isChecked = elem.find('input').first().prop('checked');
@@ -206,9 +186,11 @@ var contextMenus = (function () {
                 var clickInformation = {
                     fieldName: filter.name,
                     contextType: 'filter',
-                    clicked: clickedSortItem
+                    clicked: clickedSortItem,
+                    filter: filter
                 }
-                data.setFilter(filter);
+                clickedSortItem.data('fieldFingerprint', filter);
+                data.setFilter(clickInformation);
                 view.makeAdditionalUI(clickInformation);
                 sendConfig();
                 $('.context_filter').remove();
@@ -224,13 +206,13 @@ var contextMenus = (function () {
             .show(200);
 
         if (distinctFieldValues[fieldName] !== undefined) {
-            populateDistinct(fieldName);
+            populateDistinct(fieldName, clickedSortItem.index());
         } else {
             $('<div>')
                 .css({ 'display': 'flex', 'justify-content': 'center', 'padding': '20px' })
                 .append($('<i class="fa fa-refresh fa-spin fa-3x fa-fw"></i>'))
                 .appendTo(innerContainer);
-            getDistinctFieldEntries(fieldName);
+            getDistinctFieldEntries(fieldName, clickedSortItem.index());
         }
     }
 

@@ -102,7 +102,7 @@ var queryStore = (function () {
         buckets.forEach(function (buck) {
             var bucketarr = data.model[buck];
             bucketarr.forEach(function (elem) {
-                addFieldToBucket(buck, elem.name);
+                addFieldToBucket(buck, elem.name, elem);
             });
         });
         pivotState.setPendingTransform(loadData.transform);

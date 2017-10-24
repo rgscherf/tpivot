@@ -113,16 +113,21 @@ var RequestLoadManager = function () {
 };
 
 
-function addFieldToBucket(bucket, fieldName) {
+function addFieldToBucket(bucket, fieldName, fieldObject) {
     view.addFieldToBucket(fieldName);
-    if (bucket === 'Filters') {
-        contextMenus.getDistinctFieldEntries(fieldName);
-    }
+
+    // fieldFingerprint uniquely identifies values. 
+    // This is used when deciding which model elements to remove/reorder when
+    // there is more than one copy of a same-named field in the same bucket.
+    var fieldFingerPrint = fieldObject === undefined
+        ? data.makeDefaultField(bucket, fieldName)
+        : fieldObject;
     var d = $('<div>')
         .addClass('fieldList__item')
         .addClass('fieldList__item--inBucket')
         .addClass('sortingBucket--bold')
         .text(fieldName)
+        .data('fieldFingerprint', fieldFingerPrint)
         .hover(function enter(event) {
             $(tutils.closeButton)
                 .appendTo($(this))
@@ -130,9 +135,11 @@ function addFieldToBucket(bucket, fieldName) {
                 .click(function (event) {
                     var target = $(event.target).closest('.fieldList__item--inBucket');
                     var bucket = target.closest('.sortingBucket__fieldContainer').data('bucket');
-                    data.removeField(bucket, utils.textOf(target));
+                    var fingerprint = $(target).data('fieldFingerprint');
+                    console.log(`Removing field from ${bucket} with fingerprint ${fingerprint}`);
+                    data.removeField(bucket, fingerprint);
                     sendConfig();
-                    view.removeDoubleClickedItem(target);
+                    view.removeFieldDomElement(target);
                     view.removeFieldFromBucket(utils.textOf(target));
                 });
         }, function exit(event) {
@@ -140,6 +147,11 @@ function addFieldToBucket(bucket, fieldName) {
         });
     var bucketSelector = '[data-bucket="' + bucket + '"]';
     $(bucketSelector).append(d);
+
+    if (bucket === 'Filters') {
+        contextMenus.getDistinctFieldEntries(fieldName, d.index());
+    }
+
     var mockClick = view.makeClickInformation(fieldName, bucket, d);
     if (mockClick) { view.makeAdditionalUI(mockClick); }
 }
@@ -283,7 +295,6 @@ $(function () {
     $(document).on('contextmenu', function (event) {
         // We pass model to make initial transformations
         // such as highlighting default values.
-        console.log('got contextmenu from: ' + event.target);
         contextMenus.popMenu(data.model, event);
     });
 
@@ -300,13 +311,16 @@ $(function () {
         if (!clickInformation || !clickInformation.contextType) { return; }
         switch (clickInformation.contextType) {
             case "aggregator":
+                var aggObject = data.makeDefaultField('Values', clickInformation.fieldName);
+                aggObject.reducer = clickInformation.selectedReducer;
+                $(clickInformation.clicked).data('fieldFingerprint', aggObject);
                 data.setAggregator(clickInformation);
                 view.makeAdditionalUI(clickInformation);
                 sendConfig();
                 break;
             case "filter":
                 if (clickInformation.filterWasApplied) {
-                    data.setFilter(clickInformation.filter);
+                    data.setFilter(clickInformation);
                     view.makeAdditionalUI(clickInformation);
                     sendConfig();
                 }

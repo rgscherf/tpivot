@@ -229,9 +229,9 @@ var view = (function () {
     }
 
 
-    function makeFilterText(model, fieldName) {
+    function makeFilterText(filterIdx) {
         // Stringify a filter object.
-        var filterObj = data.getFilter(fieldName);
+        var filterObj = data.getFilter(filterIdx);
         if (filterObj.filterVal === '') { return '[right-click to build]'; }
 
         var is = filterObj.filterExistence ? "IS" : "IS NOT";
@@ -245,10 +245,10 @@ var view = (function () {
         var text = '';
         switch (clickInformation.contextType) {
             case 'aggregator':
-                text = '(' + data.getAggregator(clickInformation.fieldName).reducer + ' of)';
+                text = '(' + data.getAggregator(clickInformation.clicked.index()).reducer + ' of)';
                 break;
             case 'filter':
-                text = makeFilterText(data.model, clickInformation.fieldName);
+                text = makeFilterText(clickInformation.clicked.index());
                 break;
             default:
                 break;
@@ -275,7 +275,7 @@ var view = (function () {
     }
 
 
-    function removeDoubleClickedItem(element) {
+    function removeFieldDomElement(element) {
         // Remove an item from the DOM when it is double-clicked.
         var itemClass = 'fieldList__item--inBucket';
         if (element.hasClass(itemClass)) {
@@ -316,7 +316,7 @@ var view = (function () {
         switchToNewTable: switchToNewTable,
         makeAdditionalUI: makeAdditionalUI,
         makeClickInformation: makeClickInformation,
-        removeDoubleClickedItem: removeDoubleClickedItem,
+        removeFieldDomElement: removeFieldDomElement,
         removeLoadingSpinner: removeLoadingSpinner,
         addLoadingSpinner: addLoadingSpinner,
         addFieldToBucket: addFieldToBucket,

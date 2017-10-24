@@ -103,13 +103,15 @@ class Datasource extends CI_Model {
         // Validate the query model, returning true if valid.
         $is_valid = true;
 
+        // ensure table metadata is an object.
         $is_valid = $is_valid && is_array($incoming['table']);
 
+        // ensure there is a model object on incoming data.
         $model = $incoming['model'];
         if ($model === null) { return false; }
 
+        // check model buckets.
         $expected_fields = ['Rows', 'Columns', 'Values', 'Filters'];
-        $more_than_zero_fields_requested = true;
         $total_entries_in_query = 0;
         foreach ($expected_fields as $expected_field) {
 
@@ -124,6 +126,19 @@ class Datasource extends CI_Model {
                 }
             }
         }
+        
+        // check values specifically to ensure there are no duplicates.
+        $model_values = $model['Values'];
+        $names_and_reducers = [];
+        foreach ($model_values as $value) {
+            $n_and_r = $value['name'] . '+' . $value['reducer'];
+            if (in_array($n_and_r, $names_and_reducers)) { 
+                return false; 
+            } else {
+                $names_and_reducers[] = $n_and_r;
+            }
+        }
+
         $is_valid = $is_valid && ($total_entries_in_query > 0);
         return $is_valid;
     }

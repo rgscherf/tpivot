@@ -17,27 +17,33 @@ var data = (function () {
     // ADD/REMOVE FIELDS IN MODEL OBJ
     /////////////////////////////////
 
-    function addField(bucket, field) {
-        var fieldAsObject = { name: field };
+    function makeDefaultField(bucket, field) {
+        var freshField = { name: field };
         switch (bucket) {
             case "Filters":
-                fieldAsObject.filterExistence = true;
-                fieldAsObject.filterOp = "less than";
-                fieldAsObject.filterVal = "";
+                freshField.filterOp = 'IN';
+                freshField.filterExistence = true;
+                freshField.filterVal = [];
                 break;
             case "Values":
-                fieldAsObject.reducer = "count";
-                fieldAsObject.displayAs = "raw";
+                freshField.reducer = "count";
+                freshField.displayAs = "raw";
                 break;
             default:
                 break;
         }
+        return freshField;
+    }
+
+    function addField(bucket, field) {
+        var fieldAsObject = makeDefaultField(bucket, field);
         this.model[bucket].push(fieldAsObject);
     }
 
-    function removeField(bucket, field) {
+    function removeField(bucket, fieldFingerprint) {
+        // Remove a field from given model bucket.
         this.model[bucket] = this.model[bucket].filter(function (elem) {
-            return elem.name != field;
+            return !(_.isEqual(elem, fieldFingerprint));
         });
     }
 
@@ -45,6 +51,18 @@ var data = (function () {
     ///////////////////////
     // MODIFY BUCKET FIELDS
     ///////////////////////
+
+    function findFieldFromDomIndex(bucket, domIdx) {
+        // get the field object matching a given bucket and index.
+        var modelIdx = domIdx - 1 // There is an extra sibling at the start of sortable bucket containers.
+        var retrieved = bucket[modelIdx];
+        if (retrieved === undefined) {
+            var errMsg = `Tried to find field object from bucket ${bucket} at index ${modelIdx} but failed. Bucket contents: ${this.model[bucket]}`;
+            throw new Error(errMsg);
+        } else {
+            return retrieved;
+        }
+    }
 
     function findFieldInBucket(bucket, fieldName) {
         // Given an array, find the (first) entry where elem.name == fieldName.
@@ -61,18 +79,18 @@ var data = (function () {
         }
     }
 
-    function getAggregator(field) {
+    function getAggregator(idxOfFieldInDom) {
         // Retrieve an existing aggregator object.
-        return findFieldInBucket(this.model.Values, field);
+        return findFieldFromDomIndex(this.model.Values, idxOfFieldInDom);
     }
 
-    function setAggregator(incomingReducer) {
-        // Modify an existing aggregator's value. Returns a new model.
+    function setAggregator(aggregatorClickInformation) {
+        // Modify an existing aggregator's value.
         // Check contextmenu.getAggregatorClickInformation to see the shape of the incoming reducer object.
-        var reducerInModel = getAggregator.call(this, incomingReducer.fieldName);
+        var reducerInModel = getAggregator.call(this, aggregatorClickInformation.clicked.index());
 
-        var selectedReducer = incomingReducer.selectedReducer;
-        var selectedDisplayAs = incomingReducer.selectedDisplayAs;
+        var selectedReducer = aggregatorClickInformation.selectedReducer;
+        var selectedDisplayAs = aggregatorClickInformation.selectedDisplayAs;
         if (selectedReducer) {
             reducerInModel.reducer = selectedReducer;
         }
@@ -81,38 +99,34 @@ var data = (function () {
         }
     }
 
-    function getFilter(fieldName) {
+    function getFilter(filterIndexFromDom) {
         // Retrieve an existing filter object.
-        return findFieldInBucket(data.model['Filters'], fieldName);
+        return findFieldFromDomIndex(data.model.Filters, filterIndexFromDom);
+        //return findFieldInBucket(data.model['Filters'], fieldName);
     }
 
-    function setFilter(incomingFilter) {
-        // Modify an existing filter value. Returns a new model.
+    function setFilter(clickInformation) {
+        // Modify an existing filter value. 
         // Check contextmenu.tryToApplyFilter to see the shape of the incoming filter object.
-        var oldFilter = getFilter(incomingFilter.name);
-        oldFilter.filterExistence = incomingFilter.filterExistence === 'is';
-        oldFilter.filterOp = incomingFilter.filterOp;
-        oldFilter.filterVal = incomingFilter.filterVal;
+        var oldFilter = getFilter(clickInformation.clicked.index());
+        oldFilter.filterExistence = clickInformation.filter.filterExistence;
+        oldFilter.filterOp = clickInformation.filter.filterOp;
+        oldFilter.filterVal = clickInformation.filter.filterVal;
     }
 
     function reorderItemsInBucket(bucket) {
-        // Given a bucket name, return a new model where entries in that bucket 
-        // are sorted in the same order as that bucket's DOM representation.
+        // Given a bucket name, rearrange entries in that bucket which match
+        // the order of that bucket's DOM representation.
         var bucketOnModel = this.model[bucket];
         var bucketOnDom = $('[data-bucket="' + bucket + '"]');
-        var domBucketChildNames = [];
+        var bucketFingerprints = [];
         bucketOnDom
             .children()
             .filter('.fieldList__item--inBucket')
             .each(function (idx, elem) {
-                domBucketChildNames.push(utils.textOf($(elem)));
+                bucketFingerprints.push($(elem).data('fieldFingerprint'));
             });
-        var newBucketOnModel = [];
-        domBucketChildNames.forEach(function (fieldName) {
-            var modelChild = findFieldInBucket(bucketOnModel, fieldName);
-            newBucketOnModel.push(modelChild);
-        });
-        this.model[bucket] = newBucketOnModel;
+        this.model[bucket] = bucketFingerprints;
     }
 
 
@@ -208,6 +222,7 @@ var data = (function () {
     return {
         model: model,
         init: init,
+        makeDefaultField: makeDefaultField,
         addField: addField,
         removeField: removeField,
         getAggregator: getAggregator,
