@@ -114,7 +114,7 @@ var RequestLoadManager = function () {
 
 
 function addFieldToBucket(bucket, fieldName, fieldObject) {
-    view.addFieldToBucket(fieldName);
+    view.addIndicatorToFieldList(fieldName);
 
     // fieldFingerprint uniquely identifies values. 
     // This is used when deciding which model elements to remove/reorder when
@@ -140,7 +140,7 @@ function addFieldToBucket(bucket, fieldName, fieldObject) {
                     data.removeField(bucket, fingerprint);
                     sendConfig();
                     view.removeFieldDomElement(target);
-                    view.removeFieldFromBucket(utils.textOf(target));
+                    view.removeIndicatorFromFieldList(utils.textOf(target));
                 });
         }, function exit(event) {
             $(this).children('.closeButton').remove();

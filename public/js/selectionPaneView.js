@@ -69,7 +69,7 @@ var view = (function () {
     }
 
 
-    function addFieldToBucket(fieldName) {
+    function addIndicatorToFieldList(fieldName) {
         // When a given field is added to a sorting bucket, add a selection indicator to its entry in the field list.
         var indicator = findBucketIndicatorOfField(fieldName);
         if (!indicator) { return; }
@@ -80,7 +80,7 @@ var view = (function () {
     }
 
 
-    function removeFieldFromBucket(fieldName) {
+    function removeIndicatorFromFieldList(fieldName) {
         // When a given field is removed from a sorting bucket, also remove its selection indicator in the field list.
         var indicator = findBucketIndicatorOfField(fieldName);
         if (!indicator) { return; }
@@ -183,8 +183,9 @@ var view = (function () {
         removeSortableFieldsFromDOM();
     }
 
-    function switchToNewTable(tableIdentifier) {
-        // Reset DOM state.
+    function switchToNewTable(tableIdentifier, optionalFinallyFn) {
+        // Load a table in the DOM, named by a string identifier.
+        // Takes an optional fn to run after table is loaded in the DOM.
         var idElements = tableIdentifier.split('.');
         var tableObj = {
             db: dbCache.currentDb,
@@ -205,6 +206,9 @@ var view = (function () {
                     dbCache.cachedColumnNames[dbCache.currentDb][tableIdentifier] = returnData;
                     removeFieldLoadingSpinner();
                     addSortableFieldsToDOM(returnData);
+                    if (optionalFinallyFn !== undefined) {
+                        optionalFinallyFn();
+                    }
                 },
                 error: function (x, stat, err) {
                     console.log("AJAX REQUEST FAILED");
@@ -319,7 +323,7 @@ var view = (function () {
         removeFieldDomElement: removeFieldDomElement,
         removeLoadingSpinner: removeLoadingSpinner,
         addLoadingSpinner: addLoadingSpinner,
-        addFieldToBucket: addFieldToBucket,
-        removeFieldFromBucket: removeFieldFromBucket
+        addIndicatorToFieldList: addIndicatorToFieldList,
+        removeIndicatorFromFieldList: removeIndicatorFromFieldList
     }
 })();

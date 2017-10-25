@@ -88,6 +88,21 @@ var queryStore = (function () {
         attachLoadedData(newQuery);
     }
 
+    function whenTableIsLoaded(loadData) {
+        return function () {
+            data.model = loadData.model;
+            var buckets = ["Values", "Filters", "Rows", "Columns"];
+            buckets.forEach(function (buck) {
+                var bucketarr = data.model[buck];
+                bucketarr.forEach(function (elem) {
+                    addFieldToBucket(buck, elem.name, elem);
+                });
+            });
+            pivotState.setPendingTransform(loadData.transform);
+            sendConfig();
+        }
+    }
+
     function loadQueryFromModel(loadData) {
         $('#getTable').removeClass('btn-warning').addClass('btn-default');
         $('#dbSelector').val(loadData.db);
@@ -96,17 +111,9 @@ var queryStore = (function () {
         tpivot.removePivot();
         tchart.removeChart();
         view.switchToNewDb(loadData.db, tableIdentifier);
-        view.switchToNewTable(tableIdentifier);
-        data.model = loadData.model;
-        var buckets = ["Values", "Filters", "Rows", "Columns"];
-        buckets.forEach(function (buck) {
-            var bucketarr = data.model[buck];
-            bucketarr.forEach(function (elem) {
-                addFieldToBucket(buck, elem.name, elem);
-            });
-        });
-        pivotState.setPendingTransform(loadData.transform);
-        sendConfig();
+        // load some instructions to execute once table DOM is retrieved and instantiated.
+        var runWhenTableLoaded = whenTableIsLoaded(loadData);
+        view.switchToNewTable(tableIdentifier, runWhenTableLoaded);
     }
 
     function menuFromQueries(queries) {
