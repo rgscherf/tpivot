@@ -196,7 +196,9 @@ var view = (function () {
         removeSortableFieldsFromDOM();
         if (dbCache.cachedColumnNames[dbCache.currentDb] === undefined) {
             dbCache.cachedColumnNames[dbCache.currentDb] = {};
-        } if (dbCache.cachedColumnNames[dbCache.currentDb][tableIdentifier] === undefined) {
+        }
+
+        if (dbCache.cachedColumnNames[dbCache.currentDb][tableIdentifier] === undefined) {
             addFieldLoadingSpinner();
             $.ajax({
                 type: "post",
@@ -217,10 +219,12 @@ var view = (function () {
                 }
             });
 
-        }
-        else {
+        } else {
             dbCache.currentTable = tableObj;
             addSortableFieldsToDOM(dbCache.cachedColumnNames[dbCache.currentDb][tableIdentifier]);
+            if (optionalFinallyFn !== undefined) {
+                optionalFinallyFn();
+            }
         }
     }
 
