@@ -56,7 +56,7 @@ var tpivot = (function () {
         $('#pivotTable').remove();
     }
 
-    function makeExpressiveTableHead(allCoords, thead, data, renderFieldNames, model) {
+    function makeExpressiveTableHead(allCoords, thead, data, renderRowColLabels, model, renderRowColTotals) {
         var meta = data.meta;
 
         var rowCoords = allCoords.rowCoords;
@@ -67,7 +67,7 @@ var tpivot = (function () {
         // Drawing column headers
         if (meta.columns.length === 0) {
             var tr = $('<tr>');
-            if (renderFieldNames) {
+            if (renderRowColLabels) {
                 // start with N <th> spacers where N is the number of row fields.
                 // if N==0, add a <th> spacer for the dummy 'all rows' label.
                 meta.rows.forEach(function (_, rowIdx, rowArr) {
@@ -103,7 +103,7 @@ var tpivot = (function () {
             meta.columns.map(function (colArray, columnArrayIndex) {
                 var tr = $('<tr>');
                 // render column labels.
-                if (renderFieldNames) {
+                if (renderRowColLabels) {
                     // start with N <th> spacers where N is the number of row fields.
                     // if N==0, add a <th> spacer for the dummy 'all rows' label.
                     meta.rows.forEach(function (_, rowIdx, rowArr) {
@@ -173,7 +173,7 @@ var tpivot = (function () {
         // drawing agg headers
         var aggTr = $('<tr>');
         var aggregatorsIsEmpty = meta.aggregators.length === 0;
-        if (renderFieldNames) {
+        if (renderRowColLabels) {
             // start with N <th> spacers where N is the number of row fields.
             // if N==0, add a <th> spacer for the dummy 'all rows' label.
             meta.rows.forEach(function (_, rowIdx, rowArr) {
@@ -327,18 +327,18 @@ var tpivot = (function () {
         });
     }
 
-    function makeExpressiveTable(containerElement, data, renderFieldNames, model) {
+    function makeExpressiveTable(containerElement, data, model, renderRowColLabels, renderRowColTotals) {
         var meta = data.meta;
         var results = data.results;
         var allCoords = tutils.allMetaCoordinates(data);
 
         // DRAW THE TABLE HEADER
         var thead = $('<thead>');
-        makeExpressiveTableHead(allCoords, thead, data, renderFieldNames, model);
+        makeExpressiveTableHead(allCoords, thead, data, renderRowColLabels, model, renderRowColTotals);
 
         // DRAW THE TABLE BODY
         var tbody = $('<tbody>');
-        makeExpressiveTableBody(allCoords, tbody, data, renderFieldNames, model);
+        makeExpressiveTableBody(allCoords, tbody, data, renderRowColLabels, model);
 
         var table = $('<table>').addClass('table table-bordered table-condensed');
         thead.appendTo(table);
@@ -466,10 +466,11 @@ var tpivot = (function () {
             return;
         }
 
-        //if (!pivotData.results.meta) { return; }
         pivotState.registerResults(pivotData);
         var calculatedTable = pivotState.applyTransform();
-        makeExpressiveTable(container, calculatedTable, true, pivotData.model);
+        var renderRowColTotals = true;
+        var renderRowColLabels = true;
+        makeExpressiveTable(container, calculatedTable, pivotData.model, renderRowColLabels, renderRowColTotals);
     };
 
     function renderTimeout() {
