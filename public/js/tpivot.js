@@ -175,7 +175,7 @@ var tpivot = (function () {
                 aggCoords.forEach(function (aggElem) {
                     $('<th>')
                         .addClass('table__colHeader')
-                        .text('Row \u03A3: ' + aggElem)
+                        .text('Row \u03A3 ' + aggElem)
                         .attr({
                             rowspan: (meta.columns.length + 1)
                         })
