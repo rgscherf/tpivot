@@ -1,5 +1,9 @@
 var tpivot = (function () {
 
+    function isNumber(x) {
+        return x === null || x === '' || _.isFinite(Number(x));
+    }
+
     function makeErrorPanel(containerDiv, resultsObj) {
         var errmsg = resultsObj.errmsg;
         var errsql = resultsObj.errsql;
@@ -89,7 +93,7 @@ var tpivot = (function () {
                     .appendTo(tr);
             }
 
-            meta.aggregators.map(function (_) {
+            meta.aggregators.forEach(function (_) {
                 $('<th>')
                     .text('*')
                     .addClass('table__colHeader')
@@ -100,8 +104,8 @@ var tpivot = (function () {
             });
             tr.appendTo(thead);
         } else {
+            var tr = $('<tr>');
             meta.columns.map(function (colArray, columnArrayIndex) {
-                var tr = $('<tr>');
                 // render column labels.
                 if (renderRowColLabels) {
                     // start with N <th> spacers where N is the number of row fields.
@@ -166,8 +170,20 @@ var tpivot = (function () {
                                 .text(elem)
                                 .appendTo(tr);
                     });
-                tr.appendTo(thead);
             });
+            if (renderRowColTotals) {
+                aggCoords.forEach(function (aggElem) {
+                    $('<th>')
+                        .addClass('table__colHeader')
+                        .text('Row \u03A3: ' + aggElem)
+                        .attr({
+                            rowspan: (meta.columns.length + 1)
+                        })
+                        .appendTo(tr)
+                });
+            }
+
+            tr.appendTo(thead);
         }
 
         // drawing agg headers
@@ -192,8 +208,8 @@ var tpivot = (function () {
                 })
                 .appendTo(aggTr);
         }
-        colCoords.map(function (colCoord, colCoordIdx) {
-            aggCoords.map(function (aggName) {
+        colCoords.forEach(function (colCoord, colCoordIdx) {
+            aggCoords.forEach(function (aggName) {
                 var aggLabel = aggregatorsIsEmpty ? 'COUNT(*)' : aggName;
                 var sortingGroupNum = colCoordIdx;
                 var sortingGroupId = 'aggregators' + '__sortInfo__' + 0 + '__sortInfo__' + sortingGroupNum + '__sortInfo__' + aggName;
@@ -212,13 +228,22 @@ var tpivot = (function () {
         aggTr.appendTo(thead);
     }
 
-    function makeExpressiveTableBody(allCoords, tbody, data, renderFieldNames, model) {
+    function makeExpressiveTableBody(allCoords, tbody, data, renderFieldNames, model, renderRowColTotals) {
         var meta = data.meta;
         var results = data.results;
 
         var rowCoords = allCoords.rowCoords;
         var colCoords = allCoords.colCoords;
         var aggCoords = allCoords.aggCoords;
+
+        // columnTotals holds the running total for each column/aggregate intersection.
+        var columnTotals = {};
+        colCoords.forEach(function (colCoord) {
+            columnTotals[colCoord] = {};
+            aggCoords.forEach(function (aggCoord) {
+                columnTotals[colCoord][aggCoord] = [];
+            });
+        });
 
         // Rendering row labels
         if (renderFieldNames) {
@@ -239,6 +264,9 @@ var tpivot = (function () {
                 });
             }
             var emptyLength = meta.aggregators.length * colCoords.length;
+            if (renderRowColTotals && meta.columns.length > 0) {
+                emptyLength += meta.aggregators.length;
+            }
             var emptyLabels = [];
             for (var i = 0; i < emptyLength; i++) {
                 emptyLabels.push($('<th>'));
@@ -259,6 +287,12 @@ var tpivot = (function () {
 
         // Each row in the cartesian product of row values is drawn here.
         rowCoords.map(function (rowCoord, rowCoordIdx) {
+            // row totals by aggregator.
+            var rowTotals = {};
+            aggCoords.forEach(function (aggCoord) {
+                rowTotals[aggCoord] = [];
+            });
+
             var tr = $('<tr>');
 
             // If there are no rows (e.g. just pivoting on '*'), insert a label cell.
@@ -268,7 +302,7 @@ var tpivot = (function () {
                     .addClass('table__rowHeader')
                     .appendTo(tr);
             } else {
-                rowCoord.map(function (rowCoordElem, elemIdx) {
+                rowCoord.forEach(function (rowCoordElem, elemIdx) {
                     var sortingGroupNum = Math.floor(rowCoordIdx / meta.rows[elemIdx].length);
                     var sortingGroupId = 'rows' + '__sortInfo__' + elemIdx + '__sortInfo__' + sortingGroupNum + '__sortInfo__' + rowCoordElem;
 
@@ -306,8 +340,8 @@ var tpivot = (function () {
             }
 
             // Now draw cell values, iterating through column and agg coords.
-            colCoords.map(function (colCoord) {
-                aggCoords.map(function (aggCoord) {
+            colCoords.forEach(function (colCoord) {
+                aggCoords.forEach(function (aggCoord) {
                     var cellValue = '';
                     if (results[rowCoord]
                         && results[rowCoord][colCoord]
@@ -315,6 +349,13 @@ var tpivot = (function () {
                         && results[rowCoord][colCoord][aggCoord].value) {
                         cellValue = results[rowCoord][colCoord][aggCoord].value;
                     }
+                    // update row totals...
+                    rowTotals[aggCoord].push(cellValue);
+
+                    // update column totals...
+                    columnTotals[colCoord][aggCoord].push(cellValue);
+
+                    // ...and paint this cell total.
                     var td =
                         $('<td>')
                             .text(cellValue)
@@ -322,9 +363,86 @@ var tpivot = (function () {
                 });
             });
 
+            if (renderRowColTotals && meta.columns.length > 0) {
+                // draw row total cells
+                aggCoords.forEach(function (aggCoord) {
+                    var aggValues = rowTotals[aggCoord];
+                    var sumCell = $('<td>')
+                        .addClass('table__rowColumnTotal');
+                    if (_.every(aggValues, isNumber)) {
+                        var aggValuesAsNumbers = aggValues.map(function (val) {
+                            return Number(val);
+                        });
+                        var sum = aggValuesAsNumbers.reduce(function (prev, n) {
+                            return prev + n;
+                        });
+                        sumCell.text(sum);
+                    } else {
+                        sumCell.text('');
+                    }
+                    sumCell.appendTo(tr);
+                });
+            }
+
             // And finally append to the tbody.
             tr.appendTo(tbody);
         });
+
+        // paint column totals and grand total.
+        var tr = $('<tr>');
+        var grandTotal = {};
+        aggCoords.forEach(function (aggCoord) {
+            grandTotal[aggCoord] = {
+                shouldRender: true,
+                total: 0
+            };
+        });
+
+        var title = $('<th>')
+            .addClass('table__rowHeader')
+            .attr({ colspan: meta.rows.length })
+            .text('Col \u03A3')
+        title.appendTo(tr);
+
+
+        colCoords.forEach(function (colCoord) {
+            aggCoords.forEach(function (aggCoord) {
+                var td = $('<td>')
+                    .addClass('table__rowColumnTotal');
+                var colTotal = columnTotals[colCoord][aggCoord];
+                if (_.every(colTotal, isNumber)) {
+                    var colTotalAsNumbers = colTotal.map(Number);
+                    var sum = colTotalAsNumbers.reduce(function (prev, n) {
+                        return prev + n;
+                    });
+                    td.text(sum);
+                    var gtForThisAgg = grandTotal[aggCoord];
+                    if (gtForThisAgg.shouldRender) {
+                        gtForThisAgg.total += sum;
+                    }
+                } else {
+                    td.text('');
+                    grandTotal[aggCoord].shouldRender = false;
+                }
+                td.appendTo(tr);
+            });
+        });
+
+        if (meta.columns.length > 0) {
+            // paint grand total
+            aggCoords.forEach(function (aggCoord) {
+                var td = $('<td>')
+                    .addClass('table__rowColumnTotal');
+                var gtForThisAgg = grandTotal[aggCoord];
+                if (gtForThisAgg.shouldRender) {
+                    td.text(gtForThisAgg.total);
+                } else {
+                    td.text('');
+                }
+                td.appendTo(tr);
+            });
+        }
+        tr.appendTo(tbody);
     }
 
     function makeExpressiveTable(containerElement, data, model, renderRowColLabels, renderRowColTotals) {
@@ -338,7 +456,7 @@ var tpivot = (function () {
 
         // DRAW THE TABLE BODY
         var tbody = $('<tbody>');
-        makeExpressiveTableBody(allCoords, tbody, data, renderRowColLabels, model);
+        makeExpressiveTableBody(allCoords, tbody, data, renderRowColLabels, model, renderRowColTotals);
 
         var table = $('<table>').addClass('table table-bordered table-condensed');
         thead.appendTo(table);
@@ -451,7 +569,9 @@ var tpivot = (function () {
         var currentModel = pivotState.getModel();
         var container = makePivotContainer(currentModel);
         var calculatedResults = pivotState.applyTransform();
-        makeExpressiveTable(container, calculatedResults, true, currentModel)
+        var renderRowColTotals = true;
+        var renderRowColLabels = true;
+        makeExpressiveTable(container, calculatedResults, currentModel, renderRowColLabels, renderRowColTotals);
     }
 
 

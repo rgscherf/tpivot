@@ -399,6 +399,11 @@ select {
     text-align: right;
 }
 
+.table__rowColumnTotal {
+    font-weight: bold;
+    text-align: right;
+}
+
 .table__transformWidgetContainer {
     position:absolute;
     border:1px solid #CDCDCD;

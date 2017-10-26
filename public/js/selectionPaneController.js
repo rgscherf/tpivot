@@ -136,7 +136,6 @@ function addFieldToBucket(bucket, fieldName, fieldObject) {
                     var target = $(event.target).closest('.fieldList__item--inBucket');
                     var bucket = target.closest('.sortingBucket__fieldContainer').data('bucket');
                     var fingerprint = $(target).data('fieldFingerprint');
-                    console.log(`Removing field from ${bucket} with fingerprint ${fingerprint}`);
                     data.removeField(bucket, fingerprint);
                     sendConfig();
                     view.removeFieldDomElement(target);
