@@ -133,7 +133,7 @@ var view = (function () {
         }
         var tableSelect = $('#tableSelector');
         dbTables.forEach(function (tableObj) {
-            var tableIdentifier = tableObj.owner + "." + tableObj.table;
+            var tableIdentifier = tableObj.type + ": " + tableObj.owner + "." + tableObj.table;
             // ensure the table object is cached.
             if (dbCache.tableColumnNames[dbName] === undefined) {
                 dbCache.tableColumnNames[dbName] = {};
@@ -186,9 +186,10 @@ var view = (function () {
     function switchToNewTable(tableIdentifier, optionalFinallyFn) {
         // Load a table in the DOM, named by a string identifier.
         // Takes an optional fn to run after table is loaded in the DOM.
-        var idElements = tableIdentifier.split('.');
+        var idElements = tableIdentifier.split(' ')[1].split('.');
         var tableObj = {
             db: dbCache.currentDb,
+            type: tableIdentifier[0], // (V)iew or (T)able?
             owner: idElements[0],
             table: idElements[1]
         }
@@ -231,6 +232,7 @@ var view = (function () {
     function getCurrentDbInfo() {
         return {
             db: dbCache.currentDb,
+            type: dbCache.currentTable.type,
             owner: dbCache.currentTable.owner,
             table: dbCache.currentTable.table,
         }

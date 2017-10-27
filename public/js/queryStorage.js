@@ -47,6 +47,7 @@ var queryStore = (function () {
             id: id,
             date: (new Date()).toDateString(),
             db: tableInfo.db,
+            type: tableInfo.type,
             owner: tableInfo.owner,
             table: tableInfo.table,
             model: model,
@@ -106,7 +107,7 @@ var queryStore = (function () {
     function loadQueryFromModel(loadData) {
         $('#getTable').removeClass('btn-warning').addClass('btn-default');
         $('#dbSelector').val(loadData.db);
-        var tableIdentifier = loadData.owner + "." + loadData.table;
+        var tableIdentifier = loadData.type + ': ' + loadData.owner + "." + loadData.table;
         attachLoadedData(loadData);
         tpivot.removePivot();
         tchart.removeChart();
@@ -133,7 +134,7 @@ var queryStore = (function () {
                     $('.loadQueryMenu').dialog("close");
                 })
                 .append($('<td>').text(elem.id))
-                .append($('<td>').text(elem.db + "." + elem.owner + "." + elem.table))
+                .append($('<td>').text(elem.db + "." + elem.owner + "." + elem.table + '(' + elem.type + ')'))
                 .append($('<td>').text(tutils.describeModel(elem.model)))
                 .append($('<td>').text(tutils.describeTransform(elem.transform)))
                 .append($('<td>').text(elem.date))

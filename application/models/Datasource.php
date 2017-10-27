@@ -21,19 +21,33 @@ class Datasource extends CI_Model {
         return ['CETODS', 'CEIM'];
     }
 
-    public function get_sources($db_name) {
-        // Returns metadata about pivot table sources for current DB.
+    private function get_source_from($tables_or_views, $db_name) {
         $this->loadDb($db_name);
-        $query_string = 'SELECT owner, table_name FROM all_tables ORDER BY owner, table_name';
+        $query_string = '';
+        $name_retrieve_field = $tables_or_views === 'tables' ? 'TABLE_NAME' : 'VIEW_NAME';
+        if ($tables_or_views === 'tables') {
+            $query_string = 'SELECT owner, table_name FROM all_tables WHERE owner NOT LIKE \'%'.$this->db->escape_like_str('SYS').'%\' ORDER BY owner, table_name';
+        } else if ($tables_or_views === 'views') {
+            $query_string = 'SELECT owner, view_name FROM all_views WHERE owner NOT LIKE \'%'.$this->db->escape_like_str('SYS').'%\' ORDER BY owner, view_name';
+        }
         $query = $this->db->query($query_string)->result_array();
         $tables = [];
         foreach($query as $res) {
             $tables[] = [
                 'owner' => $res['OWNER'], 
-                'table' => $res['TABLE_NAME']
+                'table' => $res[$name_retrieve_field],
+                'type' => ($tables_or_views === 'tables' ? 'T' : 'V')
             ];
         }
         return $tables;
+    }
+
+    public function get_sources($db_name) {
+        // Returns metadata about pivot table sources for current DB.
+        $tables = $this->get_source_from('tables', $db_name);
+        $views = $this->get_source_from('views', $db_name);
+        $tables_and_views = array_merge($tables, $views);
+        return $tables_and_views;
     }
     
     private function make_header_row($incoming, $result_array) {
