@@ -104,8 +104,8 @@ var tpivot = (function () {
             });
             tr.appendTo(thead);
         } else {
-            var tr = $('<tr>');
             meta.columns.map(function (colArray, columnArrayIndex) {
+                var tr = $('<tr>');
                 // render column labels.
                 if (renderRowColLabels) {
                     // start with N <th> spacers where N is the number of row fields.
@@ -170,7 +170,9 @@ var tpivot = (function () {
                                 .text(elem)
                                 .appendTo(tr);
                     });
+                tr.appendTo(thead);
             });
+
             if (renderRowColTotals) {
                 aggCoords.forEach(function (aggElem) {
                     $('<th>')
@@ -179,11 +181,11 @@ var tpivot = (function () {
                         .attr({
                             rowspan: (meta.columns.length + 1)
                         })
-                        .appendTo(tr)
+                        .appendTo($(thead)
+                            .children('tr')
+                            .first());
                 });
             }
-
-            tr.appendTo(thead);
         }
 
         // drawing agg headers
@@ -213,10 +215,14 @@ var tpivot = (function () {
                 var aggLabel = aggregatorsIsEmpty ? 'COUNT(*)' : aggName;
                 var sortingGroupNum = colCoordIdx;
                 var sortingGroupId = 'aggregators' + '__sortInfo__' + 0 + '__sortInfo__' + sortingGroupNum + '__sortInfo__' + aggName;
+                var sortByValueInformation = {
+                    colCoord: colCoord,
+                    aggCoord: aggName
+                }
                 $('<th>')
                     .addClass('table__colHeader')
                     .mouseenter(function (event) {
-                        twidgets.createTranformWidgetOverlay($(this), meta.aggregators, sortingGroupId, 'row', rerenderTable);
+                        twidgets.createAggregatorOverlay($(this), meta.aggregators, sortingGroupId, 'row', rerenderTable, sortByValueInformation);
                     })
                     .mouseleave(function (event) {
                         twidgets.destroyTransformWidgetOverlay();
@@ -232,7 +238,7 @@ var tpivot = (function () {
         var meta = data.meta;
         var results = data.results;
 
-        var rowCoords = allCoords.rowCoords;
+        var rowCoords = meta.specificRowOrder ? meta.specificRowOrder : allCoords.rowCoords;
         var colCoords = allCoords.colCoords;
         var aggCoords = allCoords.aggCoords;
 
@@ -312,17 +318,19 @@ var tpivot = (function () {
                     var allCoordValuesAtThisDepth = rowCoords.map(function (rowCoord) {
                         return rowCoord[elemIdx];
                     });
-                    for (var i = 0; i < allCoordValuesAtThisDepth.length; i++) {
-                        var elem = allCoordValuesAtThisDepth[i];
-                        if (adjacentElement === '') {
-                            adjacentElement = elem;
-                        } else if (adjacentElement !== elem) {
-                            break;
-                        } else {
-                            numAdjacentsAtThisDepth += 1;
+                    if (!meta.specificRowOrder) { // ignore rowspan shennanigans if we're using specific row ordering.
+                        for (var i = 0; i < allCoordValuesAtThisDepth.length; i++) {
+                            var elem = allCoordValuesAtThisDepth[i];
+                            if (adjacentElement === '') {
+                                adjacentElement = elem;
+                            } else if (adjacentElement !== elem) {
+                                break;
+                            } else {
+                                numAdjacentsAtThisDepth += 1;
+                            }
                         }
                     }
-                    if (lastSeenElement[elemIdx] !== rowCoordElem) {
+                    if (meta.specificRowOrder || lastSeenElement[elemIdx] !== rowCoordElem) {
                         lastSeenElement[elemIdx] = rowCoordElem;
                         $('<th>')
                             .text(rowCoordElem)

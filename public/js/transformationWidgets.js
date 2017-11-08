@@ -51,6 +51,18 @@ var twidgets = (function () {
         iconHolder
             .appendTo(containingElement)
             .css({ 'top': '3px', 'right': '5px' });
+        return iconHolder;
+    }
+
+    function createAggregatorOverlay(containingElement, rowLabels, sortingGroupId, flexDirection, rerenderTableFn, sortByValueInfo) {
+        var widgetContainer = createTranformWidgetOverlay(containingElement, rowLabels, sortingGroupId, flexDirection, rerenderTableFn);
+        var sortWidget = $('<i class="fa fa-sort" aria-hidden="true"></i>')
+            .click(function (event) {
+                var newSortState = pivotState.handleValueSortClick(sortByValueInfo);
+                rerenderTableFn();
+            })
+            .prependTo(widgetContainer);
+
     }
 
     function createRenamingWidget(containingElement, sortingGroupId, rerenderTableFn) {
@@ -172,6 +184,7 @@ var twidgets = (function () {
 
     return {
         createTranformWidgetOverlay: createTranformWidgetOverlay,
+        createAggregatorOverlay: createAggregatorOverlay,
         destroyTransformWidgetOverlay: removeOverlay
     }
 })();

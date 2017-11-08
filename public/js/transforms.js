@@ -31,6 +31,8 @@ var pivotState = (function () {
         // Guard against nil values.
         if (transformToExamine === null || transformToExamine === undefined) { return true; }
 
+        if (transformToExamine.ordering.byValue !== undefined) { return false; }
+
         // get all the arrays of excluded elements.
         var allExclusionArrays = [];
         allExclusionArrays.push(transformToExamine.excludedAggregators);
@@ -78,6 +80,7 @@ var pivotState = (function () {
                 rows: [],
                 columns: [],
                 aggregators: [],
+                byValue: undefined
             },
             naming: {
                 rows: [],
@@ -364,6 +367,105 @@ var pivotState = (function () {
         return newData;
     }
 
+    function handleValueSortClick(sortByValueInfo) {
+        // currentTransform.ordering.byValue (hereafter COB) operates like a state machine, and this method contains the logic.
+        //
+        // if COB === undefined when a click is received:
+        //      instantiate it as a copy of sortByValueInfo, with an additional key denoting sort direction ('asc' | 'desc').
+        // else:
+        //      if sortByValueInfo.colCoord and .aggCoord match COB:
+        //          if COB.sortDirection === 'desc': 
+        //              change .sortDirection to 'asc'
+        //          if COB.sortDirection === 'asc':
+        //              change COB to undefined.
+        //      else:
+        //          proceed as if COB were undefined (because we clicked on a new Col/Agg coordinate)
+        // 
+        // at the end, return a string instructing which FontAwesome icon should be drawn on the JQ object to reflect new sort status.
+
+        // STATE LOGIC FOR VALUE SORT
+        var cob = currentTransform.ordering.byValue;
+        if (!cob) {
+            var freshSortInfo = JSON.parse(JSON.stringify(sortByValueInfo));
+            freshSortInfo.sortDirection = 'desc';
+            cob = freshSortInfo;
+        } else {
+            if (_.isEqual(cob.colCoord, sortByValueInfo.colCoord)
+                && cob.aggCoord === sortByValueInfo.aggCoord) {
+                if (cob.sortDirection === 'desc') {
+                    cob.sortDirection = 'asc';
+                } else if (cob.sortDirection === 'asc') {
+                    cob = undefined;
+                }
+            } else {
+                var freshSortInfo = JSON.parse(JSON.stringify(sortByValueInfo));
+                freshSortInfo.sortDirection = 'desc';
+                cob = freshSortInfo;
+            }
+        }
+        currentTransform.ordering.byValue = cob;
+
+        // RETURNING NEW SORT DIRECTION
+        var ret;
+        if (!cob) {
+            ret = 'noSort';
+        } else {
+            ret = cob.sortDirection;
+        }
+        if (['noSort', 'asc', 'desc'].indexOf(ret) === -1) {
+            throw new Error('Error sorting by value. Got bad sort direction!');
+        } else {
+            return ret;
+        }
+    }
+
+    function getValueAtCoords(tableData, rowCoord, colCoord, aggCoord) {
+        if (tableData[rowCoord]
+            && tableData[rowCoord][colCoord]
+            && tableData[rowCoord][colCoord][aggCoord]) {
+            return tableData[rowCoord][colCoord][aggCoord].value;
+        } else {
+            return null;
+        }
+    }
+
+    function calculateValueSortedRowCoords(tableData, meta) {
+        // If the user has indicated a preference to sort the table rows by values in a single column,
+        // Calculate the order of row coordinates to deliver that sorting and put them in a new key in table meta.
+        // Consumers of table meta will have to check for the existence of this key to know whether special sorting is needed,
+        // Or else just iterate through row/col/agg coordinates to build table data as normal.
+
+        var sortInfo = currentTransform.ordering.byValue;
+        var rowCoords = tutils.allMetaCoordinates({ meta: meta }).rowCoords;
+        var allRowCoordsWithValues = rowCoords.map(function (rowCoord) {
+            return {
+                rowCoord: rowCoord,
+                value: getValueAtCoords(tableData, rowCoord, sortInfo.colCoord, sortInfo.aggCoord)
+            };
+        });
+        var sorted = _.orderBy(allRowCoordsWithValues, ['value', 'rowCoord'], [sortInfo.sortDirection, sortInfo.sortDirection]);
+
+        // under desc sorting, lodash puts NULL values at the beginning of the array. ugh!
+        var withNullsAtEnd;
+        if (sortInfo.sortDirection === 'desc') {
+            var nullValues = sorted.filter(function (elem) {
+                return elem.value === null;
+            });
+            var nonNullValues = sorted.filter(function (elem) {
+                return elem.value !== null;
+            });
+
+            withNullsAtEnd = nonNullValues.concat(nullValues);
+        } else {
+            withNullsAtEnd = sorted;
+        }
+
+        var sortedRowCoords = withNullsAtEnd.map(function (elem) {
+            return elem.rowCoord;
+        });
+        return sortedRowCoords;
+    }
+
     function applyTransform() {
         let retResults = JSON.parse(JSON.stringify(currentResult.data));
 
@@ -377,6 +479,10 @@ var pivotState = (function () {
         retResults.meta.aggregators = applyTransformToSingleField('aggregators', 'excludedAggregators', dataAggs);
 
         var renamedData = renameCoordinates();
+
+        if (currentTransform.ordering.byValue !== undefined) {
+            retResults.meta.specificRowOrder = calculateValueSortedRowCoords(renamedData, retResults.meta);
+        }
 
         return {
             meta: retResults.meta,
@@ -392,6 +498,7 @@ var pivotState = (function () {
         registerResults: registerResults,
         removeHeader: removeHeader,
         restoreHeader: restoreHeader,
+        handleValueSortClick: handleValueSortClick,
         sortField: sortField,
         getModel: getModel,
         getCurrentTransform: getCurrentTransform,

@@ -7,7 +7,7 @@
   <script src="<?php echo base_url('public/js/external/jquery-ui.min.js') ?>"></script>
   <script src="<?php echo base_url('public/js/external/bootstrap.min.js') ?>"></script>
   <script src="<?php echo base_url('public/js/external/Chart.min.js') ?>"></script>
-  <script src="<?php echo base_url('public/js/external/lodash.core.min.js') ?>"></script>
+  <script src="<?php echo base_url('public/js/external/lodash.min.js') ?>"></script>
 
   <script src="<?php echo base_url('public/js/tutils.js') ?>"></script>
   <script src="<?php echo base_url('public/js/randomColor.js') ?>"></script>
