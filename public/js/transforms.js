@@ -27,11 +27,14 @@ var pivotState = (function () {
 
     function transformIsEmpty(transformToExamine) {
         // Determine whether the current transform contains semantic information.
+        // This is called when a model is saved to storage.
 
         // Guard against nil values.
         if (transformToExamine === null || transformToExamine === undefined) { return true; }
 
-        if (transformToExamine.ordering.byValue !== undefined) { return false; }
+        if (transformToExamine.ordering.byValue) { return false; }
+
+        if (transformToExamine.naming.chartTitle) { return false; }
 
         // get all the arrays of excluded elements.
         var allExclusionArrays = [];
@@ -466,6 +469,10 @@ var pivotState = (function () {
         return sortedRowCoords;
     }
 
+    function handleChartRetitle(newTitle) {
+        currentTransform.naming.chartTitle = newTitle;
+    }
+
     function applyTransform() {
         let retResults = JSON.parse(JSON.stringify(currentResult.data));
 
@@ -482,6 +489,10 @@ var pivotState = (function () {
 
         if (currentTransform.ordering.byValue !== undefined) {
             retResults.meta.specificRowOrder = calculateValueSortedRowCoords(renamedData, retResults.meta);
+        }
+
+        if (currentTransform.naming.chartTitle) {
+            retResults.meta.chartTitle = currentTransform.naming.chartTitle;
         }
 
         return {
@@ -503,6 +514,7 @@ var pivotState = (function () {
         getModel: getModel,
         getCurrentTransform: getCurrentTransform,
         transformIsEmpty: transformIsEmpty,
-        renameLabel: renameLabel
+        renameLabel: renameLabel,
+        handleChartRetitle: handleChartRetitle
     }
 })();

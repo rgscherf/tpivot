@@ -240,6 +240,8 @@ input[type=text] {
 
 .loadMenu__ui-dialog-title {
     font-size: 1.25em;
+    flex-grow: 1;
+    text-align: center;
 }
 .loadMenu__ui-dialog-close:after {
     font-family: FontAwesome;
@@ -247,6 +249,8 @@ input[type=text] {
 }
 .loadMenu__ui-dialog-close {
     outline: none;
+    flex-grow: 0;
+    margin-left: 10px;
 }
 
 .fieldList__item--inBucket {

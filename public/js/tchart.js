@@ -4,6 +4,10 @@ var tchart = (function () {
     }
 
     function getChartTitle(result, model) {
+        if (result.meta.chartTitle) {
+            return result.meta.chartTitle;
+        }
+
         // "(STATUS, DUE_DATE) by (TYPE), collected by (COUNT(ID))"
         function makeEntryString(elems) {
             var elemString = elems.map(function (elem) {
@@ -17,6 +21,67 @@ var tchart = (function () {
             ? 'COUNT(*)'
             : makeEntryString(result.meta.aggregators.map(function (e) { return { name: e }; }));
         return 'Rows: ' + rowString + '; Columns: ' + colString + '; Collected by: ' + aggString;
+    }
+
+    function createRenamingWidget(containingElement) {
+        function doRename() {
+            // get val of current rename
+            // send message to rename chart w/ current title
+            // change chart title in DOM
+            // rerender chart? (or maybe just keep change in transform for next time.)
+            var newLabel = $('#labelRename').val();
+            $('.loadMenu__ui-dialog-title').text(newLabel);
+            pivotState.handleChartRetitle(newLabel);
+
+            $('.labelRenameContainer').remove();
+
+
+            // ORIGINAL IMPLEMENTATION
+            // var field = sortingGroup[0];
+            // var fieldArray = sortingGroup[1];
+            // var fieldLabel = sortingGroup[3];
+            // var newLabel = $('#labelRenameContainer').val();
+            // pivotState.renameLabel(field, fieldArray, fieldLabel, newLabel);
+            // $('.labelRenameContainer').remove();
+            // rerenderTableFn();
+        }
+        var d = $('<div>')
+            .addClass('table__sortWidget labelRenameContainer')
+            .css({ 'align-items': 'center', 'padding': '10px' });
+        var inp = $('<input>')
+            .val($('.loadMenu__ui-dialog-title').text())
+            .keydown(function (event) {
+                var key = event.which;
+                if (key === 32) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    var labelRename = $('#labelRename');
+                    labelRename.val(labelRename.val() + ' ');
+                }
+            })
+            .keypress(function (event) {
+                var key = event.which;
+                if (key === 13) { // enter
+                    event.preventDefault();
+                    doRename();
+                }
+            })
+            .click(function (event) {
+                event.stopPropagation();
+                $('#labelRename').focus();
+            })
+            .css({ 'width': '150px', 'margin-right': '10px', 'height': '34px', 'padding': '5px' })
+            .attr({ 'id': 'labelRename', 'type': 'text' });
+        var ok = $('<button>')
+            .addClass('btn btn-warning')
+            .text('OK')
+            .click(function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                doRename();
+            });
+        d.append(inp, ok).appendTo(containingElement);
+        $('#labelRename').focus().select();
     }
 
     function renderExpChart(model, result, chartType) {
@@ -83,6 +148,7 @@ var tchart = (function () {
                 $(this).dialog("destroy");
             },
             resizable: false,
+            draggable: false,
             closeText: "",
             height: 'auto',
             width: 820,
@@ -91,6 +157,13 @@ var tchart = (function () {
             closeOnEscape: true
         })
             .css('padding', '10px');
+
+        var b = $('<button>')
+            .append('<i class="fa fa-pencil" aria-hidden="true"></i>')
+            .click(function (event) {
+                createRenamingWidget($(this));
+            })
+            .insertBefore($('.loadMenu__ui-dialog-close'));
 
         var chart = new Chart(canvas, {
             type: chartType,
