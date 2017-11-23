@@ -54,4 +54,8 @@ $route['renderpivot/processquery']['post'] = 'Pivot/process_client_query';
 $route['renderpivot/getdistinct']['post'] = 'Pivot/get_distinct_entries';
 $route['renderpivot/getcolumns']['post'] = 'Pivot/get_table_columns';
 $route['renderpivot/gettables']['post'] = 'Pivot/get_db_tables';
+
+$route['storage/queries']['get'] = 'Pivot/get_saved_queries';
+$route['storage/save']['post'] = 'Pivot/save_query';
+
 $route['default_controller'] = 'Pivot/index';

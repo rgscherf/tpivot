@@ -55,4 +55,27 @@ class Pivot extends CI_Controller {
         ->set_content_type('application/json')
         ->set_output(json_encode($tables, JSON_NUMERIC_CHECK));
     }
+
+    public function get_saved_queries() {
+        $queries = $this->Datasource->get_saved_queries();
+        $this->output->set_status_header(200)
+        ->set_content_type('application/json')
+        ->set_output(json_encode($queries, JSON_NUMERIC_CHECK));
+    }
+
+    public function save_query() {
+        $goods = $this->input->raw_input_stream;
+        $cleangoods = json_decode(trim($goods), true);
+        log_message('debug', json_encode($cleangoods));
+        $save_info;
+        if ($cleangoods['event'] === 'save_update') {
+            $save_info = $this->Datasource->save_update_query($cleangoods);
+        } else {
+            $save_info = $this->Datasource->save_new_query($cleangoods);
+        }
+        $this->output->set_status_header(200)
+        ->set_content_type('application/json')
+        ->set_output(json_encode($save_info, JSON_NUMERIC_CHECK));
+    }
+
 }

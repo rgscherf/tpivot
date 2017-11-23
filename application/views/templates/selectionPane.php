@@ -31,6 +31,8 @@
   var queryProcessURL = "<?php echo base_url('index.php/renderpivot/processquery'); ?>";
   var queryColumnURL = "<?php echo base_url('index.php/renderpivot/getcolumns'); ?>";
   var getDbTables = "<?php echo base_url('index.php/renderpivot/gettables'); ?>";
+  var getSavedQueriesURL = "<?php echo base_url('index.php/storage/queries'); ?>";
+  var saveQueryURL = "<?php echo base_url('index.php/storage/save'); ?>";
 </script>
 
 <?php function buildSelectionVisibilityContainer() { ob_start(); ?>

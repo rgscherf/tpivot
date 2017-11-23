@@ -21,6 +21,15 @@ class Datasource extends CI_Model {
         return ['CETODS', 'CEIM'];
     }
 
+    private function saved_queries_location() {
+        $loc =  [
+            'table' => 'PIVOT_QUERY',
+            'owner' => 'CE_CASE_MGMT',
+            'db' => 'CETODS'
+        ];
+        return $loc;
+    }
+
     private function get_source_from($tables_or_views, $db_name) {
         $this->loadDb($db_name);
         $query_string = '';
@@ -362,6 +371,86 @@ class Datasource extends CI_Model {
         foreach($query as $key=>$value) {
             $entries[] = $value['COLUMN_NAME'];
         }
+        return $entries;
+    }
+
+    public function save_update_query($payload) {
+        set_time_limit(300);
+        $location = $this->saved_queries_location();
+        $this->loadDb($location['db']);
+        $save_table = $location['owner'] . "." . $location['table'];
+
+        $omnibus_model = $this->db->escape(json_encode($payload['omnibusModel']));
+        $transform = $this->db->escape($payload['transform'] === null ? null : json_encode($payload['transform']));
+        $event = $this->db->escape($payload['event']);
+        $user = $this->db->escape($payload['user']);
+
+        $id = $payload['id'];
+        if ($id === null) { return; }
+
+        $query_string = "UPDATE 
+                $save_table
+            SET
+                QUERY = $omnibus_model,
+                TRANSFORM = $transform,
+                EVENT = $event,
+                UPDATE_USER = $user,
+                UPDATE_DATE = SYSDATE
+            WHERE
+                ID = $id";
+        $query_result = $this->db->query($query_string);
+        return [$query_result, $id];
+    }
+
+    private function get_next_id_for_table($table_name) {
+        $query_string = "SELECT NVL(MAX(ID), 0) AS MAX_ID FROM $table_name";
+        $query_result = $this->db->query($query_string)->result_array();
+        $query_result = (int) $query_result[0]['MAX_ID'];
+        return $query_result + 1;
+    }
+
+    public function save_new_query($payload) {
+        set_time_limit(300);
+        $location = $this->saved_queries_location();
+        $this->loadDb($location['db']);
+        $save_table = $location['owner'] . "." . $location['table'];
+
+        $next_id = $this->get_next_id_for_table($save_table);
+        $name = $this->db->escape($payload['queryName']);
+        $omnibus_model = $this->db->escape(json_encode($payload['omnibusModel']));
+        $transform = $this->db->escape($payload['transform'] === null ? null : json_encode($payload['transform']));
+        $event = $this->db->escape($payload['event']);
+        $user = $this->db->escape($payload['user']);
+
+        $query_string = "INSERT INTO $save_table 
+            (ID, QUERY_NAME, QUERY, TRANSFORM, EVENT, CREATE_USER, UPDATE_DATE, UPDATE_USER, EXPIRE_DATE, EXPIRE_USER, CREATE_DATE) 
+            VALUES ($next_id, $name, $omnibus_model, $transform, $event, $user, SYSDATE, $user, null, $user, SYSDATE)";
+
+        $query_result = $this->db->query($query_string);
+        return [$query_result, $this->db->insert_id()];
+    }
+
+    public function get_saved_queries() {
+        set_time_limit(300);
+        $location = $this->saved_queries_location();
+        $this->loadDb($location['db']);
+        $owner = $location['owner'];
+        $table = $location['table'];
+        $query_string = "SELECT * FROM $owner.$table";
+        $query = $this->db->query($query_string)->result_array();
+        $entries = [];
+        foreach($query as $entry) {
+            $entries[] = [
+                'id' => $entry['ID'],
+                'name' => $entry['QUERY_NAME'],
+                'omnibusModel' => json_decode($entry['QUERY']),
+                'transform' => json_decode($entry['TRANSFORM']),
+                'date' => $entry['UPDATE_DATE'],
+                'user' => $entry['UPDATE_USER']
+            ];
+        }
+        $this->log('::::SAVED QUERIES::::');
+        $this->log($entries);
         return $entries;
     }
 }

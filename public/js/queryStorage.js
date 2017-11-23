@@ -1,16 +1,19 @@
 var queryStore = (function () {
     var currentLoaded = null;
     var QUERY_STORAGE_KEY = 'pivotStore';
+    var PLACEHOLDER_USER_STRING = 'temp_test_user';
+    var SAVE_NEW_QUERY_EVENT = 'save_new';
+    var UPDATE_QUERY_EVENT = 'save_update';
 
     function unloadQuery() {
         currentLoaded = null;
         $('#loadedDocument').children().remove();
     }
 
-    function attachLoadedData(loadData) {
+    function addLoadedDataTag(loadData) {
         currentLoaded = loadData;
         $('#loadedDocument').children().remove();
-        var loadString = "Currently modifying query with ID " + loadData.id;
+        var loadString = "Currently modifying query " + loadData.name;
         var loadDiv = $('<div>')
             .addClass('bg-info queryBuilder--marginLeft')
             .css({ 'border-radius': '2px', 'padding': '5px', 'display': 'inline-block' })
@@ -18,41 +21,53 @@ var queryStore = (function () {
             .appendTo($('#loadedDocument'));
     }
 
-    function storage() {
-        return window.localStorage;
-    }
-
-    function getStoredQueries() {
-        var queries = JSON.parse(storage().getItem(QUERY_STORAGE_KEY));
-        return (queries || []);
-    }
-
-    function appendToStorage(query) {
-        var store = getStoredQueries();
-        store.push(query);
-        storage().setItem(QUERY_STORAGE_KEY, JSON.stringify(store));
-    }
-
-    function replaceStorage(queries) {
-        storage().setItem(QUERY_STORAGE_KEY, JSON.stringify(queries));
-    }
-
     function getTransformForSerialization() {
         // determine whether to save the transform.
         return pivotState.transformIsEmpty(pivotState.getCurrentTransform()) ? null : pivotState.getCurrentTransform();
     }
 
-    function createQueryStorageObject(id, tableInfo, model) {
-        return {
-            id: id,
-            date: (new Date()).toDateString(),
+    function sendQueryToStorage(tableInfo, model, name, eventType, id) {
+        var omnibusModel = {
             db: tableInfo.db,
-            type: tableInfo.type,
             owner: tableInfo.owner,
             table: tableInfo.table,
-            model: model,
-            transform: getTransformForSerialization()
+            type: tableInfo.type,
+            model: model
         }
+        var payload = JSON.stringify({
+            id: id,
+            user: PLACEHOLDER_USER_STRING,
+            event: eventType,
+            queryName: name,
+            omnibusModel: omnibusModel,
+            transform: getTransformForSerialization()
+        });
+
+        $.ajax({
+            type: "post",
+            url: window.saveQueryURL,
+            data: payload,
+            success: function (saveInfo) {
+                var saveResult = saveInfo[0];
+                if (!saveResult) {
+                    throw "Error saving query to DB. Stringified record I tried to save: " + payload;
+                }
+                var newLoaded = {
+                    id: saveInfo[1],
+                    db: tableInfo.db,
+                    type: tableInfo.type,
+                    owner: tableInfo.owner,
+                    table: tableInfo.table,
+                    model: model,
+                    name: name
+                }
+                addLoadedDataTag(newLoaded);
+            },
+            error: function (x, stat, err) {
+                console.log("AJAX REQUEST FAILED");
+                console.log(x, stat, err);
+            }
+        });
     }
 
     function updateQuery(currentTableInfo, model) {
@@ -60,33 +75,63 @@ var queryStore = (function () {
             console.log('Was asked to update a saved query with no query loaded!');
             return;
         }
-        var transform = getTransformForSerialization();
         var id = currentLoaded.id;
-        var storedQueriesWithoutThisId = getStoredQueries().filter(function (elem) {
-            return elem.id !== id;
-        });
-        var newQuery = createQueryStorageObject(id, currentTableInfo, model);
-        var allQueries = storedQueriesWithoutThisId.concat(newQuery);
-        replaceStorage(allQueries);
-        attachLoadedData(newQuery);
+        var queryName = currentLoaded.name;
+        sendQueryToStorage(currentTableInfo, model, queryName, UPDATE_QUERY_EVENT, id);
+    }
+
+    function createLabelNameWidget(containingElement, currentTableInfo, model) {
+        function saveQueryWithName() {
+            var queryName = $('#queryNameInput').val();
+            $('.queryNameContainer').remove();
+
+            if (queryName === '') { return; }
+            sendQueryToStorage(currentTableInfo, model, queryName, SAVE_NEW_QUERY_EVENT, null);
+        }
+        var d = $('<div>')
+            .addClass('table__sortWidget queryNameContainer')
+            .css({ 'align-items': 'center', 'padding': '10px' });
+        var inp = $('<input>')
+            .keydown(function (event) {
+                var key = event.which;
+                if (key === 32) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    var queryNameInput = $('#queryNameInput');
+                    queryNameInput.val(queryNameInput.val() + ' ');
+                }
+            })
+            .keypress(function (event) {
+                var key = event.which;
+                if (key === 13) { // enter
+                    event.preventDefault();
+                    saveQueryWithName();
+                }
+            })
+            .click(function (event) {
+                event.stopPropagation();
+                $('#queryNameInput').focus();
+            })
+            .css({ 'width': '150px', 'margin-right': '10px', 'height': '34px', 'padding': '5px' })
+            .attr({
+                'id': 'queryNameInput',
+                'type': 'text',
+                'placeholder': 'Name this query:'
+            });
+        var ok = $('<button>')
+            .addClass('btn btn-warning')
+            .text('OK')
+            .click(function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                saveQueryWithName();
+            });
+        d.append(inp, ok).appendTo(containingElement);
+        $('#queryNameInput').focus().select();
     }
 
     function saveQuery(currentTableInfo, model) {
-        // determine ID for the new stored query
-        var storedQueries = getStoredQueries();
-        var newQueryId;
-        if (storedQueries.length === 0) {
-            newQueryId = 0;
-        } else {
-            var allIds = storedQueries.map(function (elem) { return elem.id });
-            var maxId = Math.max.apply(null, allIds);
-            newQueryId = maxId + 1;
-        }
-
-        // construct the storage object.
-        var newQuery = createQueryStorageObject(newQueryId, currentTableInfo, model);
-        appendToStorage(newQuery);
-        attachLoadedData(newQuery);
+        createLabelNameWidget($('#storeQuery__saveNew'), currentTableInfo, model);
     }
 
     function whenTableIsLoaded(loadData) {
@@ -108,7 +153,7 @@ var queryStore = (function () {
         $('#getTable').removeClass('btn-warning').addClass('btn-default');
         $('#dbSelector').val(loadData.db);
         var tableIdentifier = loadData.type + ': ' + loadData.owner + "." + loadData.table;
-        attachLoadedData(loadData);
+        addLoadedDataTag(loadData);
         tpivot.removePivot();
         tchart.removeChart();
         view.switchToNewDb(loadData.db, tableIdentifier);
@@ -122,9 +167,10 @@ var queryStore = (function () {
         var d = $('<table>');
         var t = $('<tr class="queryBuilder--headerText">')
             .append($('<th>').text('ID'))
+            .append($('<th>').text('Name'))
             .append($('<th>').text('Table Location'))
-            .append($('<th>').text('Query Description'))
-            .append($('<th>').text('Transformations'))
+            // .append($('<th>').text('Query Description'))
+            // .append($('<th>').text('Transformations'))
             .append($('<th>').text('Date Saved'))
             .appendTo(d);
         queries.forEach(function (elem) {
@@ -134,9 +180,10 @@ var queryStore = (function () {
                     $('.loadQueryMenu').dialog("close");
                 })
                 .append($('<td>').text(elem.id))
+                .append($('<td>').text(elem.name))
                 .append($('<td>').text(elem.db + "." + elem.owner + "." + elem.table + '(' + elem.type + ')'))
-                .append($('<td>').text(tutils.describeModel(elem.model)))
-                .append($('<td>').text(tutils.describeTransform(elem.transform)))
+                // .append($('<td>').text(tutils.describeModel(elem.model)))
+                // .append($('<td>').text(tutils.describeTransform(elem.transform)))
                 .append($('<td>').text(elem.date))
                 .disableSelection();
             q.appendTo(d);
@@ -146,30 +193,58 @@ var queryStore = (function () {
         return container;
     }
 
+    function unpackReturnedQueries(queries) {
+        return queries.map(function (parsed) {
+            return {
+                db: parsed.omnibusModel.db,
+                owner: parsed.omnibusModel.owner,
+                table: parsed.omnibusModel.table,
+                type: parsed.omnibusModel.type,
+                id: parsed.id,
+                model: parsed.omnibusModel.model,
+                transform: parsed.transform,
+                date: parsed.date,
+                user: parsed.user,
+                name: parsed.name
+            };
+        });
+    }
+
     function loadQueryMenu() {
-        var queries = getStoredQueries();
-        var menuElement = menuFromQueries(queries);
-        $(menuElement)
-            .dialog({
-                classes: {
-                    "ui-dialog": "loadMenu__ui-dialog",
-                    "ui-dialog-titlebar": "loadMenu__ui-dialog-titlebar",
-                    "ui-dialog-title": "loadMenu__ui-dialog-title",
-                    "ui-dialog-titlebar-close": "loadMenu__ui-dialog-close",
-                    // "ui-dialog-content": "",
-                },
-                close: function (event, ui) {
-                    $(this).dialog("destroy");
-                },
-                resizable: false,
-                closeText: "",
-                height: 'auto',
-                width: 700,
-                modal: true,
-                title: 'Click to load a saved query',
-                closeOnEscape: true
-            })
-            .addClass("loadQueryMenu");
+        $.ajax({
+            type: "get",
+            url: window.getSavedQueriesURL,
+            data: '',
+            success: function (queries) {
+                var unpacked = unpackReturnedQueries(queries);
+                var menuElement = menuFromQueries(unpacked);
+                $(menuElement)
+                    .dialog({
+                        classes: {
+                            "ui-dialog": "loadMenu__ui-dialog",
+                            "ui-dialog-titlebar": "loadMenu__ui-dialog-titlebar",
+                            "ui-dialog-title": "loadMenu__ui-dialog-title",
+                            "ui-dialog-titlebar-close": "loadMenu__ui-dialog-close",
+                            // "ui-dialog-content": "",
+                        },
+                        close: function (event, ui) {
+                            $(this).dialog("destroy");
+                        },
+                        resizable: false,
+                        closeText: "",
+                        height: 500,
+                        width: 800,
+                        modal: true,
+                        title: 'Click to load a saved query',
+                        closeOnEscape: true
+                    })
+                    .addClass("loadQueryMenu");
+            },
+            error: function (x, stat, err) {
+                console.log("AJAX REQUEST FAILED");
+                console.log(x, stat, err);
+            }
+        });
     }
 
     return {
